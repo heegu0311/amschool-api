@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DataSourceOptions } from 'typeorm';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -21,9 +22,10 @@ import { DataSourceOptions } from 'typeorm';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // 개발환경에서만 true로 설정
+        synchronize: configService.get('NODE_ENV') === 'development',
       }),
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
