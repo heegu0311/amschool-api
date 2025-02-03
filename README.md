@@ -65,3 +65,15 @@ $ pnpm run test:cov
 ## License
 
 [MIT licensed](LICENSE)
+
+### Environment Variables
+
+Create `.env` file in the root directory:
+
+```bash
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password
+DB_DATABASE=your_database
+```

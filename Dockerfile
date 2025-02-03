@@ -28,6 +28,7 @@ RUN pnpm install --prod
 
 # 빌드된 파일 복사
 COPY --from=builder /app/dist ./dist
+COPY .env .env
 
 # 서버 실행
 EXPOSE 3000
