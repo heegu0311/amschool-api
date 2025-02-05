@@ -5,6 +5,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DataSourceOptions } from 'typeorm';
 import { UsersModule } from './users/users.module';
+import { ArticlesModule } from './articles/articles.module';
+import { User } from './users/entities/user.entity';
+import { Article } from './articles/entities/article.entity';
+import { Comment } from './articles/entities/comment.entity';
+import { Reply } from './articles/entities/reply.entity';
+import { Category } from './articles/entities/category.entity';
 
 @Module({
   imports: [
@@ -21,11 +27,12 @@ import { UsersModule } from './users/users.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') === 'development',
+        entities: [User, Article, Comment, Reply, Category],
+        synchronize: true,
       }),
     }),
     UsersModule,
+    ArticlesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
