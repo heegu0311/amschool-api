@@ -11,6 +11,9 @@ import { Article } from './articles/entities/article.entity';
 import { Comment } from './articles/entities/comment.entity';
 import { Reply } from './articles/entities/reply.entity';
 import { Category } from './articles/entities/category.entity';
+import { ArticleLike } from './articles/entities/article-like.entity';
+import { CommentLike } from './articles/entities/comment-like.entity';
+import { ReplyLike } from './articles/entities/reply-like.entity';
 
 @Module({
   imports: [
@@ -27,7 +30,16 @@ import { Category } from './articles/entities/category.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Article, Comment, Reply, Category],
+        entities: [
+          User,
+          Article,
+          Comment,
+          Reply,
+          Category,
+          ArticleLike,
+          CommentLike,
+          ReplyLike,
+        ],
         synchronize: true,
       }),
     }),

@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Comment } from './comment.entity';
+import { ReplyLike } from './reply-like.entity';
 
 @Entity()
 export class Reply {
@@ -16,6 +18,9 @@ export class Reply {
 
   @Column('text')
   content: string;
+
+  @Column({ default: 0 })
+  likeCount: number;
 
   @ManyToOne(() => User, { eager: true })
   author: User;
@@ -30,4 +35,7 @@ export class Reply {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany('ReplyLike', 'reply')
+  likes: ReplyLike[];
 }
