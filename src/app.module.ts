@@ -11,15 +11,13 @@ import { ArticlesModule } from './articles/articles.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: `.env.${process.env.NODE_ENV}`,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): DataSourceOptions => ({
         type: 'mysql',
-        host: configService.get('NODE_ENV')
-          ? 'host.docker.internal'
-          : configService.get('DB_HOST'),
+        host: configService.get('DB_HOST'),
         port: configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
