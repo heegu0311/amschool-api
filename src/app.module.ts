@@ -17,7 +17,7 @@ import { ArticlesModule } from './articles/articles.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): DataSourceOptions => ({
         type: 'mysql',
-        host: configService.get('DB_HOST'),
+        host: configService.get('DB_HOST') || 'host.docker.internal',
         port: configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
