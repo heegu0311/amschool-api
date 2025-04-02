@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 이메일 문의
+    url: mailto:your-email@example.com
+    about: 이메일로 문의하기
