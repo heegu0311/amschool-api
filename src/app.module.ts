@@ -1,12 +1,12 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSourceOptions } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DataSourceOptions } from 'typeorm';
-import { UsersModule } from './users/users.module';
-import { LoggerModule } from './logger/logger.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
+import { LoggerModule } from './logger/logger.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
