@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DataSourceOptions } from 'typeorm';
 import { UsersModule } from './users/users.module';
-import { ArticlesModule } from './articles/articles.module';
 
 @Module({
   imports: [
@@ -27,7 +26,6 @@ import { ArticlesModule } from './articles/articles.module';
       }),
     }),
     UsersModule,
-    ArticlesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
