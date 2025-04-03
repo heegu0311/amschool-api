@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 
@@ -50,11 +51,11 @@ export class User {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @Column({ nullable: true })
-  survey_answer_id: number;
-
   @OneToMany(() => CancerUser, (cancerUser) => cancerUser.user, {
     lazy: true,
   })
   cancerUsers: Promise<CancerUser[]>;
+
+  @OneToOne('SurveyAnswer', 'user')
+  surveyAnswer: any;
 }

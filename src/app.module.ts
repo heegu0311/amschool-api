@@ -9,6 +9,7 @@ import { LoggerModule } from './logger/logger.module';
 import { UsersModule } from './users/users.module';
 import { CancerModule } from './cancer/cancer.module';
 import { CancerUserModule } from './cancer-user/cancer-user.module';
+import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CancerUserModule } from './cancer-user/cancer-user.module';
     UsersModule,
     CancerModule,
     CancerUserModule,
+    SurveyAnswerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
