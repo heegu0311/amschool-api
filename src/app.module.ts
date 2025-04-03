@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
 import { UsersModule } from './users/users.module';
+import { CancerModule } from './cancer/cancer.module';
+import { CancerUserModule } from './cancer-user/cancer-user.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { UsersModule } from './users/users.module';
     }),
     LoggerModule,
     UsersModule,
+    CancerModule,
+    CancerUserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
