@@ -1,4 +1,4 @@
-name: Build and Deploy to AWS ECR
+name: Server App Build and Deploy to AWS ECR
 
 on:
   push:
@@ -36,3 +36,16 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # 5. Deploy to EC2 Instance via SSH
+      - name: Deploy to EC2 Instance
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd amschool
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker pull ${{ secrets.ECR_REGISTRY }}/amschool/server:latest
+            docker-compose up -d --no-deps --build amschool-api

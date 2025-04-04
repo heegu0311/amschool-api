@@ -18,7 +18,7 @@ import { UsersModule } from './users/users.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): DataSourceOptions => ({
         type: 'mysql',
-        host: configService.get('DB_HOST') || 'host.docker.internal',
+        host: configService.get('DB_HOST'),
         port: configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
