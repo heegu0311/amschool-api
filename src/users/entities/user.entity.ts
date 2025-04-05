@@ -15,11 +15,23 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 30 })
+  username: string;
+
+  @Column({ nullable: true })
+  password: string;
+
+  @Column({ length: 60, unique: true })
   email: string;
 
-  @Column()
-  password: string;
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ nullable: true })
+  provider: string;
+
+  @Column({ nullable: true })
+  providerId: string;
 
   @Column({ default: false })
   is_admin: boolean;

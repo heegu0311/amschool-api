@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { CancerModule } from './cancer/cancer.module';
 import { CancerUserModule } from './cancer-user/cancer-user.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
     CancerModule,
     CancerUserModule,
     SurveyAnswerModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
