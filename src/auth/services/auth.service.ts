@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class AuthService {
@@ -32,8 +33,7 @@ export class AuthService {
 
     // Refresh Token 생성 (2주)
     const refreshToken = uuidv4();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 14);
+    const expiresAt = dayjs().add(14, 'day').toDate();
 
     // Refresh Token DB 저장
     await this.refreshTokenRepository.save({
@@ -75,7 +75,7 @@ export class AuthService {
       throw new UnauthorizedException('유효하지 않은 refresh token입니다.');
     }
 
-    if (tokenEntity.expiresAt < new Date()) {
+    if (dayjs(tokenEntity.expiresAt).isBefore(dayjs())) {
       throw new UnauthorizedException('만료된 refresh token입니다.');
     }
 
@@ -85,8 +85,7 @@ export class AuthService {
 
     // Refresh Token Rotation
     const newRefreshToken = uuidv4();
-    const newExpiresAt = new Date();
-    newExpiresAt.setDate(newExpiresAt.getDate() + 14);
+    const newExpiresAt = dayjs().add(14, 'day').toDate();
 
     // 기존 토큰 폐기
     await this.refreshTokenRepository.update(

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EmailVerification } from '../entities/email-verification.entity';
 import { EmailService } from '../../common/services/email.service';
 import * as crypto from 'crypto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class EmailVerificationService {
@@ -28,7 +29,7 @@ export class EmailVerificationService {
       const emailVerification = this.emailVerificationRepository.create({
         email,
         code: verificationCode,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10분 후 만료
+        expiresAt: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
       });
       await this.emailVerificationRepository.save(emailVerification);
 
@@ -50,7 +51,7 @@ export class EmailVerificationService {
       throw new BadRequestException('인증 코드를 찾을 수 없습니다.');
     }
 
-    if (verification.expiresAt < new Date()) {
+    if (dayjs(verification.expiresAt).isBefore(dayjs())) {
       throw new BadRequestException('인증 코드가 만료되었습니다.');
     }
 
