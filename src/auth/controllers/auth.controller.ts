@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from '../../auth/services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -16,7 +23,9 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<{ message: string }> {
     // 이메일 인증 코드 생성 및 발송
     await this.emailVerificationService.sendVerificationEmail(
       registerDto.email,
@@ -24,8 +33,11 @@ export class AuthController {
     return { message: '인증 이메일이 발송되었습니다.' };
   }
 
+  @HttpCode(200)
   @Post('verify-email')
-  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+  async verifyEmail(
+    @Body() verifyEmailDto: VerifyEmailDto,
+  ): Promise<{ message: string }> {
     await this.emailVerificationService.verifyEmail(
       verifyEmailDto.email,
       verifyEmailDto.code,
@@ -35,18 +47,22 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(
+    @Body() loginDto: LoginDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     return this.authService.login(loginDto);
   }
 
   @Post('refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ): Promise<{ access_token: string }> {
     return this.authService.refreshAccessToken(refreshTokenDto.refresh_token);
   }
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
-  async logout(@Request() req) {
+  async logout(@Request() req): Promise<{ message: string }> {
     await this.authService.revokeRefreshToken(req.user.id);
     return { message: '로그아웃되었습니다.' };
   }
@@ -54,7 +70,7 @@ export class AuthController {
   @Post('complete-registration')
   async completeRegistration(
     @Body() completeRegistrationDto: CompleteRegistrationDto,
-  ) {
+  ): Promise<{ access_token: string; refresh_token: string }> {
     return this.authService.completeRegistration(completeRegistrationDto);
   }
 }
