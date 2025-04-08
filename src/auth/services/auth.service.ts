@@ -43,8 +43,8 @@ export class AuthService {
     });
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -102,8 +102,8 @@ export class AuthService {
     });
 
     return {
-      access_token: newAccessToken,
-      refresh_token: newRefreshToken,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     };
   }
 
@@ -153,7 +153,7 @@ export class AuthService {
         password: hashedPassword,
         username: completeRegistrationDto.email.split('@')[0],
         isActive: true,
-        signin_provider: 'email',
+        signinProvider: 'email',
       });
     } catch (error: unknown) {
       if (error instanceof BadRequestException) {

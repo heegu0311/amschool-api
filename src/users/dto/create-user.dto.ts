@@ -53,7 +53,7 @@ export class CreateUserDto {
     example: 'patient',
   })
   @IsString()
-  user_type: string;
+  userType: string;
 
   @ApiProperty({
     description: '프로필 이미지 URL',
@@ -69,14 +69,14 @@ export class CreateUserDto {
   })
   @IsBoolean()
   @IsOptional()
-  is_cancer_public?: boolean;
+  isCancerPublic?: boolean;
 
   @ApiProperty({
     description: '로그인 제공자',
     example: 'local',
   })
   @IsString()
-  signin_provider: string;
+  signinProvider: string;
 
   @ApiProperty({
     description: '소셜 로그인 제공자',
@@ -112,7 +112,7 @@ export class CreateUserDto {
   })
   @IsBoolean()
   @IsOptional()
-  is_admin?: boolean;
+  isAdmin?: boolean;
 
   @ApiProperty({
     description: '실명',

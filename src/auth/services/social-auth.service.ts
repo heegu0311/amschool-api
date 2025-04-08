@@ -21,17 +21,17 @@ export class SocialAuthService {
         providerId: socialUser.providerId,
         username: socialUser.email.split('@')[0],
         password: '',
-        signin_provider: socialUser.provider,
+        signinProvider: socialUser.provider,
         nickname: socialUser.name,
         intro: '',
-        user_type: 'user',
+        userType: 'user',
         profile: '',
       });
     }
 
     const payload = { sub: user.id, email: user.email };
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken: await this.jwtService.signAsync(payload),
     };
   }
 }

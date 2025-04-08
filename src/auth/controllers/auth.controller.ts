@@ -49,15 +49,15 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     return this.authService.login(loginDto);
   }
 
   @Post('refresh')
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<{ access_token: string }> {
-    return this.authService.refreshAccessToken(refreshTokenDto.refresh_token);
+  ): Promise<{ accessToken: string }> {
+    return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
   }
 
   @Post('logout')
@@ -70,7 +70,7 @@ export class AuthController {
   @Post('complete-registration')
   async completeRegistration(
     @Body() completeRegistrationDto: CompleteRegistrationDto,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     return this.authService.completeRegistration(completeRegistrationDto);
   }
 }

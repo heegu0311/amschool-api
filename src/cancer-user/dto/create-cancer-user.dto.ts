@@ -5,11 +5,11 @@ export class CreateCancerUserDto {
     description: '사용자 ID',
     example: 1,
   })
-  user_id: number;
+  userId: number;
 
   @ApiProperty({
     description: '암 종류 ID',
     example: 1,
   })
-  cancer_id: number;
+  cancerId: number;
 }

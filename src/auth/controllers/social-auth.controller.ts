@@ -19,7 +19,7 @@ export class SocialAuthController {
     console.log(req.user);
 
     const result = await this.socialAuthService.socialLogin(req.user);
-    res.redirect(`/auth/callback?token=${result.access_token}`);
+    res.redirect(`/auth/callback?token=${result.accessToken}`);
   }
 
   @Get('naver')
@@ -32,7 +32,7 @@ export class SocialAuthController {
   @UseGuards(AuthGuard('naver'))
   async naverCallback(@Req() req, @Res() res: Response) {
     const result = await this.socialAuthService.socialLogin(req.user);
-    res.redirect(`/auth/callback?token=${result.access_token}`);
+    res.redirect(`/auth/callback?token=${result.accessToken}`);
   }
 
   @Get('google')
@@ -45,6 +45,6 @@ export class SocialAuthController {
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req, @Res() res: Response) {
     const result = await this.socialAuthService.socialLogin(req.user);
-    res.redirect(`/auth/callback?token=${result.access_token}`);
+    res.redirect(`/auth/callback?token=${result.accessToken}`);
   }
 }

@@ -11,13 +11,13 @@ export class CreateSurveyAnswerDto {
     description: '설문 ID',
     example: 1,
   })
-  survey_id: number;
+  surveyId: number;
 
   @ApiProperty({
     description: '사용자 ID',
     example: 1,
   })
-  user_id: number;
+  userId: number;
 
   @ApiProperty({
     description: '답변 내용',
