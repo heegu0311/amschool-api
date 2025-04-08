@@ -114,52 +114,30 @@ export class AuthService {
   }
 
   async completeRegistration(completeRegistrationDto: CompleteRegistrationDto) {
-    // 이메일 인증 확인
-    let isVerified = false;
-    try {
-      isVerified = await this.emailVerificationService.isEmailVerified(
-        completeRegistrationDto.email,
-      );
-    } catch (error: unknown) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new BadRequestException(
-        '이메일 인증 확인 중 오류가 발생했습니다: ' + (error as Error).message,
-      );
-    }
+    const isVerified = await this.emailVerificationService.isEmailVerified(
+      completeRegistrationDto.email,
+    );
 
     if (!isVerified) {
       throw new BadRequestException('이메일 인증이 완료되지 않았습니다.');
     }
 
-    // 비밀번호 확인
     if (!completeRegistrationDto.password) {
       throw new BadRequestException('비밀번호는 필수입니다.');
     }
 
-    // 비밀번호 해시화
     const hashedPassword = await bcrypt.hash(
       completeRegistrationDto.password,
       10,
     );
 
-    // 사용자 생성
-    let user;
-    try {
-      user = await this.usersService.create({
-        ...completeRegistrationDto,
-        password: hashedPassword,
-        username: completeRegistrationDto.email.split('@')[0],
-        isActive: true,
-        signinProvider: 'email',
-      });
-    } catch (error: unknown) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new BadRequestException('사용자 생성 중 오류가 발생했습니다.');
-    }
+    const user = await this.usersService.create({
+      ...completeRegistrationDto,
+      password: hashedPassword,
+      username: completeRegistrationDto.email.split('@')[0],
+      isActive: true,
+      signinProvider: 'email',
+    });
 
     if (!user) {
       throw new BadRequestException('사용자 생성에 실패했습니다.');
