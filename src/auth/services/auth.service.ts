@@ -148,26 +148,6 @@ export class AuthService {
         throw new BadRequestException('이미 존재하는 이메일입니다.');
       }
 
-      // MySQL 연결 관련 에러
-      if (
-        error.code === 'ECONNREFUSED' ||
-        error.code === 'PROTOCOL_CONNECTION_LOST'
-      ) {
-        throw new ServiceUnavailableException(
-          '데이터베이스 연결에 실패했습니다.',
-        );
-      }
-
-      // MySQL 외래 키 제약조건 위반
-      if (error.code === 'ER_NO_REFERENCED_ROW') {
-        throw new BadRequestException('참조하는 데이터가 존재하지 않습니다.');
-      }
-
-      // MySQL 데이터 타입 에러
-      if (error.code === 'ER_TRUNCATED_WRONG_VALUE') {
-        throw new BadRequestException('잘못된 데이터 형식입니다.');
-      }
-
       throw error; // 다른 에러는 전역 예외 필터가 처리
     }
   }
