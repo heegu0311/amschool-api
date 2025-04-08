@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
-import { Cancer } from 'src/cancer/entities/cancer.entity';
+import { Cancer } from '../../cancer/entities/cancer.entity';
 @Entity()
 export class CancerUser {
   @PrimaryGeneratedColumn()

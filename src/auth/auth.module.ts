@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EmailService } from 'src/common/services/email.service';
+import { EmailService } from '../common/services/email.service';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './controllers/auth.controller';
 import { SocialAuthController } from './controllers/social-auth.controller';

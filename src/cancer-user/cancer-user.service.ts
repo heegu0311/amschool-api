@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CancerUser } from './entities/cancer-user.entity';
 import { CreateCancerUserDto } from './dto/create-cancer-user.dto';
-import { UpdateCancerUserDto } from './dto/update-cancer-user.dto';
+import { CancerUser } from './entities/cancer-user.entity';
 
 @Injectable()
 export class CancerUserService {
@@ -14,8 +13,8 @@ export class CancerUserService {
 
   create(createCancerUserDto: CreateCancerUserDto) {
     const cancerUser = new CancerUser();
-    cancerUser.user_id = createCancerUserDto.user_id;
-    cancerUser.cancer_id = createCancerUserDto.cancer_id;
+    cancerUser.user_id = createCancerUserDto.userId;
+    cancerUser.cancer_id = createCancerUserDto.cancerId;
     return this.cancerUserRepository.save(cancerUser);
   }
 
@@ -30,13 +29,5 @@ export class CancerUserService {
       where: { id },
       relations: ['user', 'cancer'],
     });
-  }
-
-  update(id: number, updateCancerUserDto: UpdateCancerUserDto) {
-    return this.cancerUserRepository.update(id, updateCancerUserDto);
-  }
-
-  remove(id: number) {
-    return this.cancerUserRepository.delete(id);
   }
 }
