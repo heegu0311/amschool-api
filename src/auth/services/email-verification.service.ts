@@ -58,6 +58,10 @@ export class EmailVerificationService {
     if (verification.code !== code) {
       throw new BadRequestException('잘못된 인증 코드입니다.');
     }
+
+    await this.emailVerificationRepository.update(verification.id, {
+      isVerified: true,
+    });
   }
 
   async isEmailVerified(email: string): Promise<boolean> {
