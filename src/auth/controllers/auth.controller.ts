@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UseGuards,
-  Request,
-  HttpCode,
-} from '@nestjs/common';
+import { Body, Controller, Post, Request, HttpCode } from '@nestjs/common';
 import { AuthService } from '../../auth/services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -13,8 +6,10 @@ import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { CompleteRegistrationDto } from '../dto/complete-registration.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { Public } from '../decorators/public.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -22,6 +17,7 @@ export class AuthController {
     private readonly emailVerificationService: EmailVerificationService,
   ) {}
 
+  @Public()
   @Post('register')
   async register(
     @Body() registerDto: RegisterDto,
@@ -33,6 +29,7 @@ export class AuthController {
     return { message: '인증 이메일이 발송되었습니다.' };
   }
 
+  @Public()
   @HttpCode(200)
   @Post('verify-email')
   async verifyEmail(
@@ -46,6 +43,7 @@ export class AuthController {
     return { message: '이메일이 인증되었습니다.' };
   }
 
+  @Public()
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
@@ -53,6 +51,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Public()
   @Post('refresh')
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
@@ -60,13 +59,14 @@ export class AuthController {
     return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
   }
 
+  @ApiBearerAuth('access-token')
   @Post('logout')
-  @UseGuards(AuthGuard('jwt'))
   async logout(@Request() req): Promise<{ message: string }> {
     await this.authService.revokeRefreshToken(req.user.id);
     return { message: '로그아웃되었습니다.' };
   }
 
+  @Public()
   @Post('complete-registration')
   async completeRegistration(
     @Body() completeRegistrationDto: CompleteRegistrationDto,

@@ -10,7 +10,10 @@ import {
 import { CancerService } from './cancer.service';
 import { CreateCancerDto } from './dto/create-cancer.dto';
 import { UpdateCancerDto } from './dto/update-cancer.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('cancer')
+@ApiBearerAuth('access-token')
 @Controller('cancer')
 export class CancerController {
   constructor(private readonly cancerService: CancerService) {}

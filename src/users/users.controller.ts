@@ -10,7 +10,10 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('users')
+@ApiBearerAuth('access-token')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -35,8 +38,6 @@ export class UsersController {
     return this.usersService.update(+id, updateUserDto);
   }
 
-  // @UseGuards(AuthGuard('jwt'))
-  // @ApiBearerAuth()
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);

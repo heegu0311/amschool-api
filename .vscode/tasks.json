@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$tsc"],
+      "label": "pnpm: build",
+      "detail": "NestJS 애플리케이션 빌드"
+    },
+    {
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["start:dev"],
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "label": "pnpm: start:dev",
+      "detail": "개발 모드로 NestJS 애플리케이션 실행"
+    },
+    {
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["start:debug"],
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "label": "pnpm: start:debug",
+      "detail": "디버그 모드로 NestJS 애플리케이션 실행"
+    }
+  ]
+}
