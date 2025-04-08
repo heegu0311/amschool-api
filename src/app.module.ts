@@ -11,12 +11,21 @@ import { CancerModule } from './cancer/cancer.module';
 import { CancerUserModule } from './cancer-user/cancer-user.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { AuthModule } from './auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      global: true,
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
