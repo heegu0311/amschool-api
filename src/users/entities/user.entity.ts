@@ -4,7 +4,11 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+  OneToOne,
 } from 'typeorm';
+import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 
 @Entity()
 export class User {
@@ -14,18 +18,56 @@ export class User {
   @Column({ length: 30 })
   username: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
-  @Column({ length: 60 })
+  @Column({ length: 60, unique: true })
   email: string;
 
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ nullable: true })
+  provider: string;
+
+  @Column({ nullable: true })
+  providerId: string;
+
+  @Column({ default: false })
+  is_admin: boolean;
+
+  @Column()
+  user_type: string;
+
+  @Column()
+  profile: string;
+
+  @Column()
+  nickname: string;
+
+  @Column()
+  intro: string;
+
+  @Column({ default: false })
+  is_cancer_public: boolean;
+
+  @Column()
+  signin_provider: string;
+
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
+
+  @OneToMany(() => CancerUser, (cancerUser) => cancerUser.user, {
+    lazy: true,
+  })
+  cancerUsers: Promise<CancerUser[]>;
+
+  @OneToOne('SurveyAnswer', 'user')
+  surveyAnswer: any;
 }
