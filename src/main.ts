@@ -8,6 +8,13 @@ import { Reflector } from '@nestjs/core';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // CORS 설정 추가
+  app.enableCors({
+    origin: true, // 모든 도메인 허용
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle('AMSchool API')
     .setDescription('AMSchool API 문서')
