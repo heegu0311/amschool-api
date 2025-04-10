@@ -5,14 +5,12 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install -g pnpm
+RUN npm install -g npm@latest
 
-RUN pnpm install
-
-RUN pnpm add bcrypt express
+RUN npm install
 
 COPY . .
 
-RUN pnpm run build
+RUN npm run build
 
 CMD ["node", "dist/main.js"]
