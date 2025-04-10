@@ -9,6 +9,8 @@ RUN npm install -g pnpm
 
 RUN pnpm install
 
+RUN pnpm add bcrypt express
+
 COPY . .
 
 RUN pnpm run build
