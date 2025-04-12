@@ -41,7 +41,7 @@ export class EmailVerificationService {
     }
   }
 
-  async verifyEmail(email: string, code: string): Promise<void> {
+  async verifyCode(email: string, code: string): Promise<void> {
     const verification = await this.emailVerificationRepository.findOne({
       where: { email },
       order: { createdAt: 'DESC' },

@@ -16,16 +16,14 @@ export class SocialAuthService {
     if (!user) {
       user = await this.usersService.create({
         email: socialUser.email,
-        name: socialUser.name,
-        provider: socialUser.provider,
-        providerId: socialUser.providerId,
         username: socialUser.email.split('@')[0],
         password: '',
-        signinProvider: socialUser.provider,
-        nickname: socialUser.name,
+        signin_provider: socialUser.provider,
         intro: '',
-        userType: 'user',
-        profile: '',
+        user_type: 'patient',
+        profile_image: '',
+        profile_type: 'default',
+        is_admin: false,
       });
     }
 

@@ -1,10 +1,5 @@
-import {
-  Column,
-  Entity,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  JoinColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 
 @Entity('survey_answer')
 export class SurveyAnswer {
@@ -12,12 +7,20 @@ export class SurveyAnswer {
   id: number;
 
   @Column()
-  name: string;
+  value: string;
 
   @Column()
-  user_id: number;
+  answer: string;
 
-  @OneToOne('User', 'surveyAnswer')
-  @JoinColumn({ name: 'user_id' })
-  user: any;
+  @Column()
+  emoji: string;
+
+  @OneToMany(
+    () => SurveyAnswerUser,
+    (surveyAnswerUser) => surveyAnswerUser.surveyAnswer,
+    {
+      lazy: true,
+    },
+  )
+  surveyAnswerUsers: Promise<SurveyAnswerUser[]>;
 }
