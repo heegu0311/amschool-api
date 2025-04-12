@@ -4,6 +4,7 @@ import {
   MinLength,
   IsOptional,
   IsBoolean,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -16,14 +17,21 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    description: '사용자 비밀번호 (최소 6자)',
+    description: '사용자 비밀번호',
     example: 'password123',
     required: false,
   })
   @IsString()
   @IsOptional()
-  @MinLength(6)
   password?: string;
+
+  @ApiProperty({
+    description: '사용자 유형',
+    example: 'patient',
+    enum: ['patient', 'supporter'],
+  })
+  @IsEnum(['patient', 'supporter'])
+  user_type: 'patient' | 'supporter';
 
   @ApiProperty({
     description: '사용자 이름',
@@ -34,12 +42,19 @@ export class CreateUserDto {
   username: string;
 
   @ApiProperty({
-    description: '사용자 닉네임',
-    example: '길동이',
+    description: '프로필 타입',
+    example: 'default',
+    enum: ['default', 'upload'],
+  })
+  @IsEnum(['default', 'upload'])
+  profile_type: 'default' | 'upload';
+
+  @ApiProperty({
+    description: '프로필 이미지 URL',
+    example: 'https://example.com/profile.jpg',
   })
   @IsString()
-  @MinLength(2)
-  nickname: string;
+  profile_image: string;
 
   @ApiProperty({
     description: '사용자 소개',
@@ -49,55 +64,23 @@ export class CreateUserDto {
   intro: string;
 
   @ApiProperty({
-    description: '사용자 유형',
-    example: 'patient',
-  })
-  @IsString()
-  userType: string;
-
-  @ApiProperty({
-    description: '프로필 이미지 URL',
-    example: 'https://example.com/profile.jpg',
-  })
-  @IsString()
-  profile: string;
-
-  @ApiProperty({
     description: '암 정보 공개 여부',
-    example: true,
+    example: false,
     required: false,
   })
   @IsBoolean()
   @IsOptional()
-  isCancerPublic?: boolean;
-
-  @ApiProperty({
-    description: '로그인 제공자',
-    example: 'local',
-  })
-  @IsString()
-  signinProvider: string;
+  is_public?: boolean;
 
   @ApiProperty({
     description: '소셜 로그인 제공자',
-    example: 'google',
-    required: false,
+    example: 'email',
   })
   @IsString()
-  @IsOptional()
-  provider?: string;
+  signin_provider: string;
 
   @ApiProperty({
-    description: '소셜 로그인 제공자 ID',
-    example: '123456789',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  providerId?: string;
-
-  @ApiProperty({
-    description: '계정 활성화 상태',
+    description: '활성화 여부',
     example: true,
     required: false,
   })
@@ -112,14 +95,5 @@ export class CreateUserDto {
   })
   @IsBoolean()
   @IsOptional()
-  isAdmin?: boolean;
-
-  @ApiProperty({
-    description: '실명',
-    example: '홍길동',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  name?: string;
+  is_admin: boolean;
 }

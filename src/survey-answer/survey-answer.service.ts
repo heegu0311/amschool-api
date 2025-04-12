@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SurveyAnswer } from './entities/survey-answer.entity';
 
 @Injectable()
 export class SurveyAnswerService {
-  findAll() {
-    return `This action returns all surveyAnswer`;
+  constructor(
+    @InjectRepository(SurveyAnswer)
+    private surveyAnswerRepository: Repository<SurveyAnswer>,
+  ) {}
+
+  findAll(): Promise<SurveyAnswer[]> {
+    return this.surveyAnswerRepository.find();
   }
 
   findOne(id: number) {

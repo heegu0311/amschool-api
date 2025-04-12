@@ -36,5 +36,5 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     example: 'email',
     required: false,
   })
-  signinProvider?: string;
+  provider?: string;
 }

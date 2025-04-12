@@ -1,17 +1,13 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { SurveyAnswerService } from './survey-answer.service';
-
-@Controller('survey-answer')
+import { Public } from '../auth/decorators/public.decorator';
+@Controller('survey-answers')
 export class SurveyAnswerController {
   constructor(private readonly surveyAnswerService: SurveyAnswerService) {}
 
   @Get()
+  @Public()
   findAll() {
     return this.surveyAnswerService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.surveyAnswerService.findOne(+id);
   }
 }

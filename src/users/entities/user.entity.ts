@@ -1,55 +1,50 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn,
   DeleteDateColumn,
+  Entity,
   OneToMany,
-  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
+import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 30 })
-  username: string;
+  @Column({ length: 60, unique: true })
+  email: string;
 
   @Column({ nullable: true })
   password: string;
 
-  @Column({ length: 60, unique: true })
-  email: string;
-
   @Column({ default: true })
-  isActive: boolean;
+  is_active: boolean;
 
   @Column({ nullable: true })
   provider: string;
 
-  @Column({ nullable: true })
-  providerId: string;
+  @Column()
+  @Column({ type: 'enum', enum: ['patient', 'supporter'] })
+  user_type: 'patient' | 'supporter';
 
-  @Column({ default: false })
-  is_admin: boolean;
+  @Column({ length: 30 })
+  username: string;
+
+  @Column({ type: 'enum', enum: ['default', 'upload'] })
+  profile_type: 'default' | 'upload';
 
   @Column()
-  user_type: string;
-
-  @Column()
-  profile: string;
-
-  @Column()
-  nickname: string;
+  profile_image: string;
 
   @Column()
   intro: string;
 
   @Column({ default: false })
-  is_cancer_public: boolean;
+  is_public: boolean;
 
   @Column()
   signin_provider: string;
@@ -68,6 +63,12 @@ export class User {
   })
   cancerUsers: Promise<CancerUser[]>;
 
-  @OneToOne('SurveyAnswer', 'user')
-  surveyAnswer: any;
+  @OneToMany(
+    () => SurveyAnswerUser,
+    (surveyAnswerUser) => surveyAnswerUser.user,
+    {
+      lazy: true,
+    },
+  )
+  surveyAnswerUsers: Promise<SurveyAnswerUser[]>;
 }

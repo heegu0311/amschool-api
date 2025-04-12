@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/users.service';
@@ -138,7 +137,7 @@ export class AuthService {
         password: hashedPassword,
         username: completeRegistrationDto.email.split('@')[0],
         isActive: true,
-        signinProvider: 'email',
+        signin_provider: 'email',
       });
 
       return this.generateTokens(user.id, user.email);
