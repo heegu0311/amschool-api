@@ -15,30 +15,25 @@ export class EmailVerificationService {
   ) {}
 
   async sendVerificationEmail(email: string): Promise<void> {
-    try {
-      // 이전 인증 코드가 있다면 삭제
-      await this.emailVerificationRepository.delete({ email });
+    // 이전 인증 코드가 있다면 삭제
+    await this.emailVerificationRepository.delete({ email });
 
-      // 새로운 인증 코드 생성
-      const verificationCode = crypto
-        .randomBytes(3)
-        .toString('hex')
-        .toUpperCase();
+    // 새로운 인증 코드 생성
+    const verificationCode = crypto
+      .randomBytes(3)
+      .toString('hex')
+      .toUpperCase();
 
-      // 인증 정보 저장
-      const emailVerification = this.emailVerificationRepository.create({
-        email,
-        code: verificationCode,
-        expiresAt: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
-      });
-      await this.emailVerificationRepository.save(emailVerification);
+    // 인증 정보 저장
+    const emailVerification = this.emailVerificationRepository.create({
+      email,
+      code: verificationCode,
+      expiresAt: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
+    });
+    await this.emailVerificationRepository.save(emailVerification);
 
-      // 이메일 발송
-      await this.emailService.sendVerificationEmail(email, verificationCode);
-    } catch (error) {
-      console.error('이메일 인증 메일 발송 실패:', error);
-      throw new BadRequestException('이메일 인증 메일 발송에 실패했습니다.');
-    }
+    // 이메일 발송
+    await this.emailService.sendVerificationEmail(email, verificationCode);
   }
 
   async verifyCode(email: string, code: string): Promise<void> {
