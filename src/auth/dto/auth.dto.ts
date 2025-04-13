@@ -69,7 +69,7 @@ export class CompleteRegistrationDto {
 
   @ApiProperty({ description: '암 종류 목록' })
   @IsArray()
-  cancerTypes: number[];
+  cancerIds: number[];
 
   @ApiProperty({ description: '공개 여부' })
   @IsBoolean()

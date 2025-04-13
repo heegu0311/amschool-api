@@ -10,10 +10,12 @@ import { AuthService } from './services/auth.service';
 import { EmailVerificationService } from './services/email-verification.service';
 import { SocialAuthService } from './services/social-auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CancerUserModule } from '../cancer-user/cancer-user.module';
 
 @Module({
   imports: [
     UsersModule,
+    CancerUserModule,
     TypeOrmModule.forFeature([EmailVerification, RefreshToken]),
   ],
   controllers: [AuthController, SocialAuthController],

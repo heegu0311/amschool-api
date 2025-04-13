@@ -19,15 +19,11 @@ export class CancerUser {
   @Column()
   cancerId: number;
 
-  @ManyToOne(() => User, (user) => user.cancerUsers, {
-    lazy: true,
-  })
+  @ManyToOne(() => User, (user) => user.cancerUsers)
   @JoinColumn({ name: 'user_id' })
   user: Promise<User>;
 
-  @ManyToOne(() => Cancer, (cancer) => cancer.cancerUsers, {
-    lazy: true,
-  })
+  @ManyToOne(() => Cancer, (cancer) => cancer.cancerUsers)
   @JoinColumn({ name: 'cancer_id' })
   cancer: Promise<Cancer>;
 }

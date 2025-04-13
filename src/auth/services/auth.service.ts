@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { UsersService } from 'src/users/users.service';
+import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailVerificationService: EmailVerificationService,
+    private readonly cancerUserService: CancerUserService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
   ) {}
@@ -135,6 +137,21 @@ export class AuthService {
         ...completeRegistrationDto,
         password: hashedPassword,
       });
+
+      // 선택된 암 정보가 있는 경우 cancer_user 테이블에 추가
+      if (
+        completeRegistrationDto.cancerIds &&
+        completeRegistrationDto.cancerIds.length > 0
+      ) {
+        await Promise.all(
+          completeRegistrationDto.cancerIds.map(async (cancerId) => {
+            await this.cancerUserService.create({
+              userId: user.id,
+              cancerId,
+            });
+          }),
+        );
+      }
 
       return this.generateTokens(user.id, user.email);
     } catch (error) {

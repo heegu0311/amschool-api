@@ -9,8 +9,6 @@ export class Cancer {
   @Column()
   name: string;
 
-  @OneToMany(() => CancerUser, (cancerUser) => cancerUser.cancer, {
-    lazy: true,
-  })
+  @OneToMany(() => CancerUser, (cancerUser) => cancerUser.cancer)
   cancerUsers: Promise<CancerUser[]>;
 }
