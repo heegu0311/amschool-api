@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Request, HttpCode } from '@nestjs/common';
 import { AuthService } from '../../auth/services/auth.service';
 import { LoginDto } from '../dto/login.dto';
-import { RegisterDto as sendVerificationEmailDto } from '../dto/register.dto';
+import { SendVerificationEmailDto } from '../dto/send-verification-email.dto';
 import { VerifyEmailDto as VerifyCodeDto } from '../dto/verify-email.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { CompleteRegistrationDto } from '../dto/complete-registration.dto';
@@ -20,7 +20,7 @@ export class AuthController {
   @Public()
   @Post('send-verification-email')
   async sendVerificationEmail(
-    @Body() sendVerificationEmailDto: sendVerificationEmailDto,
+    @Body() sendVerificationEmailDto: SendVerificationEmailDto,
   ): Promise<{ message: string }> {
     // 이메일 인증 코드 생성 및 발송
     await this.emailVerificationService.sendVerificationEmail(
