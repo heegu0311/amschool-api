@@ -10,6 +10,7 @@ import {
   VerifyEmailDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
+import { User } from 'src/users/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -46,10 +47,9 @@ export class AuthController {
   }
 
   @Public()
+  @HttpCode(200)
   @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async login(@Body() loginDto: LoginDto): Promise<User> {
     return this.authService.login(loginDto);
   }
 
