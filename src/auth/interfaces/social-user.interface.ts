@@ -5,8 +5,8 @@ export interface SocialUser {
   providerId: string;
   username: string;
   password: string;
-  signin_provider: 'kakao' | 'naver' | 'google';
+  signinProvider: 'kakao' | 'naver' | 'google';
   nickname: string;
   intro: string;
-  is_cancer_public: boolean;
+  isPublic: boolean;
 }

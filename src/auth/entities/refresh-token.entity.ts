@@ -3,7 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
-  ManyToOne,
+  OneToOne,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
@@ -20,15 +20,15 @@ export class RefreshToken {
   token: string;
 
   @Column()
-  expires_at: Date;
+  expiresAt: Date;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @Column({ default: false })
   isRevoked: boolean;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user: User;
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: Promise<User>;
 }

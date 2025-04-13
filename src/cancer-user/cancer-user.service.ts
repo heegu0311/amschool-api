@@ -13,8 +13,8 @@ export class CancerUserService {
 
   create(createCancerUserDto: CreateCancerUserDto) {
     const cancerUser = new CancerUser();
-    cancerUser.user_id = createCancerUserDto.userId;
-    cancerUser.cancer_id = createCancerUserDto.cancerId;
+    cancerUser.userId = createCancerUserDto.userId;
+    cancerUser.cancerId = createCancerUserDto.cancerId;
     return this.cancerUserRepository.save(cancerUser);
   }
 

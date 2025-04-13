@@ -1,13 +1,15 @@
-import { Body, Controller, Post, Request, HttpCode } from '@nestjs/common';
-import { AuthService } from '../../auth/services/auth.service';
-import { LoginDto } from '../dto/login.dto';
-import { SendVerificationEmailDto } from '../dto/send-verification-email.dto';
-import { VerifyEmailDto as VerifyCodeDto } from '../dto/verify-email.dto';
-import { EmailVerificationService } from '../services/email-verification.service';
-import { CompleteRegistrationDto } from '../dto/complete-registration.dto';
-import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { Public } from '../decorators/public.decorator';
+import { Body, Controller, HttpCode, Post, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AuthService } from '../../auth/services/auth.service';
+import { Public } from '../decorators/public.decorator';
+import {
+  CompleteRegistrationDto,
+  LoginDto,
+  RefreshTokenDto,
+  SendVerificationEmailDto,
+  VerifyEmailDto,
+} from '../dto/auth.dto';
+import { EmailVerificationService } from '../services/email-verification.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -33,7 +35,7 @@ export class AuthController {
   @HttpCode(200)
   @Post('verify-code')
   async verifyCode(
-    @Body() verifyCodeDto: VerifyCodeDto,
+    @Body() verifyCodeDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
     await this.emailVerificationService.verifyCode(
       verifyCodeDto.email,

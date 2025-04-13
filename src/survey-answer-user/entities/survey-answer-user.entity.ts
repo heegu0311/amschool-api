@@ -30,13 +30,4 @@ export class SurveyAnswerUser {
   )
   @JoinColumn({ name: 'survey_answer_id' })
   surveyAnswer: Promise<SurveyAnswer>;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @DeleteDateColumn()
-  deleted_at: Date;
 }

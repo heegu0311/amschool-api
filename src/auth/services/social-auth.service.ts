@@ -14,17 +14,7 @@ export class SocialAuthService {
     let user = await this.usersService.findByEmail(socialUser.email);
 
     if (!user) {
-      user = await this.usersService.create({
-        email: socialUser.email,
-        username: socialUser.email.split('@')[0],
-        password: '',
-        signin_provider: socialUser.provider,
-        intro: '',
-        user_type: 'patient',
-        profile_image: '',
-        profile_type: 'default',
-        is_admin: false,
-      });
+      user = await this.usersService.create(socialUser as any);
     }
 
     const payload = { sub: user.id, email: user.email };

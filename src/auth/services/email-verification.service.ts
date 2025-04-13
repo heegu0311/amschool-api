@@ -28,7 +28,7 @@ export class EmailVerificationService {
     const emailVerification = this.emailVerificationRepository.create({
       email,
       code: verificationCode,
-      expires_at: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
+      expiresAt: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
     });
     await this.emailVerificationRepository.save(emailVerification);
 
@@ -39,14 +39,14 @@ export class EmailVerificationService {
   async verifyCode(email: string, code: string): Promise<void> {
     const verification = await this.emailVerificationRepository.findOne({
       where: { email },
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
 
     if (!verification) {
       throw new BadRequestException('인증 코드를 찾을 수 없습니다.');
     }
 
-    if (dayjs(verification.expires_at).isBefore(dayjs())) {
+    if (dayjs(verification.expiresAt).isBefore(dayjs())) {
       throw new BadRequestException('인증 코드가 만료되었습니다.');
     }
 
@@ -62,7 +62,7 @@ export class EmailVerificationService {
   async isEmailVerified(email: string): Promise<boolean> {
     const verification = await this.emailVerificationRepository.findOne({
       where: { email, isVerified: true },
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
     return !!verification;
   }

@@ -18,9 +18,6 @@ export class SurveyAnswer {
   @OneToMany(
     () => SurveyAnswerUser,
     (surveyAnswerUser) => surveyAnswerUser.surveyAnswer,
-    {
-      lazy: true,
-    },
   )
   surveyAnswerUsers: Promise<SurveyAnswerUser[]>;
 }

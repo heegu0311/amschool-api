@@ -4,9 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../../users/users.service';
-import { LoginDto } from '../dto/login.dto';
-import { CompleteRegistrationDto } from '../dto/complete-registration.dto';
+import { LoginDto, CompleteRegistrationDto } from '../dto/auth.dto';
 import { EmailVerificationService } from './email-verification.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,13 +12,14 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-    private emailVerificationService: EmailVerificationService,
+    private readonly userService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly emailVerificationService: EmailVerificationService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
   ) {}
@@ -49,7 +48,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findByEmail(loginDto.email);
+    const user = await this.userService.findByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
@@ -79,8 +78,8 @@ export class AuthService {
       throw new UnauthorizedException('만료된 refresh token입니다.');
     }
 
-    // 새로운 Access Token 발급
-    const payload = { sub: tokenEntity.user.id, email: tokenEntity.user.email };
+    const user = await tokenEntity.user;
+    const payload = { sub: user.id, email: user.email };
     const newAccessToken = await this.jwtService.signAsync(payload);
 
     // Refresh Token Rotation
@@ -95,7 +94,7 @@ export class AuthService {
 
     // 새로운 Refresh Token 저장
     await this.refreshTokenRepository.save({
-      userId: tokenEntity.user.id,
+      userId: user.id,
       token: newRefreshToken,
       expiresAt: newExpiresAt,
     });
@@ -132,12 +131,9 @@ export class AuthService {
     );
 
     try {
-      const user = await this.usersService.create({
+      const user = await this.userService.create({
         ...completeRegistrationDto,
         password: hashedPassword,
-        username: completeRegistrationDto.email.split('@')[0],
-        isActive: true,
-        signin_provider: 'email',
       });
 
       return this.generateTokens(user.id, user.email);

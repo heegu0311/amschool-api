@@ -1,17 +1,40 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSourceOptions, DefaultNamingStrategy } from 'typeorm';
+import { DataSourceOptions } from 'typeorm';
+import { DefaultNamingStrategy } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { CancerUserModule } from './cancer-user/cancer-user.module';
+import { CancerModule } from './cancer/cancer.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
-import { UsersModule } from './users/users.module';
-import { CancerModule } from './cancer/cancer.module';
-import { CancerUserModule } from './cancer-user/cancer-user.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
-import { AuthModule } from './auth/auth.module';
-import { JwtModule } from '@nestjs/jwt';
+import { UsersModule } from './users/users.module';
+
+export class SnakeNamingStrategy extends DefaultNamingStrategy {
+  tableName(targetName: string, userSpecifiedName: string): string {
+    return (
+      userSpecifiedName ||
+      targetName
+        .replace(/([A-Z])/g, '_$1')
+        .toLowerCase()
+        .replace(/^_/, '')
+    );
+  }
+
+  columnName(propertyName: string, customName: string): string {
+    return (
+      customName ||
+      propertyName
+        .replace(/([A-Z])/g, '_$1')
+        .toLowerCase()
+        .replace(/^_/, '')
+    );
+  }
+}
 
 @Module({
   imports: [
@@ -37,8 +60,8 @@ import { JwtModule } from '@nestjs/jwt';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false,
-        namingStrategy: new DefaultNamingStrategy(),
+        synchronize: true,
+        namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
     LoggerModule,

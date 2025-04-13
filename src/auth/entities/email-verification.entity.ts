@@ -21,11 +21,11 @@ export class EmailVerification {
   isVerified: boolean;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updatedAt: Date;
 
   @Column()
-  expires_at: Date;
+  expiresAt: Date;
 }

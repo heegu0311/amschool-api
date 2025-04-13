@@ -14,10 +14,10 @@ export class CancerUser {
   id: number;
 
   @Column()
-  user_id: number;
+  userId: number;
 
   @Column()
-  cancer_id: number;
+  cancerId: number;
 
   @ManyToOne(() => User, (user) => user.cancerUsers, {
     lazy: true,
