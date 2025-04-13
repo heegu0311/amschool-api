@@ -20,10 +20,10 @@ export class RefreshToken {
   token: string;
 
   @Column()
-  expiresAt: Date;
+  expires_at: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @Column({ default: false })
   isRevoked: boolean;
