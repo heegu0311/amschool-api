@@ -63,7 +63,7 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
 
-    return user;
+    return { ...user, image: user.profileImage };
   }
 
   async refreshAccessToken(refreshToken: string) {
