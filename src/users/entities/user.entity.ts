@@ -69,5 +69,5 @@ export class User {
   surveyAnswerUsers: Promise<SurveyAnswerUser[]>;
 
   @OneToOne(() => RefreshToken)
-  refreshToken: RefreshToken;
+  refreshToken: Promise<RefreshToken>;
 }
