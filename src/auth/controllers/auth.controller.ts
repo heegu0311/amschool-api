@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Request } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Request, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../../auth/services/auth.service';
 import { Public } from '../decorators/public.decorator';
@@ -8,9 +8,11 @@ import {
   RefreshTokenDto,
   SendVerificationEmailDto,
   VerifyEmailDto,
+  LogoutDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { User } from 'src/users/entities/user.entity';
+import { Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -61,10 +63,29 @@ export class AuthController {
     return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
   }
 
-  @ApiBearerAuth('access-token')
+  @Public()
   @Post('logout')
-  async logout(@Request() req): Promise<{ message: string }> {
-    await this.authService.revokeRefreshToken(req.user.id);
+  async logout(
+    @Body() logoutDto: LogoutDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
+    await this.authService.revokeRefreshToken(logoutDto.userId);
+
+    // 쿠키 삭제
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
     return { message: '로그아웃되었습니다.' };
   }
 

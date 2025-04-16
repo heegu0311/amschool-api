@@ -6,6 +6,7 @@ import {
   IsArray,
   IsOptional,
   MinLength,
+  IsNumber,
 } from 'class-validator';
 
 export class SendVerificationEmailDto {
@@ -108,4 +109,10 @@ export class CompleteRegistrationDto {
   @ApiProperty({ description: '이름' })
   @IsString()
   name: string;
+}
+
+export class LogoutDto {
+  @ApiProperty({ description: '사용자 ID' })
+  @IsNumber()
+  userId: number;
 }
