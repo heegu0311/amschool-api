@@ -63,7 +63,9 @@ export class AuthService {
       throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
     }
 
-    return { ...user, image: user.profileImage };
+    const tokens = await this.generateTokens(user.id, user.email);
+
+    return { ...user, ...tokens };
   }
 
   async refreshAccessToken(refreshToken: string) {
@@ -112,6 +114,8 @@ export class AuthService {
       { userId, isRevoked: false },
       { isRevoked: true },
     );
+
+    return { message: '로그아웃되었습니다.' };
   }
 
   async completeRegistration(completeRegistrationDto: CompleteRegistrationDto) {
