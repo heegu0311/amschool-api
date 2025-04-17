@@ -1,18 +1,17 @@
-import { Body, Controller, HttpCode, Post, Request, Res } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthService } from '../../auth/services/auth.service';
 import { Public } from '../decorators/public.decorator';
 import {
   CompleteRegistrationDto,
   LoginDto,
+  LogoutDto,
   RefreshTokenDto,
   SendVerificationEmailDto,
   VerifyEmailDto,
-  LogoutDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
-import { User } from 'src/users/entities/user.entity';
-import { Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -58,11 +57,26 @@ export class AuthController {
   }
 
   @Public()
+  @HttpCode(200)
   @Post('refresh')
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<{ accessToken: string }> {
-    return this.authService.refreshAccessToken(refreshTokenDto.refreshToken);
+    const result = await this.authService.refreshAccessToken(
+      refreshTokenDto.refreshToken,
+    );
+
+    // 액세스 토큰을 쿠키로 설정
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 * 1000, // 15분 (밀리초 단위)
+    });
+
+    return result;
   }
 
   @Public()
@@ -74,14 +88,14 @@ export class AuthController {
     await this.authService.revokeRefreshToken(logoutDto.userId);
 
     // 쿠키 삭제
-    res.clearCookie('access_token', {
+    res.clearCookie('accessToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
     });
 
-    res.clearCookie('refresh_token', {
+    res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

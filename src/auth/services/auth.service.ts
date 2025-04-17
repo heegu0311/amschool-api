@@ -79,6 +79,11 @@ export class AuthService {
     }
 
     if (dayjs(tokenEntity.expiresAt).isBefore(dayjs())) {
+      // 기존 토큰 폐기
+      await this.refreshTokenRepository.update(
+        { id: tokenEntity.id },
+        { isRevoked: true },
+      );
       throw new UnauthorizedException('만료된 refresh token입니다.');
     }
 
@@ -86,26 +91,8 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email };
     const newAccessToken = await this.jwtService.signAsync(payload);
 
-    // Refresh Token Rotation
-    const newRefreshToken = uuidv4();
-    const newExpiresAt = dayjs().add(14, 'day').toDate();
-
-    // 기존 토큰 폐기
-    await this.refreshTokenRepository.update(
-      { id: tokenEntity.id },
-      { isRevoked: true },
-    );
-
-    // 새로운 Refresh Token 저장
-    await this.refreshTokenRepository.save({
-      userId: user.id,
-      token: newRefreshToken,
-      expiresAt: newExpiresAt,
-    });
-
     return {
       accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
     };
   }
 
