@@ -1,16 +1,23 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
-  UseGuards,
+  Patch,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
-import { QuestionsService } from './questions.service';
-import { CreateQuestionDto } from './dto/create-question.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
+import { QuestionsService } from './questions.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('questions')
+@ApiBearerAuth('accessToken')
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
@@ -21,6 +28,7 @@ export class QuestionsController {
     return await this.questionsService.create(createQuestionDto, req.user.id);
   }
 
+  @Public()
   @Get()
   async findAll() {
     return await this.questionsService.findAll();
@@ -33,19 +41,25 @@ export class QuestionsController {
 
   @Post(':id/ai-answer')
   @UseGuards(JwtAuthGuard)
-  async createAiAnswer(
-    @Param('id') id: string,
-    @Body('content') content: string,
-  ) {
-    return await this.questionsService.createAiAnswer(+id, content);
+  async createAiAnswer(@Param('id') id: string) {
+    return await this.questionsService.createAiAnswer(+id);
   }
 
-  @Post('ai-answer/:id/feedback')
+  @Patch(':id/ai-answer/feedback')
   @UseGuards(JwtAuthGuard)
   async updateAiFeedback(
     @Param('id') id: string,
-    @Body('feedbackPoint') feedbackPoint: number,
+    @Body() updateAiFeedbackDto: UpdateAiFeedbackDto,
   ) {
-    return await this.questionsService.updateAiFeedback(+id, feedbackPoint);
+    return await this.questionsService.updateAiFeedback(
+      +id,
+      updateAiFeedbackDto.feedbackPoint,
+    );
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id') id: string) {
+    return await this.questionsService.delete(+id);
   }
 }

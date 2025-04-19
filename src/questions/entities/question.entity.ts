@@ -1,12 +1,13 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
-  JoinColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
@@ -34,10 +35,13 @@ export class Question {
   @UpdateDateColumn()
   updated_at: Date;
 
+  @DeleteDateColumn()
+  deleted_at: Date;
+
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'author_id' })
   author: User;
 
-  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question)
+  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, { cascade: true })
   aiAnswer: AiAnswer;
 }
