@@ -1,12 +1,13 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
   Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { Cancer } from '../../cancer/entities/cancer.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class CancerUser {
@@ -21,9 +22,9 @@ export class CancerUser {
 
   @ManyToOne(() => User, (user) => user.cancerUsers)
   @JoinColumn({ name: 'user_id' })
-  user: Promise<User>;
+  user: Relation<User>;
 
   @ManyToOne(() => Cancer, (cancer) => cancer.cancerUsers)
   @JoinColumn({ name: 'cancer_id' })
-  cancer: Promise<Cancer>;
+  cancer: Relation<Cancer>;
 }

@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToOne,
+  Relation,
 } from 'typeorm';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
@@ -59,15 +60,15 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => CancerUser, (cancerUser) => cancerUser.user, {})
-  cancerUsers: Promise<CancerUser[]>;
+  @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user)
+  cancerUsers: Relation<CancerUser[]>;
 
   @OneToMany(
     () => SurveyAnswerUser,
-    (surveyAnswerUser) => surveyAnswerUser.user,
+    (surveyAnswerUser: SurveyAnswerUser) => surveyAnswerUser.user,
   )
-  surveyAnswerUsers: Promise<SurveyAnswerUser[]>;
+  surveyAnswerUsers: Relation<SurveyAnswerUser[]>;
 
   @OneToOne(() => RefreshToken)
-  refreshToken: Promise<RefreshToken>;
+  refreshToken: Relation<RefreshToken>;
 }

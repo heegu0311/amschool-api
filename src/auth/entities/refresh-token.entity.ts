@@ -1,10 +1,11 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -30,5 +31,5 @@ export class RefreshToken {
 
   @ManyToOne(() => User, (user) => user.refreshToken)
   @JoinColumn({ name: 'user_id' })
-  user: Promise<User>;
+  user: Relation<User>;
 }

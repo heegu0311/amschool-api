@@ -6,6 +6,7 @@ import {
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 import { Question } from './question.entity';
 
@@ -37,5 +38,5 @@ export class AiAnswer {
 
   @OneToOne(() => Question, (question) => question.aiAnswer)
   @JoinColumn({ name: 'question_id' })
-  question: Promise<Question>;
+  question: Relation<Question>;
 }
