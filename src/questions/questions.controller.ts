@@ -7,14 +7,17 @@ import {
   Patch,
   Post,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
 import { QuestionsService } from './questions.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('questions')
 @ApiBearerAuth('accessToken')
@@ -24,7 +27,16 @@ export class QuestionsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() createQuestionDto: CreateQuestionDto, @Request() req) {
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  async create(
+    @Body() createQuestionDto: CreateQuestionDto,
+    @Request() req,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      createQuestionDto.image = file;
+    }
     return await this.questionsService.create(createQuestionDto, req.user.id);
   }
 

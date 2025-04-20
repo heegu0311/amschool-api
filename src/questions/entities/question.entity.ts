@@ -43,5 +43,5 @@ export class Question {
   author: User;
 
   @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, { cascade: true })
-  aiAnswer: AiAnswer;
+  aiAnswer: Promise<AiAnswer>;
 }

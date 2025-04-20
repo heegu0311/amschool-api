@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
+import { S3Service } from 'src/common/services/s3.service';
+import { ImageService } from '../common/services/image.service';
 
 @Injectable()
 export class QuestionsService {
@@ -19,6 +21,8 @@ export class QuestionsService {
     @InjectRepository(AiAnswer)
     private aiAnswerRepository: Repository<AiAnswer>,
     private configService: ConfigService,
+    private s3Service: S3Service,
+    private imageService: ImageService,
   ) {
     this.openai = new OpenAI({
       apiKey: this.configService.get<string>('OPENAI_API_KEY'),
@@ -33,7 +37,18 @@ export class QuestionsService {
       ...createQuestionDto,
       author_id: userId,
     });
-    return await this.questionsRepository.save(question);
+
+    const savedQuestion = await this.questionsRepository.save(question);
+
+    if (createQuestionDto.image) {
+      await this.imageService.uploadImage(
+        createQuestionDto.image,
+        'question',
+        savedQuestion.id,
+      );
+    }
+
+    return savedQuestion;
   }
 
   async findAll(): Promise<Question[]> {
@@ -201,11 +216,16 @@ export class QuestionsService {
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }
-    await this.questionsRepository.softRemove(question);
+
+    // 이미지 삭제
+    await this.imageService.deleteImagesByEntity('question', id);
 
     // 연관된 AiAnswer도 soft delete
-    if (question.aiAnswer) {
-      await this.aiAnswerRepository.softRemove(question.aiAnswer);
+    const aiAnswer = await question.aiAnswer;
+    if (aiAnswer) {
+      await this.aiAnswerRepository.softRemove(aiAnswer);
     }
+
+    await this.questionsRepository.softRemove(question);
   }
 }

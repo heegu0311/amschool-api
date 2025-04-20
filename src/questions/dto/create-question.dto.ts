@@ -1,14 +1,21 @@
-import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateQuestionDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   title: string;
 
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   content: string;
 
-  @IsEnum(['public', 'private'])
-  access_level: string;
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
+  image?: Express.Multer.File;
+
+  @IsOptional()
+  access_level?: string;
 }
