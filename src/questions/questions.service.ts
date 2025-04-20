@@ -11,6 +11,8 @@ import * as path from 'path';
 import { S3Service } from 'src/common/services/s3.service';
 import { ImageService } from '../common/services/image.service';
 import { Image } from '../common/entities/image.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 
 @Injectable()
 export class QuestionsService {
@@ -70,11 +72,28 @@ export class QuestionsService {
     return savedQuestion;
   }
 
-  async findAll(): Promise<Question[]> {
-    return await this.questionsRepository.find({
+  async findAll(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Question>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [items, totalItems] = await this.questionsRepository.findAndCount({
       where: { deleted_at: undefined },
       relations: ['author', 'aiAnswer', 'images'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { created_at: 'DESC' },
     });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async findOne(id: number): Promise<Question> {
@@ -240,7 +259,7 @@ export class QuestionsService {
     await this.imageService.deleteImagesByEntity('question', id);
 
     // 연관된 AiAnswer도 soft delete
-    const aiAnswer = await question.aiAnswer;
+    const aiAnswer = question.aiAnswer;
     if (aiAnswer) {
       await this.aiAnswerRepository.softRemove(aiAnswer);
     }
@@ -248,14 +267,31 @@ export class QuestionsService {
     await this.questionsRepository.softRemove(question);
   }
 
-  async findByAuthorId(authorId: number): Promise<Question[]> {
-    return await this.questionsRepository.find({
+  async findByAuthorId(
+    authorId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Question>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [items, totalItems] = await this.questionsRepository.findAndCount({
       where: {
         author_id: authorId,
         deleted_at: undefined,
       },
       relations: ['author', 'aiAnswer', 'images'],
+      skip: (page - 1) * limit,
+      take: limit,
       order: { created_at: 'DESC' },
     });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 }

@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Request,
   UploadedFiles,
   UseGuards,
@@ -18,7 +19,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
 import { QuestionsService } from './questions.service';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { Question } from './entities/question.entity';
 
 @ApiTags('questions')
 @ApiBearerAuth('accessToken')
@@ -47,14 +51,26 @@ export class QuestionsController {
 
   @Public()
   @Get()
-  async findAll() {
-    return await this.questionsService.findAll();
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Question>> {
+    return await this.questionsService.findAll(paginationDto);
   }
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  async findMyQuestions(@Request() req) {
-    return await this.questionsService.findByAuthorId(req.user.id);
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findMyQuestions(
+    @Request() req,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Question>> {
+    return await this.questionsService.findByAuthorId(
+      req.user.id,
+      paginationDto,
+    );
   }
 
   @Get(':id')
