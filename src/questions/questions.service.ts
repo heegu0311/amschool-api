@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { S3Service } from 'src/common/services/s3.service';
 import { ImageService } from '../common/services/image.service';
+import { Image } from '../common/entities/image.entity';
 
 @Injectable()
 export class QuestionsService {
@@ -20,6 +21,8 @@ export class QuestionsService {
     private questionsRepository: Repository<Question>,
     @InjectRepository(AiAnswer)
     private aiAnswerRepository: Repository<AiAnswer>,
+    @InjectRepository(Image)
+    private imageRepository: Repository<Image>,
     private configService: ConfigService,
     private s3Service: S3Service,
     private imageService: ImageService,
@@ -40,12 +43,28 @@ export class QuestionsService {
 
     const savedQuestion = await this.questionsRepository.save(question);
 
-    if (createQuestionDto.image) {
-      await this.imageService.uploadImage(
-        createQuestionDto.image,
-        'question',
-        savedQuestion.id,
-      );
+    if (createQuestionDto.images && createQuestionDto.images.length > 0) {
+      const uploadPromises = createQuestionDto.images.map(async (image) => {
+        const uploadedImage = await this.imageService.uploadImage(
+          image,
+          'question',
+          savedQuestion.id,
+        );
+
+        const imageEntity = this.imageRepository.create({
+          url: uploadedImage.url,
+          originalName: image.originalname,
+          mimeType: image.mimetype,
+          size: image.size,
+          entityType: 'question',
+          entityId: savedQuestion.id,
+          question: savedQuestion,
+        });
+
+        return this.imageRepository.save(imageEntity);
+      });
+
+      await Promise.all(uploadPromises);
     }
 
     return savedQuestion;
@@ -54,14 +73,14 @@ export class QuestionsService {
   async findAll(): Promise<Question[]> {
     return await this.questionsRepository.find({
       where: { deleted_at: undefined },
-      relations: ['author', 'aiAnswer'],
+      relations: ['author', 'aiAnswer', 'images'],
     });
   }
 
   async findOne(id: number): Promise<Question> {
     const question = await this.questionsRepository.findOne({
       where: { id, deleted_at: undefined },
-      relations: ['author', 'aiAnswer'],
+      relations: ['author', 'aiAnswer', 'images'],
     });
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
@@ -235,7 +254,7 @@ export class QuestionsService {
         author_id: authorId,
         deleted_at: undefined,
       },
-      relations: ['author', 'aiAnswer'],
+      relations: ['author', 'aiAnswer', 'images'],
       order: { created_at: 'DESC' },
     });
   }

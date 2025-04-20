@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -12,6 +13,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
+import { Image } from '../../common/entities/image.entity';
 
 @Entity()
 export class Question {
@@ -41,10 +43,13 @@ export class Question {
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'author_id' })
-  author: User;
+  author: Relation<User>;
 
   @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, {
     cascade: true,
   })
   aiAnswer: Relation<AiAnswer>;
+
+  @OneToMany(() => Image, (image) => image.question)
+  images: Relation<Image[]>;
 }

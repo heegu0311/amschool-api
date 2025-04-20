@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Question } from '../../questions/entities/question.entity';
 
 @Entity()
 export class Image {
@@ -38,4 +42,8 @@ export class Image {
 
   @DeleteDateColumn()
   deletedAt: Date;
+
+  @ManyToOne(() => Question, (question) => question.images)
+  @JoinColumn({ name: 'entityId' })
+  question: Relation<Question>;
 }

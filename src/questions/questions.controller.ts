@@ -8,11 +8,11 @@ import {
   Patch,
   Post,
   Request,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
@@ -28,17 +28,21 @@ export class QuestionsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FilesInterceptor('images'))
   @ApiConsumes('multipart/form-data')
   async create(
     @Body() createQuestionDto: CreateQuestionDto,
     @Request() req,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    if (file) {
-      createQuestionDto.image = file;
+    if (files) {
+      createQuestionDto.images = files;
     }
-    return await this.questionsService.create(createQuestionDto, req.user.id);
+    const question = await this.questionsService.create(
+      createQuestionDto,
+      req.user.id,
+    );
+    return this.questionsService.findOne(question.id);
   }
 
   @Public()
