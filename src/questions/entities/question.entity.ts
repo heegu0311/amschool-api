@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
@@ -42,6 +43,8 @@ export class Question {
   @JoinColumn({ name: 'author_id' })
   author: User;
 
-  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, { cascade: true })
-  aiAnswer: Promise<AiAnswer>;
+  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, {
+    cascade: true,
+  })
+  aiAnswer: Relation<AiAnswer>;
 }

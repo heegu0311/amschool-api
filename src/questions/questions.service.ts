@@ -228,4 +228,15 @@ export class QuestionsService {
 
     await this.questionsRepository.softRemove(question);
   }
+
+  async findByAuthorId(authorId: number): Promise<Question[]> {
+    return await this.questionsRepository.find({
+      where: {
+        author_id: authorId,
+        deleted_at: undefined,
+      },
+      relations: ['author', 'aiAnswer'],
+      order: { created_at: 'DESC' },
+    });
+  }
 }

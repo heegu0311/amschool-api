@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Request,
@@ -46,32 +47,38 @@ export class QuestionsController {
     return await this.questionsService.findAll();
   }
 
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  async findMyQuestions(@Request() req) {
+    return await this.questionsService.findByAuthorId(req.user.id);
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return await this.questionsService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.questionsService.findOne(id);
   }
 
   @Post(':id/ai-answer')
   @UseGuards(JwtAuthGuard)
-  async createAiAnswer(@Param('id') id: string) {
-    return await this.questionsService.createAiAnswer(+id);
+  async createAiAnswer(@Param('id', ParseIntPipe) id: number) {
+    return await this.questionsService.createAiAnswer(id);
   }
 
   @Patch(':id/ai-answer/feedback')
   @UseGuards(JwtAuthGuard)
   async updateAiFeedback(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateAiFeedbackDto: UpdateAiFeedbackDto,
   ) {
     return await this.questionsService.updateAiFeedback(
-      +id,
+      id,
       updateAiFeedbackDto.feedbackPoint,
     );
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(@Param('id') id: string) {
-    return await this.questionsService.delete(+id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return await this.questionsService.delete(id);
   }
 }
