@@ -23,12 +23,16 @@ import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { Question } from './entities/question.entity';
+import { S3Service } from '../common/services/s3.service';
 
 @ApiTags('questions')
 @ApiBearerAuth('accessToken')
 @Controller('questions')
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(
+    private readonly questionsService: QuestionsService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -74,8 +78,17 @@ export class QuestionsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.questionsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const question = await this.questionsService.findOne(+id);
+
+    // 이미지에 대한 presigned URL 생성
+    if (question.images.length > 0) {
+      for (const image of question.images) {
+        image.url = await image.getPresignedUrl(this.s3Service);
+      }
+    }
+
+    return question;
   }
 
   @Post(':id/ai-answer')

@@ -47,4 +47,15 @@ export class S3Service {
       })
       .promise();
   }
+
+  async getPresignedUrl(
+    key: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
+    return this.s3.getSignedUrlPromise('getObject', {
+      Bucket: this.bucket,
+      Key: key,
+      Expires: expiresIn,
+    });
+  }
 }

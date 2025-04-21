@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Question } from '../../questions/entities/question.entity';
+import { S3Service } from '../services/s3.service';
 
 @Entity()
 export class Image {
@@ -46,4 +47,9 @@ export class Image {
   @ManyToOne(() => Question, (question) => question.images)
   @JoinColumn({ name: 'entityId' })
   question: Relation<Question>;
+
+  async getPresignedUrl(s3Service: S3Service): Promise<string> {
+    const key = this.url.split('/').slice(-2).join('/'); // S3 키 추출
+    return s3Service.getPresignedUrl(key);
+  }
 }
