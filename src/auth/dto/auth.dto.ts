@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEmail,
-  IsString,
-  IsBoolean,
   IsArray,
-  IsOptional,
-  MinLength,
+  IsBoolean,
+  IsEmail,
   IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
 } from 'class-validator';
 
 export class SendVerificationEmailDto {
@@ -26,11 +26,17 @@ export class VerifyEmailDto {
 }
 
 export class LoginDto {
-  @ApiProperty({ description: '이메일 주소' })
+  @ApiProperty({
+    description: '이메일 주소',
+    example: 'heegu0311@gmail.com',
+  })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: '비밀번호' })
+  @ApiProperty({
+    description: '비밀번호',
+    example: '1q2w3e4r!!',
+  })
   @IsString()
   @MinLength(8)
   password: string;

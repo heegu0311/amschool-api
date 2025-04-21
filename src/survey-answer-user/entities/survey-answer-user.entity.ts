@@ -1,14 +1,12 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
   JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { SurveyAnswer } from '../../survey-answer/entities/survey-answer.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('survey_answer_user')
 export class SurveyAnswerUser {
@@ -19,15 +17,15 @@ export class SurveyAnswerUser {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
-  user: Promise<User>;
+  user: Relation<User>;
 
   @ManyToOne(
     () => SurveyAnswer,
-    (surveyAnswer) => surveyAnswer.surveyAnswerUsers,
+    (surveyAnswer: SurveyAnswer) => surveyAnswer.surveyAnswerUsers,
     {
       onDelete: 'CASCADE',
     },
   )
   @JoinColumn({ name: 'survey_answer_id' })
-  surveyAnswer: Promise<SurveyAnswer>;
+  surveyAnswer: Relation<SurveyAnswer>;
 }

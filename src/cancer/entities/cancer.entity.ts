@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Relation,
+} from 'typeorm';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 
 @Entity()
@@ -10,5 +16,5 @@ export class Cancer {
   name: string;
 
   @OneToMany(() => CancerUser, (cancerUser) => cancerUser.cancer)
-  cancerUsers: Promise<CancerUser[]>;
+  cancerUsers: Relation<CancerUser[]>;
 }

@@ -1,15 +1,19 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  OneToOne,
+  DeleteDateColumn,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Relation,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
+import { Image } from '../../common/entities/image.entity';
 
 @Entity()
 export class Question {
@@ -34,10 +38,18 @@ export class Question {
   @UpdateDateColumn()
   updated_at: Date;
 
+  @DeleteDateColumn()
+  deleted_at: Date;
+
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'author_id' })
-  author: User;
+  author: Relation<User>;
 
-  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question)
-  aiAnswer: AiAnswer;
+  @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, {
+    cascade: true,
+  })
+  aiAnswer: Relation<AiAnswer>;
+
+  @OneToMany(() => Image, (image) => image.question)
+  images: Relation<Image[]>;
 }

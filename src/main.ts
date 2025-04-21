@@ -1,9 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
@@ -29,17 +27,20 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'access-token', // This name here is important for matching up with @ApiBearerAuth() in your controller!
+      'accessToken',
     )
     .build();
 
-  const documentFactory = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
 
   await app.listen(process.env.PORT ?? 8000);
 }
