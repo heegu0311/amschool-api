@@ -40,7 +40,7 @@ export class QuestionsService {
   ): Promise<Question> {
     const question = this.questionsRepository.create({
       ...createQuestionDto,
-      author_id: userId,
+      authorId: userId,
     });
 
     const savedQuestion = await this.questionsRepository.save(question);
@@ -69,6 +69,11 @@ export class QuestionsService {
       await Promise.all(uploadPromises);
     }
 
+    // AI 답변 생성을 비동기적으로 실행
+    this.createAiAnswer(savedQuestion.id).catch((error) => {
+      console.error('Failed to create AI answer:', error);
+    });
+
     return savedQuestion;
   }
 
@@ -77,11 +82,11 @@ export class QuestionsService {
   ): Promise<PaginatedResponse<Question>> {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.questionsRepository.findAndCount({
-      where: { deleted_at: undefined },
+      where: { deletedAt: undefined },
       relations: ['author', 'aiAnswer', 'images'],
       skip: (page - 1) * limit,
       take: limit,
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
 
     return {
@@ -98,7 +103,7 @@ export class QuestionsService {
 
   async findOne(id: number): Promise<Question> {
     const question = await this.questionsRepository.findOne({
-      where: { id, deleted_at: undefined },
+      where: { id, deletedAt: undefined },
       relations: ['author', 'aiAnswer', 'images'],
     });
     if (!question) {
@@ -107,18 +112,20 @@ export class QuestionsService {
     return question;
   }
 
+  async findAiAnswer(questionId: number): Promise<AiAnswer> {
+    const aiAnswer = await this.aiAnswerRepository.findOne({
+      where: { questionId, deletedAt: undefined },
+    });
+    if (!aiAnswer) {
+      throw new NotFoundException(
+        `AI Answer for question ID ${questionId} not found`,
+      );
+    }
+    return aiAnswer;
+  }
+
   async createAiAnswer(questionId: number): Promise<AiAnswer> {
     const question = await this.findOne(questionId);
-
-    // 이미지 URL 추출 및 presigned URL로 변환
-    const imageUrls =
-      question.images?.length > 0
-        ? await Promise.all(
-            question.images.map((image) =>
-              image.getPresignedUrl(this.s3Service),
-            ),
-          )
-        : [];
 
     // 1. 언어 감지
     const languagePrompt = `Detect the language of the following message and respond only with one of the following: 'KOREAN', 'ENGLISH', 'JAPANESE', 'CHINESE'. Message: ${question.content}.`;
@@ -144,7 +151,27 @@ export class QuestionsService {
       .trim()
       .toUpperCase();
 
-    // 2. 언어별 시스템 메시지 설정
+    // 2. 질문 요약 생성
+    const summaryPrompt = `Summarize the following question in one sentence in ${language} (max 30 characters): ${question.content}`;
+    const summaryCompletion = await this.openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a helpful assistant that summarizes questions concisely in 30 characters or less.',
+        },
+        {
+          role: 'user',
+          content: summaryPrompt,
+        },
+      ],
+      max_tokens: 50,
+    });
+
+    const summary = summaryCompletion.choices[0].message?.content || '';
+
+    // 3. 언어별 시스템 메시지 설정
     const systemMessages = {
       KOREAN:
         '당신은 내과 의사 역할을 하는 AI입니다. 사용자의 질문에 대해 현재 의학적으로 가능한 치료 방법과 예방 조치를 설명하세요. 진단은 하지 마세요.',
@@ -158,7 +185,17 @@ export class QuestionsService {
 
     const systemMessage = systemMessages[language] || systemMessages.ENGLISH;
 
-    // 3. AI 응답 생성 (이미지 포함)
+    // 4. 이미지 URL 추출 및 presigned URL로 변환
+    const imageUrls =
+      question.images?.length > 0
+        ? await Promise.all(
+            question.images.map((image) =>
+              image.getPresignedUrl(this.s3Service),
+            ),
+          )
+        : [];
+
+    // 5. AI 응답 생성 (이미지 포함)
     const model = imageUrls.length > 0 ? 'gpt-4-turbo' : 'gpt-4';
     const imageDetail = imageUrls.length > 3 ? 'low' : 'high';
 
@@ -194,12 +231,12 @@ export class QuestionsService {
       completion.choices[0].message?.content ||
       '죄송합니다, 요청을 처리할 수 없습니다.';
 
-    // 4. HTML 포맷팅
+    // 6. HTML 포맷팅
     botReply = botReply.replace(/(\d+)\.\s/g, '<li>');
     botReply = botReply.replace(/\n/g, '</li>\n');
     botReply = `<ul>${botReply}</li></ul>`;
 
-    // 5. 예약 링크 추가
+    // 7. 예약 링크 추가
     const bookingLinks = {
       KOREAN:
         "<br><br>의사와 상담/처방을 원하면 <a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>예약</a>을 눌러서 진행할 수 있습니다.",
@@ -213,7 +250,7 @@ export class QuestionsService {
 
     botReply += bookingLinks[language] || bookingLinks.ENGLISH;
 
-    // 6. 안내 문구 추가
+    // 8. 안내 문구 추가
     const noticeMessages = {
       KOREAN:
         "<span style='color: #007bff; font-weight: bold;'>📌 꼭 확인해주세요.</span><br>- 첨부된 이미지를 포함하여 해석한 답변입니다.<br>- 본 답변은 의학적 판단이나 진료 행위로 해석될 수 없으며, 비타헬스365는 이로 인해 발생하는 어떠한 책임도 지지 않습니다.<br>- 정확한 개인 증상 파악 및 진단은 의사를 통해 진행하시기 바랍니다.<br>- 고객님의 개인정보 보호를 위해 개인정보는 입력하지 않도록 주의 바랍니다.<br>- 서비스에 입력되는 데이터는 OpenAI 정책에 따라 관리됩니다.",
@@ -227,7 +264,7 @@ export class QuestionsService {
 
     const noticeMessage = noticeMessages[language] || noticeMessages.ENGLISH;
 
-    // 7. 로깅
+    // 9. 로깅
     await this.logChat(question.content, botReply, language);
 
     const cleaned = sanitizeHtml(botReply, {
@@ -236,7 +273,8 @@ export class QuestionsService {
     });
 
     const aiAnswer = this.aiAnswerRepository.create({
-      question_id: questionId,
+      questionId: questionId,
+      questionSummary: summary,
       content: cleaned,
       notice: noticeMessage,
       language: language,
@@ -272,12 +310,12 @@ export class QuestionsService {
     feedbackPoint: number,
   ): Promise<AiAnswer> {
     const aiAnswer = await this.aiAnswerRepository.findOne({
-      where: { id: answerId, deleted_at: undefined },
+      where: { id: answerId, deletedAt: undefined },
     });
     if (!aiAnswer) {
       throw new NotFoundException();
     }
-    aiAnswer.feedback_point = feedbackPoint;
+    aiAnswer.feedbackPoint = feedbackPoint;
     return await this.aiAnswerRepository.save(aiAnswer);
   }
 
@@ -306,13 +344,13 @@ export class QuestionsService {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.questionsRepository.findAndCount({
       where: {
-        author_id: authorId,
-        deleted_at: undefined,
+        authorId: authorId,
+        deletedAt: undefined,
       },
       relations: ['author', 'aiAnswer', 'images'],
       skip: (page - 1) * limit,
       take: limit,
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
 
     return {

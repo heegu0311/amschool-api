@@ -19,7 +19,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
 import { QuestionsService } from './questions.service';
-import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiQuery,
+  ApiTags,
+  ApiBody,
+} from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { Question } from './entities/question.entity';
@@ -38,6 +44,7 @@ export class QuestionsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images'))
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateQuestionDto })
   async create(
     @Body() createQuestionDto: CreateQuestionDto,
     @Request() req,
@@ -89,6 +96,11 @@ export class QuestionsController {
     }
 
     return question;
+  }
+
+  @Get(':id/ai-answer')
+  async findAiAnswer(@Param('id', ParseIntPipe) id: number) {
+    return await this.questionsService.findAiAnswer(id);
   }
 
   @Post(':id/ai-answer')
