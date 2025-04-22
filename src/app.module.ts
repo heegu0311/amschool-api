@@ -48,7 +48,7 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy {
       global: true,
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '120m' },
+        signOptions: { expiresIn: '15m' },
       }),
     }),
     TypeOrmModule.forRootAsync({

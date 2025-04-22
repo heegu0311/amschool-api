@@ -45,7 +45,7 @@ export class Image {
   deletedAt: Date;
 
   @ManyToOne(() => Question, (question) => question.images)
-  @JoinColumn({ name: 'entityId' })
+  @JoinColumn({ name: 'entity_id' })
   question: Relation<Question>;
 
   async getPresignedUrl(s3Service: S3Service): Promise<string> {

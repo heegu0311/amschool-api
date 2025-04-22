@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateQuestionDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiProperty()
   @IsString()
@@ -21,5 +21,5 @@ export class CreateQuestionDto {
   images?: Express.Multer.File[];
 
   @IsOptional()
-  access_level?: string;
+  accessLevel?: string;
 }

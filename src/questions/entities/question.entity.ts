@@ -21,28 +21,28 @@ export class Question {
   id: number;
 
   @Column()
-  author_id: number;
+  authorId: number;
 
-  @Column()
+  @Column({ nullable: true })
   title: string;
 
   @Column('text')
   content: string;
 
   @Column({ type: 'enum', enum: ['public', 'private'], default: 'private' })
-  access_level: string;
+  accessLevel: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updatedAt: Date;
 
   @DeleteDateColumn()
-  deleted_at: Date;
+  deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.id)
-  @JoinColumn({ name: 'author_id' })
+  @JoinColumn({ name: 'authorId' })
   author: Relation<User>;
 
   @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, {

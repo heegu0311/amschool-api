@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Question } from './question.entity';
 
@@ -16,13 +17,16 @@ export class AiAnswer {
   id: number;
 
   @Column('text')
+  questionSummary: string;
+
+  @Column('text')
   content: string;
 
   @Column()
-  question_id: number;
+  questionId: number;
 
   @Column({ type: 'float', nullable: true })
-  feedback_point: number;
+  feedbackPoint: number;
 
   @Column('text', { nullable: true })
   notice: string;
@@ -31,10 +35,13 @@ export class AiAnswer {
   language: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @DeleteDateColumn()
-  deleted_at: Date;
+  deletedAt: Date;
 
   @OneToOne(() => Question, (question) => question.aiAnswer)
   @JoinColumn({ name: 'question_id' })
