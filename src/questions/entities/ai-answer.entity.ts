@@ -17,9 +17,6 @@ export class AiAnswer {
   id: number;
 
   @Column('text')
-  questionSummary: string;
-
-  @Column('text')
   content: string;
 
   @Column()

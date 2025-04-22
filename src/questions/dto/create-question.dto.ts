@@ -5,7 +5,7 @@ export class CreateQuestionDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  title?: string;
+  questionSummary?: string;
 
   @ApiProperty()
   @IsString()
