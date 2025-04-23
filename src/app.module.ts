@@ -14,6 +14,7 @@ import { LoggerModule } from './logger/logger.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
 import { QuestionsModule } from './questions/questions.module';
+import { DiaryModule } from './diary/diary.module';
 
 export class SnakeNamingStrategy extends DefaultNamingStrategy {
   tableName(targetName: string, userSpecifiedName: string): string {
@@ -72,6 +73,7 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy {
     SurveyAnswerModule,
     AuthModule,
     QuestionsModule,
+    DiaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
