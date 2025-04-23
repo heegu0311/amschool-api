@@ -4,6 +4,8 @@ import { Repository, Between } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { Diary } from './entities/diary.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 
 @Injectable()
 export class DiaryService {
@@ -20,12 +22,29 @@ export class DiaryService {
     return await this.diaryRepository.save(diary);
   }
 
-  async findAll(userId: number) {
-    return await this.diaryRepository.find({
+  async findAll(
+    userId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
       where: { authorId: userId },
       relations: ['emotion'],
+      skip: (page - 1) * limit,
+      take: limit,
       order: { createdAt: 'DESC' },
     });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
   async findOne(id: number, userId: number) {
@@ -61,7 +80,7 @@ export class DiaryService {
         authorId: userId,
         createdAt: Between(startDate, endDate),
       },
-      relations: ['emotion', 'subEmotion'],
+      relations: ['emotion'],
       order: { createdAt: 'DESC' },
     });
   }
