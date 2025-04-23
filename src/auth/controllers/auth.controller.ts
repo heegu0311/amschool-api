@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from '../../auth/services/auth.service';
 import { Public } from '../decorators/public.decorator';
@@ -23,6 +23,18 @@ export class AuthController {
 
   @Public()
   @Post('send-verification-email')
+  @ApiOperation({ summary: '이메일 인증 코드 발송' })
+  @ApiBody({ type: SendVerificationEmailDto })
+  @ApiResponse({
+    status: 200,
+    description: '인증 이메일 발송 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '인증 이메일이 발송되었습니다.' },
+      },
+    },
+  })
   async sendVerificationEmail(
     @Body() sendVerificationEmailDto: SendVerificationEmailDto,
   ): Promise<{ message: string }> {
@@ -36,6 +48,18 @@ export class AuthController {
   @Public()
   @HttpCode(200)
   @Post('verify-code')
+  @ApiOperation({ summary: '이메일 인증 코드 검증' })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({
+    status: 200,
+    description: '이메일 인증 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '이메일이 인증되었습니다.' },
+      },
+    },
+  })
   async verifyCode(
     @Body() verifyCodeDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
@@ -50,6 +74,19 @@ export class AuthController {
   @Public()
   @HttpCode(200)
   @Post('login')
+  @ApiOperation({ summary: '로그인' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({
+    status: 200,
+    description: '로그인 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+        refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
   async login(
     @Body() loginDto: LoginDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -59,6 +96,18 @@ export class AuthController {
   @Public()
   @HttpCode(200)
   @Post('refresh')
+  @ApiOperation({ summary: '액세스 토큰 갱신' })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: '토큰 갱신 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
@@ -81,6 +130,18 @@ export class AuthController {
 
   @Public()
   @Post('logout')
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiBody({ type: LogoutDto })
+  @ApiResponse({
+    status: 200,
+    description: '로그아웃 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '로그아웃되었습니다.' },
+      },
+    },
+  })
   async logout(
     @Body() logoutDto: LogoutDto,
     @Res({ passthrough: true }) res: Response,
@@ -107,6 +168,19 @@ export class AuthController {
 
   @Public()
   @Post('complete-registration')
+  @ApiOperation({ summary: '회원가입 완료' })
+  @ApiBody({ type: CompleteRegistrationDto })
+  @ApiResponse({
+    status: 201,
+    description: '회원가입 완료',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+        refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
   async completeRegistration(
     @Body() completeRegistrationDto: CompleteRegistrationDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
