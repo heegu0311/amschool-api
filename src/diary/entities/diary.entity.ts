@@ -14,7 +14,7 @@ import { Emotion } from './emotion.entity';
 
 @Entity()
 export class Diary {
-  @ApiProperty({ description: '일기 ID' })
+  @ApiProperty({ description: '오늘의나 ID' })
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -30,7 +30,7 @@ export class Diary {
   @Column({ nullable: true })
   subEmotionId: number;
 
-  @ApiProperty({ description: '일기 내용' })
+  @ApiProperty({ description: '오늘의나 내용' })
   @Column('text')
   content: string;
 

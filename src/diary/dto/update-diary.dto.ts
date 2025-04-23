@@ -12,7 +12,7 @@ export class UpdateDiaryDto {
   @IsOptional()
   subEmotionId?: number;
 
-  @ApiProperty({ description: '일기 내용', required: false })
+  @ApiProperty({ description: '오늘의나 내용', required: false })
   @IsString()
   @IsOptional()
   content?: string;

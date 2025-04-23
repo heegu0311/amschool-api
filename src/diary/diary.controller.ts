@@ -33,11 +33,11 @@ export class DiaryController {
   constructor(private readonly diaryService: DiaryService) {}
 
   @Post()
-  @ApiOperation({ summary: '일기 생성' })
+  @ApiOperation({ summary: '새로운 오늘의나 생성' })
   @ApiBody({ type: CreateDiaryDto })
   @ApiResponse({
     status: 201,
-    description: '일기가 성공적으로 생성됨',
+    description: '오늘의나 생성 성공',
     type: Diary,
   })
   create(@Request() req, @Body() createDiaryDto: CreateDiaryDto) {
@@ -45,7 +45,7 @@ export class DiaryController {
   }
 
   @Get()
-  @ApiOperation({ summary: '일기 목록 조회' })
+  @ApiOperation({ summary: '오늘의나 목록 조회' })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -60,7 +60,7 @@ export class DiaryController {
   })
   @ApiResponse({
     status: 200,
-    description: '일기 목록 조회 성공',
+    description: '오늘의나 목록 조회 성공',
     type: [Diary],
   })
   findAll(@Request() req, @Query() paginationDto: PaginationDto) {
@@ -68,23 +68,31 @@ export class DiaryController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: '특정 일기 조회' })
+  @ApiOperation({ summary: '특정 오늘의나 조회' })
   @ApiResponse({
     status: 200,
-    description: '일기 조회 성공',
+    description: '오늘의나 조회 성공',
     type: Diary,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '오늘의나를 찾을 수 없음',
   })
   findOne(@Request() req, @Param('id') id: string) {
     return this.diaryService.findOne(+id, req.user.id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: '일기 수정' })
+  @ApiOperation({ summary: '오늘의나 수정' })
   @ApiBody({ type: UpdateDiaryDto })
   @ApiResponse({
     status: 200,
-    description: '일기 수정 성공',
+    description: '오늘의나 수정 성공',
     type: Diary,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '오늘의나를 찾을 수 없음',
   })
   update(
     @Request() req,
@@ -95,20 +103,24 @@ export class DiaryController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: '일기 삭제' })
+  @ApiOperation({ summary: '오늘의나 삭제' })
   @ApiResponse({
     status: 200,
-    description: '일기 삭제 성공',
+    description: '오늘의나 삭제 성공',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '오늘의나를 찾을 수 없음',
   })
   remove(@Request() req, @Param('id') id: string) {
     return this.diaryService.remove(+id, req.user.id);
   }
 
   @Get('monthly/:year/:month')
-  @ApiOperation({ summary: '월별 일기 조회' })
+  @ApiOperation({ summary: '월별 오늘의나 조회' })
   @ApiResponse({
     status: 200,
-    description: '월별 일기 조회 성공',
+    description: '월별 오늘의나 조회 성공',
     type: [Diary],
   })
   findByMonth(
