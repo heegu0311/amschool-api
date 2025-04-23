@@ -69,7 +69,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get('similar')
+  @Get('similar-users')
   @ApiOperation({
     summary: '유사한 암에 관심있는 사용자 목록 조회',
     description:

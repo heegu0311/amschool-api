@@ -7,20 +7,15 @@ export class CreateDiaryDto {
   @IsNotEmpty()
   emotionId: number;
 
-  @ApiProperty({ description: '세부 감정 ID', required: false })
+  @ApiProperty({ description: '세부 감정 ID' })
   @IsNumber()
-  @IsOptional()
-  subEmotionId?: number;
+  @IsNotEmpty()
+  subEmotionId: number;
 
   @ApiProperty({ description: '오늘의나 내용' })
   @IsString()
   @IsNotEmpty()
   content: string;
-
-  @ApiProperty({ description: '썸네일 URL', required: false })
-  @IsString()
-  @IsOptional()
-  thumbnail?: string;
 
   @ApiProperty({
     description: '접근 권한',

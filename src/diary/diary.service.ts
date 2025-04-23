@@ -1,25 +1,64 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { Diary } from './entities/diary.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { UsersService } from '../users/users.service';
+import { ImageService } from '../common/services/image.service';
+import { Image } from '../common/entities/image.entity';
+import { Express } from 'express';
 
 @Injectable()
 export class DiaryService {
   constructor(
     @InjectRepository(Diary)
     private diaryRepository: Repository<Diary>,
+    @InjectRepository(Image)
+    private imageRepository: Repository<Image>,
+    private readonly usersService: UsersService,
+    private readonly imageService: ImageService,
   ) {}
 
-  async create(userId: number, createDiaryDto: CreateDiaryDto) {
+  async create(
+    userId: number,
+    createDiaryDto: CreateDiaryDto,
+    images?: Express.Multer.File[],
+  ) {
     const diary = this.diaryRepository.create({
       authorId: userId,
       ...createDiaryDto,
     });
-    return await this.diaryRepository.save(diary);
+    const savedDiary = await this.diaryRepository.save(diary);
+
+    if (images && images.length > 0) {
+      const uploadPromises = images.map(async (image) => {
+        const uploadedImage = await this.imageService.uploadImage(
+          image,
+          'diary',
+          savedDiary.id,
+        );
+
+        const imageEntity = this.imageRepository.create({
+          url: uploadedImage.url,
+          originalName: image.originalname,
+          mimeType: image.mimetype,
+          size: image.size,
+          entityType: 'diary',
+          entityId: savedDiary.id,
+        });
+
+        const savedImage = await this.imageRepository.save(imageEntity);
+        savedImage.diary = savedDiary;
+        return this.imageRepository.save(savedImage);
+      });
+
+      await Promise.all(uploadPromises);
+    }
+
+    return savedDiary;
   }
 
   async findAll(
@@ -30,6 +69,58 @@ export class DiaryService {
     const [items, totalItems] = await this.diaryRepository.findAndCount({
       where: { authorId: userId },
       relations: ['emotion'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
+
+  async findSimilarUserDiaries(
+    userId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+
+    // 1. 유사 사용자 ID 목록 조회
+    const similarUsersResponse = await this.usersService.findSimilarUsers(
+      userId,
+      {
+        page: 1,
+        limit: 100, // 충분히 큰 수로 설정하여 모든 유사 사용자를 가져옴
+      },
+    );
+    const similarUserIds = similarUsersResponse.items.map((user) => user.id);
+
+    if (similarUserIds.length === 0) {
+      return {
+        items: [],
+        meta: {
+          totalItems: 0,
+          itemCount: 0,
+          itemsPerPage: limit,
+          totalPages: 0,
+          currentPage: page,
+        },
+      };
+    }
+
+    // 2. 유사 사용자들의 오늘의나 조회
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
+      where: {
+        authorId: In(similarUserIds),
+      },
+      relations: ['emotion', 'author'],
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -60,14 +151,51 @@ export class DiaryService {
     return diary;
   }
 
-  async update(id: number, userId: number, updateDiaryDto: UpdateDiaryDto) {
+  async update(
+    id: number,
+    userId: number,
+    updateDiaryDto: UpdateDiaryDto,
+    images?: Express.Multer.File[],
+  ) {
     const diary = await this.findOne(id, userId);
     Object.assign(diary, updateDiaryDto);
-    return await this.diaryRepository.save(diary);
+    const updatedDiary = await this.diaryRepository.save(diary);
+
+    if (images && images.length > 0) {
+      // 기존 이미지 삭제
+      await this.imageService.deleteImagesByEntity('diary', id);
+
+      // 새 이미지 업로드
+      const uploadPromises = images.map(async (image) => {
+        const uploadedImage = await this.imageService.uploadImage(
+          image,
+          'diary',
+          id,
+        );
+
+        const imageEntity = this.imageRepository.create({
+          url: uploadedImage.url,
+          originalName: image.originalname,
+          mimeType: image.mimetype,
+          size: image.size,
+          entityType: 'diary',
+          entityId: id,
+        });
+
+        const savedImage = await this.imageRepository.save(imageEntity);
+        savedImage.diary = updatedDiary;
+        return this.imageRepository.save(savedImage);
+      });
+
+      await Promise.all(uploadPromises);
+    }
+
+    return updatedDiary;
   }
 
   async remove(id: number, userId: number) {
     const diary = await this.findOne(id, userId);
+    await this.imageService.deleteImagesByEntity('diary', id);
     return await this.diaryRepository.softRemove(diary);
   }
 

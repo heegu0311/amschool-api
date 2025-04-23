@@ -17,11 +17,6 @@ export class UpdateDiaryDto {
   @IsOptional()
   content?: string;
 
-  @ApiProperty({ description: '썸네일 URL', required: false })
-  @IsString()
-  @IsOptional()
-  thumbnail?: string;
-
   @ApiProperty({
     description: '접근 권한',
     enum: ['public', 'private'],
