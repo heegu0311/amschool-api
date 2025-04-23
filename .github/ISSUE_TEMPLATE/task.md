@@ -1,7 +1,7 @@
 ---
 name: 작업 항목
 about: 구현해야 할 기능이나 수정사항을 기록합니다
-title: '[back]'
+title: '[Back]'
 labels: task
 assignees: 'heegu0311'
 ---
