@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDiaryDto {
   @ApiProperty({ description: '감정 ID' })
@@ -22,4 +22,12 @@ export class CreateDiaryDto {
   })
   @IsString()
   accessLevel: 'public' | 'member' | 'private';
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    required: false,
+  })
+  @IsOptional()
+  images?: Express.Multer.File[];
 }

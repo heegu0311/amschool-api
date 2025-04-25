@@ -23,4 +23,12 @@ export class UpdateDiaryDto {
   @IsString()
   @IsOptional()
   accessLevel: 'public' | 'member' | 'private';
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    required: false,
+  })
+  @IsOptional()
+  images?: Express.Multer.File[];
 }
