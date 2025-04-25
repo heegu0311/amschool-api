@@ -22,5 +22,5 @@ export class UpdateDiaryDto {
   })
   @IsString()
   @IsOptional()
-  accessLevel?: 'public' | 'member' | 'private';
+  accessLevel: 'public' | 'member' | 'private';
 }

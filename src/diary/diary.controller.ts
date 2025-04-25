@@ -30,9 +30,8 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { Diary } from './entities/diary.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { S3Service } from '../common/services/s3.service';
-
+import { Public } from '../auth/decorators/public.decorator';
 @ApiTags('diary')
-@ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard)
 @Controller('diary')
 export class DiaryController {
@@ -42,6 +41,7 @@ export class DiaryController {
   ) {}
 
   @Post()
+  @ApiBearerAuth('accessToken')
   @UseInterceptors(FilesInterceptor('images'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '새로운 오늘의나 생성' })
@@ -73,6 +73,8 @@ export class DiaryController {
   }
 
   @Get()
+  @Public()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '오늘의나 목록 조회' })
   @ApiQuery({
     name: 'page',
@@ -92,10 +94,11 @@ export class DiaryController {
     type: [Diary],
   })
   findAll(@Request() req, @Query() paginationDto: PaginationDto) {
-    return this.diaryService.findAll(req.user.id, paginationDto);
+    return this.diaryService.findAll(paginationDto, req.user?.id);
   }
 
   @Get('similar-user')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '유사한 암을 가진 사용자들의 오늘의나 목록 조회',
     description:
@@ -129,6 +132,8 @@ export class DiaryController {
   }
 
   @Get(':id')
+  @Public()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 오늘의나 조회' })
   @ApiResponse({
     status: 200,
@@ -140,10 +145,11 @@ export class DiaryController {
     description: '오늘의나를 찾을 수 없음',
   })
   findOne(@Request() req, @Param('id') id: string) {
-    return this.diaryService.findOne(+id, req.user.id);
+    return this.diaryService.findOne(+id, req.user?.id);
   }
 
   @Patch(':id')
+  @ApiBearerAuth('accessToken')
   @UseInterceptors(FilesInterceptor('images'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '오늘의나 수정' })
@@ -173,6 +179,7 @@ export class DiaryController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '오늘의나 삭제' })
   @ApiResponse({
     status: 200,
@@ -187,6 +194,7 @@ export class DiaryController {
   }
 
   @Get('monthly/:year/:month')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '월별 오늘의나 조회' })
   @ApiResponse({
     status: 200,

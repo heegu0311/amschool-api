@@ -35,11 +35,11 @@ export class Diary {
   accessLevel: 'public' | 'member' | 'private';
 
   @ApiProperty({ description: '감정 ID', required: false })
-  @Column()
+  @Column({ name: 'emotion_id' })
   emotionId: number;
 
   @ApiProperty({ description: '부감정 ID', required: false })
-  @Column()
+  @Column({ name: 'sub_emotion_id' })
   subEmotionId: number;
 
   @ApiProperty({ description: '작성일' })

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateDiaryDto {
   @ApiProperty({ description: '감정 ID' })
@@ -21,6 +21,5 @@ export class CreateDiaryDto {
     default: 'public',
   })
   @IsString()
-  @IsOptional()
-  accessLevel?: 'public' | 'member' | 'private';
+  accessLevel: 'public' | 'member' | 'private';
 }

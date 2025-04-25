@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Image } from '../common/entities/image.entity';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { ImageService } from '../common/services/image.service';
+import { UsersService } from '../users/users.service';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { Diary } from './entities/diary.entity';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { UsersService } from '../users/users.service';
-import { ImageService } from '../common/services/image.service';
-import { Image } from '../common/entities/image.entity';
-import { Express } from 'express';
 
 @Injectable()
 export class DiaryService {
@@ -62,13 +65,39 @@ export class DiaryService {
   }
 
   async findAll(
-    userId: number,
     paginationDto: PaginationDto,
+    userId?: number,
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
+
+    // userId가 없으면 public 일기만 조회
+    // userId가 있으면 public 또는 member 일기 조회
+    const where = userId
+      ? { accessLevel: In(['public', 'member'] as const) }
+      : { accessLevel: 'public' as const };
+
     const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where: { authorId: userId },
-      relations: ['emotion'],
+      where,
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        emotion: {
+          id: true,
+          name: true,
+        },
+        author: {
+          id: true,
+          username: true,
+          profileImage: true,
+        },
+        subEmotion: {
+          id: true,
+          name: true,
+        },
+      },
+      relations: ['emotion', 'author', 'subEmotion', 'images'],
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -138,11 +167,19 @@ export class DiaryService {
     };
   }
 
-  async findOne(id: number, userId: number) {
+  async findOne(id: number, userId?: number) {
     const diary = await this.diaryRepository.findOne({
-      where: { id, authorId: userId },
-      relations: ['emotion', 'subEmotion'],
+      where: { id },
+      relations: ['images'],
     });
+
+    if (diary?.accessLevel === 'private' && diary?.authorId !== userId) {
+      throw new NotFoundException(`Diary #${id} has private type`);
+    }
+
+    if (diary?.accessLevel === 'member' && !userId) {
+      throw new NotFoundException(`Diary #${id} has member type`);
+    }
 
     if (!diary) {
       throw new NotFoundException(`Diary #${id} not found`);
@@ -158,6 +195,11 @@ export class DiaryService {
     images?: Express.Multer.File[],
   ) {
     const diary = await this.findOne(id, userId);
+
+    if (diary.authorId !== userId) {
+      throw new UnauthorizedException('자신의 일지만 수정할 수 있습니다.');
+    }
+
     Object.assign(diary, updateDiaryDto);
     const updatedDiary = await this.diaryRepository.save(diary);
 
@@ -208,7 +250,26 @@ export class DiaryService {
         authorId: userId,
         createdAt: Between(startDate, endDate),
       },
-      relations: ['emotion'],
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        emotion: {
+          id: true,
+          name: true,
+        },
+        author: {
+          id: true,
+          username: true,
+          profileImage: true,
+        },
+        subEmotion: {
+          id: true,
+          name: true,
+        },
+      },
+      relations: ['emotion', 'author', 'subEmotion', 'images'],
       order: { createdAt: 'DESC' },
     });
   }
