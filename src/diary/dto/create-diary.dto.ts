@@ -1,14 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDiaryDto {
   @ApiProperty({ description: '감정 ID' })
-  @IsNumber()
   @IsNotEmpty()
   emotionId: number;
 
   @ApiProperty({ description: '세부 감정 ID' })
-  @IsNumber()
   @IsNotEmpty()
   subEmotionId: number;
 
@@ -19,10 +17,10 @@ export class CreateDiaryDto {
 
   @ApiProperty({
     description: '접근 권한',
-    enum: ['public', 'private'],
+    enum: ['public', 'member', 'private'],
     default: 'public',
   })
   @IsString()
   @IsOptional()
-  accessLevel?: 'public' | 'private';
+  accessLevel?: 'public' | 'member' | 'private';
 }

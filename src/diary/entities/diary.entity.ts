@@ -26,13 +26,13 @@ export class Diary {
   @Column()
   authorId: number;
 
-  @ApiProperty({ description: '제목' })
-  @Column()
-  title: string;
-
   @ApiProperty({ description: '내용' })
   @Column('text')
   content: string;
+
+  @ApiProperty({ description: '접근 권한' })
+  @Column({ default: 'public' })
+  accessLevel: 'public' | 'member' | 'private';
 
   @ApiProperty({ description: '감정 ID', required: false })
   @Column()

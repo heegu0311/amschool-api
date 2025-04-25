@@ -56,6 +56,14 @@ export class DiaryController {
     @Body() createDiaryDto: CreateDiaryDto,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
+    // emotionId와 subEmotionId를 숫자로 변환
+    if (typeof createDiaryDto.emotionId === 'string') {
+      createDiaryDto.emotionId = parseInt(createDiaryDto.emotionId, 10);
+    }
+    if (typeof createDiaryDto.subEmotionId === 'string') {
+      createDiaryDto.subEmotionId = parseInt(createDiaryDto.subEmotionId, 10);
+    }
+
     const diary = await this.diaryService.create(
       req.user.id,
       createDiaryDto,
