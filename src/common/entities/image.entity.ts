@@ -8,12 +8,14 @@ import {
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
+  Check,
 } from 'typeorm';
 import { Question } from '../../questions/entities/question.entity';
 import { S3Service } from '../services/s3.service';
 import { Diary } from '../../diary/entities/diary.entity';
 
 @Entity()
+@Check('"order" >= 1 AND "order" <= 3')
 export class Image {
   @PrimaryGeneratedColumn()
   id: number;
@@ -35,6 +37,9 @@ export class Image {
 
   @Column()
   entityId: number;
+
+  @Column({ type: 'int', default: 1 })
+  order: number;
 
   @CreateDateColumn()
   createdAt: Date;

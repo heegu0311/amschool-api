@@ -6,7 +6,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -58,11 +57,11 @@ export class Diary {
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 
-  @OneToOne(() => Emotion, (emotion) => emotion.id)
+  @ManyToOne(() => Emotion, (emotion) => emotion.id)
   @JoinColumn({ name: 'emotion_id' })
   emotion: Relation<Emotion>;
 
-  @OneToOne(() => Emotion, (emotion) => emotion.id)
+  @ManyToOne(() => Emotion, (emotion) => emotion.id)
   @JoinColumn({ name: 'sub_emotion_id' })
   subEmotion: Relation<Emotion>;
 

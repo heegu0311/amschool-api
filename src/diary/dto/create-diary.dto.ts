@@ -2,15 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDiaryDto {
-  @ApiProperty({ description: '감정 ID' })
+  @ApiProperty({ description: '감정 ID', default: 1 })
   @IsNotEmpty()
   emotionId: number;
 
-  @ApiProperty({ description: '세부 감정 ID' })
+  @ApiProperty({ description: '세부 감정 ID', default: 1 })
   @IsNotEmpty()
   subEmotionId: number;
 
-  @ApiProperty({ description: '오늘의나 내용' })
+  @ApiProperty({
+    description: '오늘의나 내용',
+    default: '오늘은 좋은 하루였어요.',
+  })
   @IsString()
   @IsNotEmpty()
   content: string;

@@ -15,20 +15,10 @@ export class ImageService {
   async uploadImage(
     file: Express.Multer.File,
     entityType: string,
-    entityId: number,
-  ): Promise<Image> {
+  ): Promise<string> {
     const url = await this.s3Service.uploadFile(file, entityType);
 
-    const image = this.imageRepository.create({
-      url,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-      entityType,
-      entityId,
-    });
-
-    return await this.imageRepository.save(image);
+    return url;
   }
 
   async deleteImage(id: number): Promise<void> {

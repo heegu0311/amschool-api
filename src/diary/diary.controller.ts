@@ -11,8 +11,12 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  Req,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FilesInterceptor,
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -42,7 +46,7 @@ export class DiaryController {
 
   @Post()
   @ApiBearerAuth('accessToken')
-  @UseInterceptors(FilesInterceptor('images'))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 3 }]))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '새로운 오늘의나 생성' })
   @ApiBody({ type: CreateDiaryDto })
@@ -52,24 +56,15 @@ export class DiaryController {
     type: Diary,
   })
   async create(
-    @Request() req,
     @Body() createDiaryDto: CreateDiaryDto,
-    @UploadedFiles() images?: Express.Multer.File[],
+    @UploadedFiles()
+    files: {
+      images?: Express.Multer.File[];
+    },
+    @Req() req,
   ) {
-    // emotionId와 subEmotionId를 숫자로 변환
-    if (typeof createDiaryDto.emotionId === 'string') {
-      createDiaryDto.emotionId = parseInt(createDiaryDto.emotionId, 10);
-    }
-    if (typeof createDiaryDto.subEmotionId === 'string') {
-      createDiaryDto.subEmotionId = parseInt(createDiaryDto.subEmotionId, 10);
-    }
-
-    const diary = await this.diaryService.create(
-      req.user.id,
-      createDiaryDto,
-      images,
-    );
-    return this.diaryService.findOne(diary.id, req.user.id);
+    const userId = req.user.id;
+    return this.diaryService.create(userId, createDiaryDto, files.images);
   }
 
   @Get()

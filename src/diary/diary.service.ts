@@ -37,28 +37,27 @@ export class DiaryService {
     const savedDiary = await this.diaryRepository.save(diary);
 
     if (images && images.length > 0) {
-      const uploadPromises = images.map(async (image) => {
-        const uploadedImage = await this.imageService.uploadImage(
-          image,
-          'diary',
-          savedDiary.id,
-        );
+      const imageEntities = await Promise.all(
+        images.map(async (image, index) => {
+          const uploadedImageUrl = await this.imageService.uploadImage(
+            image,
+            'diary',
+          );
 
-        const imageEntity = this.imageRepository.create({
-          url: uploadedImage.url,
-          originalName: image.originalname,
-          mimeType: image.mimetype,
-          size: image.size,
-          entityType: 'diary',
-          entityId: savedDiary.id,
-        });
+          return this.imageRepository.create({
+            url: uploadedImageUrl,
+            originalName: image.originalname,
+            mimeType: image.mimetype,
+            size: image.size,
+            entityType: 'diary',
+            entityId: savedDiary.id,
+            order: index,
+            diary: savedDiary,
+          });
+        }),
+      );
 
-        const savedImage = await this.imageRepository.save(imageEntity);
-        savedImage.diary = savedDiary;
-        return this.imageRepository.save(savedImage);
-      });
-
-      await Promise.all(uploadPromises);
+      await this.imageRepository.save(imageEntities);
     }
 
     return savedDiary;
@@ -201,36 +200,61 @@ export class DiaryService {
     }
 
     Object.assign(diary, updateDiaryDto);
-    const updatedDiary = await this.diaryRepository.save(diary);
+    await this.diaryRepository.save(diary);
 
-    if (images && images.length > 0) {
-      // 기존 이미지 삭제
-      await this.imageService.deleteImagesByEntity('diary', id);
+    // 이미지 업데이트 처리
+    if (updateDiaryDto.imageUpdates && updateDiaryDto.imageUpdates.length > 0) {
+      // 기존 이미지 업데이트 처리
+      for (const imageUpdate of updateDiaryDto.imageUpdates) {
+        if (imageUpdate.id) {
+          // 기존 이미지 업데이트
+          const existingImage = await this.imageRepository.findOne({
+            where: { id: imageUpdate.id },
+          });
+          if (existingImage) {
+            existingImage.order = imageUpdate.order;
+            await this.imageRepository.save(existingImage);
+          }
+        } else {
+          // 신규 이미지 업로드 처리
+          if (images && images.length > 0) {
+            for (const imageUpdate of updateDiaryDto.imageUpdates) {
+              if (!imageUpdate || imageUpdate.id) continue; // 기존 이미지는 건너뛰기
 
-      // 새 이미지 업로드
-      const uploadPromises = images.map(async (image) => {
-        const uploadedImage = await this.imageService.uploadImage(
-          image,
-          'diary',
-          id,
-        );
+              const uploadedImageUrl = await this.imageService.uploadImage(
+                images[imageUpdate.order],
+                'diary',
+              );
 
-        const imageEntity = this.imageRepository.create({
-          url: uploadedImage.url,
-          originalName: image.originalname,
-          mimeType: image.mimetype,
-          size: image.size,
-          entityType: 'diary',
-          entityId: id,
-        });
+              const imageEntity = this.imageRepository.create({
+                url: uploadedImageUrl,
+                originalName: images[imageUpdate.order].originalname,
+                mimeType: images[imageUpdate.order].mimetype,
+                size: images[imageUpdate.order].size,
+                entityType: 'diary',
+                entityId: id,
+                order: imageUpdate.order,
+                diary: diary,
+              });
 
-        const savedImage = await this.imageRepository.save(imageEntity);
-        savedImage.diary = updatedDiary;
-        return this.imageRepository.save(savedImage);
-      });
-
-      await Promise.all(uploadPromises);
+              await this.imageRepository.save(imageEntity);
+            }
+          }
+        }
+      }
     }
+
+    // entityType이 'diary'인 images만 포함해서 다시 조회
+    const updatedDiary = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect(
+        'diary.images',
+        'image',
+        'image.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where('diary.id = :id', { id })
+      .getOne();
 
     return updatedDiary;
   }
