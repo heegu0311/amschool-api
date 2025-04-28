@@ -14,6 +14,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../users/entities/user.entity';
 import { Emotion } from './emotion.entity';
 import { Image } from '../../common/entities/image.entity';
+import { Comment } from '../../comment/entities/comment.entity';
 
 @Entity()
 export class Diary {
@@ -67,4 +68,7 @@ export class Diary {
 
   @OneToMany(() => Image, (image) => image.diary)
   images: Relation<Image[]>;
+
+  @OneToMany(() => Comment, (comment) => comment.diary)
+  comments: Relation<Comment[]>;
 }

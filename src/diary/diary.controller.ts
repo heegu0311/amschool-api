@@ -35,6 +35,7 @@ import { Diary } from './entities/diary.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { S3Service } from '../common/services/s3.service';
 import { Public } from '../auth/decorators/public.decorator';
+
 @ApiTags('diary')
 @UseGuards(JwtAuthGuard)
 @Controller('diary')
