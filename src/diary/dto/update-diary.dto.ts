@@ -74,4 +74,25 @@ export class UpdateDiaryDto {
     order: number;
     isNew: boolean;
   }>;
+
+  @ApiProperty({
+    description: '삭제할 이미지 ID 목록',
+    type: 'array',
+    items: { type: 'number' },
+  })
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }): number[] => {
+    if (value === '' || value == null) return [];
+    let parsed: any;
+    try {
+      parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    } catch {
+      return [];
+    }
+    // 항상 배열로 반환
+    if (Array.isArray(parsed)) return parsed;
+    return [parsed];
+  })
+  deletedImageIds?: number[];
 }

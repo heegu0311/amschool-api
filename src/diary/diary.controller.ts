@@ -170,7 +170,7 @@ export class DiaryController {
       updateDiaryDto,
       images,
     );
-    return this.diaryService.findOne(diary.id, req.user.id);
+    return this.diaryService.findOne(diary!.id, req.user.id);
   }
 
   @Delete(':id')

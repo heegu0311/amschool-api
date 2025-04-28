@@ -202,6 +202,22 @@ export class DiaryService {
     Object.assign(diary, updateDiaryDto);
     await this.diaryRepository.save(diary);
 
+    // 기존 이미지 삭제 처리
+    if (
+      updateDiaryDto.deletedImageIds &&
+      updateDiaryDto.deletedImageIds.length > 0
+    ) {
+      for (const deletedImageId of updateDiaryDto.deletedImageIds) {
+        const imageToDelete = await this.imageRepository.findOne({
+          where: { id: deletedImageId },
+        });
+        if (imageToDelete) {
+          await this.imageService.deleteImage(imageToDelete.id);
+          await this.imageRepository.remove(imageToDelete);
+        }
+      }
+    }
+
     // 이미지 업데이트 처리
     if (updateDiaryDto.imageUpdates && updateDiaryDto.imageUpdates.length > 0) {
       // 기존 이미지 업데이트 처리
@@ -218,27 +234,25 @@ export class DiaryService {
         } else {
           // 신규 이미지 업로드 처리
           if (images && images.length > 0) {
-            for (const imageUpdate of updateDiaryDto.imageUpdates) {
-              if (!imageUpdate || imageUpdate.id) continue; // 기존 이미지는 건너뛰기
+            if (!imageUpdate || imageUpdate.id) continue; // 기존 이미지는 건너뛰기
 
-              const uploadedImageUrl = await this.imageService.uploadImage(
-                images[imageUpdate.order],
-                'diary',
-              );
+            const uploadedImageUrl = await this.imageService.uploadImage(
+              images[imageUpdate.order],
+              'diary',
+            );
 
-              const imageEntity = this.imageRepository.create({
-                url: uploadedImageUrl,
-                originalName: images[imageUpdate.order].originalname,
-                mimeType: images[imageUpdate.order].mimetype,
-                size: images[imageUpdate.order].size,
-                entityType: 'diary',
-                entityId: id,
-                order: imageUpdate.order,
-                diary: diary,
-              });
+            const imageEntity = this.imageRepository.create({
+              url: uploadedImageUrl,
+              originalName: images[imageUpdate.order].originalname,
+              mimeType: images[imageUpdate.order].mimetype,
+              size: images[imageUpdate.order].size,
+              entityType: 'diary',
+              entityId: id,
+              order: imageUpdate.order,
+              diary: diary,
+            });
 
-              await this.imageRepository.save(imageEntity);
-            }
+            await this.imageRepository.save(imageEntity);
           }
         }
       }
