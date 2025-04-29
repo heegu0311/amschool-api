@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -11,7 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Diary } from '../../diary/entities/diary.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { Reply } from '../reply/entities/reply.entity';
 
 @Entity()
@@ -40,7 +41,7 @@ export class Comment {
   @Column()
   entityId: number;
 
-  @ApiProperty({ description: '다이어리 정보' })
+  @ApiProperty({ description: '엔티티 정보' })
   @ManyToOne(() => Diary, (diary) => diary.comments)
   @JoinColumn({
     name: 'entity_id',
@@ -50,6 +51,9 @@ export class Comment {
 
   @OneToMany(() => Reply, (reply) => reply.comment)
   replies: Relation<Reply[]>;
+
+  @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.comment)
+  reactions: Relation<ReactionEntity[]>;
 
   @ApiProperty({ description: '생성일' })
   @CreateDateColumn()

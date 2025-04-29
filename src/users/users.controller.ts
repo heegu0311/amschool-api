@@ -3,30 +3,28 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
   Query,
   Request,
   UseGuards,
-  Logger,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
   ApiResponse,
-  ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
 
-@ApiTags('users')
 @ApiBearerAuth('accessToken')
 @Controller('users')
 @UseGuards(JwtAuthGuard)

@@ -9,6 +9,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { Image } from '../common/entities/image.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ImageService } from '../common/services/image.service';
+import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
 import { UsersService } from '../users/users.service';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
@@ -23,6 +24,7 @@ export class DiaryService {
     private imageRepository: Repository<Image>,
     private readonly usersService: UsersService,
     private readonly imageService: ImageService,
+    private readonly reactionEntityService: ReactionEntityService,
   ) {}
 
   async create(
@@ -52,7 +54,6 @@ export class DiaryService {
             entityType: 'diary',
             entityId: savedDiary.id,
             order: index,
-            diary: savedDiary,
           });
         }),
       );
@@ -104,6 +105,59 @@ export class DiaryService {
 
     return {
       items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
+
+  async findAllWithMoreInfo(
+    paginationDto: PaginationDto,
+    userId?: number,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+
+    const where = userId
+      ? { accessLevel: In(['public', 'member'] as const) }
+      : { accessLevel: 'public' as const };
+
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
+      where,
+      relations: ['author', 'images', 'comments'],
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    // 다이어리 ID 목록 추출
+    const diaryIds = items.map((diary) => diary.id);
+
+    // 여러 다이어리의 공감을 한 번에 조회
+    const diaryReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'diary',
+        diaryIds,
+        userId,
+      );
+
+    // 공감 정보를 각 엔티티에 매핑
+    const diariesWithReactions = items.map((diary) => {
+      const diaryWithReactions = {
+        ...diary,
+        reactions: diaryReactions[diary.id]?.reactions || [],
+        userReaction: diaryReactions[diary.id]?.userReactions || null,
+        commentsCount: diary.comments.length,
+      };
+      return diaryWithReactions;
+    });
+    return {
+      items: diariesWithReactions,
       meta: {
         totalItems,
         itemCount: items.length,
@@ -187,6 +241,46 @@ export class DiaryService {
     return diary;
   }
 
+  async findOneWithMoreInfo(id: number, userId?: number): Promise<Diary> {
+    const diary = await this.diaryRepository.findOne({
+      where: { id },
+      relations: ['author', 'images', 'comments'],
+    });
+
+    if (!diary) {
+      throw new NotFoundException(`Diary #${id} not found`);
+    }
+
+    if (diary.accessLevel === 'private' && diary.authorId !== userId) {
+      throw new NotFoundException(`Diary #${id} has private type`);
+    }
+
+    if (diary.accessLevel === 'member' && !userId) {
+      throw new NotFoundException(`Diary #${id} has member type`);
+    }
+
+    // 다이어리 공감 조회
+    const diaryReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'diary',
+        [diary.id],
+        userId,
+      );
+
+    // 댓글 ID 목록 추출
+    const commentIds = diary.comments.map((comment) => comment.id);
+
+    // 공감 정보를 엔티티에 매핑
+    const diaryWithReactions = {
+      ...diary,
+      reactions: diaryReactions[diary.id]?.reactions || [],
+      userReactions: diaryReactions[diary.id]?.userReactions || [],
+      commentsCount: commentIds.length,
+    };
+
+    return diaryWithReactions;
+  }
+
   async update(
     id: number,
     userId: number,
@@ -249,7 +343,6 @@ export class DiaryService {
               entityType: 'diary',
               entityId: id,
               order: imageUpdate.order,
-              diary: diary,
             });
 
             await this.imageRepository.save(imageEntity);

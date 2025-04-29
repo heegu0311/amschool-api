@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ReactionEntity } from 'src/reaction-entity/entities/reaction-entity.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -49,6 +51,9 @@ export class Reply {
     referencedColumnName: 'id',
   })
   comment: Relation<Comment>;
+
+  @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.reply)
+  reactions: Relation<ReactionEntity[]>;
 
   @ApiProperty({ description: '생성일' })
   @CreateDateColumn()

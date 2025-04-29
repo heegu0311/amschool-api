@@ -14,27 +14,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
-import { QuestionsService } from './questions.service';
 import {
   ApiBearerAuth,
-  ApiConsumes,
-  ApiQuery,
-  ApiTags,
   ApiBody,
+  ApiConsumes,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { Question } from './entities/question.entity';
 import { S3Service } from '../common/services/s3.service';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
 import { AiAnswer } from './entities/ai-answer.entity';
+import { Question } from './entities/question.entity';
+import { QuestionsService } from './questions.service';
 
-@ApiTags('questions')
 @ApiBearerAuth('accessToken')
 @Controller('questions')
 export class QuestionsController {

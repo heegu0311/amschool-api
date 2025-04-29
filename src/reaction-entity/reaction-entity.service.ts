@@ -1,0 +1,165 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ReactionEntity } from './entities/reaction-entity.entity';
+
+@Injectable()
+export class ReactionEntityService {
+  constructor(
+    @InjectRepository(ReactionEntity)
+    private reactionEntityRepository: Repository<ReactionEntity>,
+  ) {}
+
+  findAll() {
+    return this.reactionEntityRepository.find();
+  }
+
+  findOne(id: number) {
+    return this.reactionEntityRepository.findOne({ where: { id } });
+  }
+
+  remove(id: number) {
+    return this.reactionEntityRepository.delete(id);
+  }
+
+  async getEntityReactions(
+    entityType: 'diary' | 'comment' | 'reply',
+    entityId: number,
+    userId?: number,
+  ) {
+    // 엔티티별 공감 통계
+    const reactionStats = await this.reactionEntityRepository
+      .createQueryBuilder('reactionEntity')
+      .select('reaction.id', 'reactionId')
+      .addSelect('reaction.name', 'reactionName')
+      .addSelect('reaction.emoji', 'reactionEmoji')
+      .addSelect('COUNT(*)', 'count')
+      .leftJoin('reactionEntity.reaction', 'reaction')
+      .where('reactionEntity.entityType = :entityType', { entityType })
+      .andWhere('reactionEntity.entityId = :entityId', { entityId })
+      .groupBy('reaction.id')
+      .getRawMany();
+
+    // 현재 사용자의 공감
+    let userReaction: any = null;
+    if (userId) {
+      userReaction = await this.reactionEntityRepository
+        .createQueryBuilder('reactionEntity')
+        .select('reaction.id', 'reactionId')
+        .addSelect('reaction.name', 'reactionName')
+        .addSelect('reaction.emoji', 'reactionEmoji')
+        .leftJoin('reactionEntity.reaction', 'reaction')
+        .where('reactionEntity.entityType = :entityType', { entityType })
+        .andWhere('reactionEntity.entityId = :entityId', { entityId })
+        .andWhere('reactionEntity.userId = :userId', { userId })
+        .getRawOne();
+    }
+
+    return {
+      stats: reactionStats,
+      userReaction: userReaction,
+    };
+  }
+
+  async addReaction(
+    entityType: 'diary' | 'comment' | 'reply',
+    entityId: number,
+    userId: number,
+    reactionId: number,
+  ) {
+    // // 이미 공감이 있는지 확인
+    // const existingReaction = await this.reactionEntityRepository.findOne({
+    //   where: {
+    //     entityType,
+    //     entityId,
+    //     userId,
+    //   },
+    // });
+
+    // if (existingReaction) {
+    //   // 이미 공감이 있으면 업데이트
+    //   existingReaction.reactionId = reactionId;
+    //   return await this.reactionEntityRepository.save(existingReaction);
+    // }
+
+    // 새로운 공감 생성
+    const reactionEntity = this.reactionEntityRepository.create({
+      entityType,
+      entityId,
+      userId,
+      reactionId,
+    });
+
+    return await this.reactionEntityRepository.save(reactionEntity);
+  }
+
+  async removeReaction(
+    entityType: 'diary' | 'comment' | 'reply',
+    entityId: number,
+    userId: number,
+  ) {
+    const reactionEntity = await this.reactionEntityRepository.findOne({
+      where: {
+        entityType,
+        entityId,
+        userId,
+      },
+    });
+
+    if (reactionEntity) {
+      await this.reactionEntityRepository.remove(reactionEntity);
+    }
+  }
+
+  async getReactionsForMultipleEntities(
+    entityType: 'diary' | 'comment' | 'reply',
+    entityIds: number[],
+    userId?: number,
+  ): Promise<Record<number, { reactions: any[]; userReactions: number[] }>> {
+    // 여러 엔티티의 공감을 한 번에 조회
+    const reactions = await this.reactionEntityRepository
+      .createQueryBuilder('reactionEntity')
+      .select('reactionEntity.entityId', 'entityId')
+      .addSelect('reactionEntity.reactionId', 'reactionId')
+      .addSelect('COUNT(*)', 'count')
+      .where('reactionEntity.entityType = :entityType', { entityType })
+      .andWhere('reactionEntity.entityId IN (:...entityIds)', { entityIds })
+      .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
+      .orderBy('reactionEntity.reactionId', 'ASC')
+      .getRawMany();
+
+    // 사용자 공감 조회
+    let userReactions: any[] = [];
+    if (userId) {
+      userReactions = await this.reactionEntityRepository
+        .createQueryBuilder('reactionEntity')
+        .select('reactionEntity.entityId', 'entityId')
+        .addSelect('reactionEntity.reactionId', 'reactionId')
+        .addSelect('COUNT(*)', 'count')
+        .where('reactionEntity.entityType = :entityType', { entityType })
+        .andWhere('reactionEntity.entityId IN (:...entityIds)', { entityIds })
+        .andWhere('reactionEntity.userId = :userId', { userId })
+        .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
+        .orderBy('reactionEntity.reactionId', 'ASC')
+        .getRawMany();
+    }
+
+    // 결과 매핑
+    const result = {};
+    entityIds.forEach((id) => {
+      result[id] = {
+        reactions: reactions
+          .filter((r) => r.entityId === id)
+          .map(({ reactionId, count }) => ({
+            reactionId,
+            count: parseInt(count, 10),
+          })),
+        userReactions: userReactions
+          .filter((r) => r.entityId === id)
+          .map((r) => r.reactionId as number),
+      };
+    });
+
+    return result;
+  }
+}

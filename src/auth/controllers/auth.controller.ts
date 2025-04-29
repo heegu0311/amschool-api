@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from '../../auth/services/auth.service';
 import { Public } from '../decorators/public.decorator';
@@ -13,7 +13,6 @@ import {
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 
-@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(

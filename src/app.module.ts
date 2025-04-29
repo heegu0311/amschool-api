@@ -2,20 +2,21 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSourceOptions } from 'typeorm';
-import { DefaultNamingStrategy } from 'typeorm';
+import { DataSourceOptions, DefaultNamingStrategy } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CancerUserModule } from './cancer-user/cancer-user.module';
 import { CancerModule } from './cancer/cancer.module';
+import { CommentModule } from './comment/comment.module';
+import { DiaryModule } from './diary/diary.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
+import { QuestionsModule } from './questions/questions.module';
+import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
+import { ReactionModule } from './reaction/reaction.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
-import { QuestionsModule } from './questions/questions.module';
-import { DiaryModule } from './diary/diary.module';
-
 export class SnakeNamingStrategy extends DefaultNamingStrategy {
   tableName(targetName: string, userSpecifiedName: string): string {
     return (
@@ -74,6 +75,9 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy {
     AuthModule,
     QuestionsModule,
     DiaryModule,
+    CommentModule,
+    ReactionModule,
+    ReactionEntityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
