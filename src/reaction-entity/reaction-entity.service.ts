@@ -41,9 +41,9 @@ export class ReactionEntityService {
       .getRawMany();
 
     // 현재 사용자의 공감
-    let userReaction: any = null;
+    let userReactions: any = null;
     if (userId) {
-      userReaction = await this.reactionEntityRepository
+      userReactions = await this.reactionEntityRepository
         .createQueryBuilder('reactionEntity')
         .select('reaction.id', 'reactionId')
         .addSelect('reaction.name', 'reactionName')
@@ -57,7 +57,7 @@ export class ReactionEntityService {
 
     return {
       stats: reactionStats,
-      userReaction: userReaction,
+      userReaction: userReactions,
     };
   }
 

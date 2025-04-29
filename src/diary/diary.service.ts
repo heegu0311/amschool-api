@@ -151,7 +151,7 @@ export class DiaryService {
       const diaryWithReactions = {
         ...diary,
         reactions: diaryReactions[diary.id]?.reactions || [],
-        userReaction: diaryReactions[diary.id]?.userReactions || null,
+        userReactions: diaryReactions[diary.id]?.userReactions || [],
         commentsCount: diary.comments.length,
       };
       return diaryWithReactions;
