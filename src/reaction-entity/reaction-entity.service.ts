@@ -64,30 +64,15 @@ export class ReactionEntityService {
   async addReaction(
     entityType: 'diary' | 'comment' | 'reply',
     entityId: number,
-    userId: number,
     reactionId: number,
+    userId: number,
   ) {
-    // // 이미 공감이 있는지 확인
-    // const existingReaction = await this.reactionEntityRepository.findOne({
-    //   where: {
-    //     entityType,
-    //     entityId,
-    //     userId,
-    //   },
-    // });
-
-    // if (existingReaction) {
-    //   // 이미 공감이 있으면 업데이트
-    //   existingReaction.reactionId = reactionId;
-    //   return await this.reactionEntityRepository.save(existingReaction);
-    // }
-
     // 새로운 공감 생성
     const reactionEntity = this.reactionEntityRepository.create({
       entityType,
       entityId,
-      userId,
       reactionId,
+      userId,
     });
 
     return await this.reactionEntityRepository.save(reactionEntity);
@@ -96,12 +81,14 @@ export class ReactionEntityService {
   async removeReaction(
     entityType: 'diary' | 'comment' | 'reply',
     entityId: number,
+    reactionId: number,
     userId: number,
   ) {
     const reactionEntity = await this.reactionEntityRepository.findOne({
       where: {
         entityType,
         entityId,
+        reactionId,
         userId,
       },
     });
@@ -123,7 +110,12 @@ export class ReactionEntityService {
       .addSelect('reactionEntity.reactionId', 'reactionId')
       .addSelect('COUNT(*)', 'count')
       .where('reactionEntity.entityType = :entityType', { entityType })
-      .andWhere('reactionEntity.entityId IN (:...entityIds)', { entityIds })
+      .andWhere(
+        entityIds.length > 0
+          ? 'reactionEntity.entityId IN (:...entityIds)'
+          : '1=0',
+        { entityIds },
+      )
       .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
       .orderBy('reactionEntity.reactionId', 'ASC')
       .getRawMany();
@@ -137,7 +129,12 @@ export class ReactionEntityService {
         .addSelect('reactionEntity.reactionId', 'reactionId')
         .addSelect('COUNT(*)', 'count')
         .where('reactionEntity.entityType = :entityType', { entityType })
-        .andWhere('reactionEntity.entityId IN (:...entityIds)', { entityIds })
+        .andWhere(
+          entityIds.length > 0
+            ? 'reactionEntity.entityId IN (:...entityIds)'
+            : '1=0',
+          { entityIds },
+        )
         .andWhere('reactionEntity.userId = :userId', { userId })
         .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
         .orderBy('reactionEntity.reactionId', 'ASC')

@@ -179,7 +179,7 @@ export class DiaryService {
       userId,
       {
         page: 1,
-        limit: 100, // 충분히 큰 수로 설정하여 모든 유사 사용자를 가져옴
+        limit: 1000, // 충분히 큰 수로 설정하여 모든 유사 사용자를 가져옴
       },
     );
     const similarUserIds = similarUsersResponse.items.map((user) => user.id);
@@ -197,19 +197,45 @@ export class DiaryService {
       };
     }
 
+    // userId가 없으면 public 일기만 조회
+    // userId가 있으면 public 또는 member 일기 조회
+    const where = userId
+      ? { accessLevel: In(['public', 'member'] as const) }
+      : { accessLevel: 'public' as const };
+
     // 2. 유사 사용자들의 오늘의나 조회
     const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where: {
-        authorId: In(similarUserIds),
-      },
-      relations: ['emotion', 'author'],
+      where: { ...where, authorId: In(similarUserIds) },
+      relations: ['author', 'images', 'comments'],
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
 
+    // 다이어리 ID 목록 추출
+    const diaryIds = items.map((diary) => diary.id);
+
+    // 여러 다이어리의 공감을 한 번에 조회
+    const diaryReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'diary',
+        diaryIds,
+        userId,
+      );
+
+    // 공감 정보를 각 엔티티에 매핑
+    const diariesWithReactions = items.map((diary) => {
+      const diaryWithReactions = {
+        ...diary,
+        reactions: diaryReactions[diary.id]?.reactions || [],
+        userReactions: diaryReactions[diary.id]?.userReactions || [],
+        commentsCount: diary.comments.length,
+      };
+      return diaryWithReactions;
+    });
+
     return {
-      items,
+      items: diariesWithReactions,
       meta: {
         totalItems,
         itemCount: items.length,

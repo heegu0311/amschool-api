@@ -46,32 +46,34 @@ export class ReactionEntityController {
 
   @ApiOperation({ summary: '공감 추가' })
   @ApiResponse({ status: 201, description: '새로운 공감이 생성되었습니다.' })
-  @Post(':entityType/:entityId')
+  @Post(':entityType/:entityId/:reactionId')
   async addReaction(
     @Param('entityType') entityType: 'diary' | 'comment' | 'reply',
     @Param('entityId') entityId: number,
-    @Body() addReactionDto: AddReactionDto,
+    @Param('reactionId') reactionId: number,
     @Req() req,
   ) {
     return this.reactionEntityService.addReaction(
       entityType,
       entityId,
+      reactionId,
       req.user.id,
-      addReactionDto.reactionId,
     );
   }
 
   @ApiOperation({ summary: '공감 삭제' })
   @ApiResponse({ status: 200, description: '공감이 삭제되었습니다.' })
-  @Delete(':entityType/:entityId')
+  @Delete(':entityType/:entityId/:reactionId')
   async removeReaction(
     @Param('entityType') entityType: 'diary' | 'comment' | 'reply',
     @Param('entityId') entityId: number,
+    @Param('reactionId') reactionId: number,
     @Req() req,
   ) {
     return this.reactionEntityService.removeReaction(
       entityType,
       entityId,
+      reactionId,
       req.user.id,
     );
   }
