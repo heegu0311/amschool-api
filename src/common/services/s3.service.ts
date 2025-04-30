@@ -38,12 +38,13 @@ export class S3Service {
 
   async deleteFile(url: string): Promise<void> {
     const key = url.split('/').pop();
+    const dir = url.split('/')[3];
     if (!key) return;
 
     await this.s3
       .deleteObject({
         Bucket: this.bucket,
-        Key: key,
+        Key: `${dir}/${key}`,
       })
       .promise();
   }

@@ -1,0 +1,314 @@
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Between, In, Repository } from 'typeorm';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Image } from '../common/entities/image.entity';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { ImageService } from '../common/services/image.service';
+import { UsersService } from '../users/users.service';
+import { CreateDiaryDto } from './dto/create-diary.dto';
+import { UpdateDiaryDto } from './dto/update-diary.dto';
+import { Diary } from './entities/diary.entity';
+
+@Injectable()
+export class DiaryService {
+  constructor(
+    @InjectRepository(Diary)
+    private diaryRepository: Repository<Diary>,
+    @InjectRepository(Image)
+    private imageRepository: Repository<Image>,
+    private readonly usersService: UsersService,
+    private readonly imageService: ImageService,
+  ) {}
+
+  async create(
+    userId: number,
+    createDiaryDto: CreateDiaryDto,
+    images?: Express.Multer.File[],
+  ) {
+    const diary = this.diaryRepository.create({
+      authorId: userId,
+      ...createDiaryDto,
+    });
+    const savedDiary = await this.diaryRepository.save(diary);
+
+    if (images && images.length > 0) {
+      const imageEntities = await Promise.all(
+        images.map(async (image, index) => {
+          const uploadedImageUrl = await this.imageService.uploadImage(
+            image,
+            'diary',
+          );
+
+          return this.imageRepository.create({
+            url: uploadedImageUrl,
+            originalName: image.originalname,
+            mimeType: image.mimetype,
+            size: image.size,
+            entityType: 'diary',
+            entityId: savedDiary.id,
+            order: index,
+            diary: savedDiary,
+          });
+        }),
+      );
+
+      await this.imageRepository.save(imageEntities);
+    }
+
+    return savedDiary;
+  }
+
+  async findAll(
+    paginationDto: PaginationDto,
+    userId?: number,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+
+    // userId가 없으면 public 일기만 조회
+    // userId가 있으면 public 또는 member 일기 조회
+    const where = userId
+      ? { accessLevel: In(['public', 'member'] as const) }
+      : { accessLevel: 'public' as const };
+
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
+      where,
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        emotion: {
+          id: true,
+          name: true,
+        },
+        author: {
+          id: true,
+          username: true,
+          profileImage: true,
+        },
+        subEmotion: {
+          id: true,
+          name: true,
+        },
+      },
+      relations: ['emotion', 'author', 'subEmotion', 'images'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
+
+  async findSimilarUserDiaries(
+    userId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+
+    // 1. 유사 사용자 ID 목록 조회
+    const similarUsersResponse = await this.usersService.findSimilarUsers(
+      userId,
+      {
+        page: 1,
+        limit: 100, // 충분히 큰 수로 설정하여 모든 유사 사용자를 가져옴
+      },
+    );
+    const similarUserIds = similarUsersResponse.items.map((user) => user.id);
+
+    if (similarUserIds.length === 0) {
+      return {
+        items: [],
+        meta: {
+          totalItems: 0,
+          itemCount: 0,
+          itemsPerPage: limit,
+          totalPages: 0,
+          currentPage: page,
+        },
+      };
+    }
+
+    // 2. 유사 사용자들의 오늘의나 조회
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
+      where: {
+        authorId: In(similarUserIds),
+      },
+      relations: ['emotion', 'author'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      items,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
+
+  async findOne(id: number, userId?: number) {
+    const diary = await this.diaryRepository.findOne({
+      where: { id },
+      relations: ['images'],
+    });
+
+    if (diary?.accessLevel === 'private' && diary?.authorId !== userId) {
+      throw new NotFoundException(`Diary #${id} has private type`);
+    }
+
+    if (diary?.accessLevel === 'member' && !userId) {
+      throw new NotFoundException(`Diary #${id} has member type`);
+    }
+
+    if (!diary) {
+      throw new NotFoundException(`Diary #${id} not found`);
+    }
+
+    return diary;
+  }
+
+  async update(
+    id: number,
+    userId: number,
+    updateDiaryDto: UpdateDiaryDto,
+    images?: Express.Multer.File[],
+  ) {
+    const diary = await this.findOne(id, userId);
+
+    if (diary.authorId !== userId) {
+      throw new UnauthorizedException('자신의 일지만 수정할 수 있습니다.');
+    }
+
+    Object.assign(diary, updateDiaryDto);
+    await this.diaryRepository.save(diary);
+
+    // 기존 이미지 삭제 처리
+    if (
+      updateDiaryDto.deletedImageIds &&
+      updateDiaryDto.deletedImageIds.length > 0
+    ) {
+      for (const deletedImageId of updateDiaryDto.deletedImageIds) {
+        const imageToDelete = await this.imageRepository.findOne({
+          where: { id: deletedImageId },
+        });
+        if (imageToDelete) {
+          await this.imageService.deleteImage(imageToDelete.id);
+          await this.imageRepository.remove(imageToDelete);
+        }
+      }
+    }
+
+    // 이미지 업데이트 처리
+    if (updateDiaryDto.imageUpdates && updateDiaryDto.imageUpdates.length > 0) {
+      // 기존 이미지 업데이트 처리
+      for (const imageUpdate of updateDiaryDto.imageUpdates) {
+        if (imageUpdate.id) {
+          // 기존 이미지 업데이트
+          const existingImage = await this.imageRepository.findOne({
+            where: { id: imageUpdate.id },
+          });
+          if (existingImage) {
+            existingImage.order = imageUpdate.order;
+            await this.imageRepository.save(existingImage);
+          }
+        } else {
+          // 신규 이미지 업로드 처리
+          if (images && images.length > 0) {
+            if (!imageUpdate || imageUpdate.id) continue; // 기존 이미지는 건너뛰기
+
+            const uploadedImageUrl = await this.imageService.uploadImage(
+              images[imageUpdate.order],
+              'diary',
+            );
+
+            const imageEntity = this.imageRepository.create({
+              url: uploadedImageUrl,
+              originalName: images[imageUpdate.order].originalname,
+              mimeType: images[imageUpdate.order].mimetype,
+              size: images[imageUpdate.order].size,
+              entityType: 'diary',
+              entityId: id,
+              order: imageUpdate.order,
+              diary: diary,
+            });
+
+            await this.imageRepository.save(imageEntity);
+          }
+        }
+      }
+    }
+
+    // entityType이 'diary'인 images만 포함해서 다시 조회
+    const updatedDiary = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect(
+        'diary.images',
+        'image',
+        'image.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where('diary.id = :id', { id })
+      .getOne();
+
+    return updatedDiary;
+  }
+
+  async remove(id: number, userId: number) {
+    const diary = await this.findOne(id, userId);
+    await this.imageService.deleteImagesByEntity('diary', id);
+    return await this.diaryRepository.softRemove(diary);
+  }
+
+  async findByMonth(userId: number, year: number, month: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    return await this.diaryRepository.find({
+      where: {
+        authorId: userId,
+        createdAt: Between(startDate, endDate),
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        emotion: {
+          id: true,
+          name: true,
+        },
+        author: {
+          id: true,
+          username: true,
+          profileImage: true,
+        },
+        subEmotion: {
+          id: true,
+          name: true,
+        },
+      },
+      relations: ['emotion', 'author', 'subEmotion', 'images'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+}
