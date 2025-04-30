@@ -7,15 +7,15 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Request,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
-  Req,
 } from '@nestjs/common';
 import {
-  FilesInterceptor,
   FileFieldsInterceptor,
+  FilesInterceptor,
 } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
@@ -24,19 +24,17 @@ import {
   ApiOperation,
   ApiQuery,
   ApiResponse,
-  ApiTags,
 } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { S3Service } from '../common/services/s3.service';
 import { DiaryService } from './diary.service';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { Diary } from './entities/diary.entity';
-import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { S3Service } from '../common/services/s3.service';
-import { Public } from '../auth/decorators/public.decorator';
 
-@ApiTags('diary')
 @UseGuards(JwtAuthGuard)
 @Controller('diary')
 export class DiaryController {
@@ -90,7 +88,7 @@ export class DiaryController {
     type: [Diary],
   })
   findAll(@Request() req, @Query() paginationDto: PaginationDto) {
-    return this.diaryService.findAll(paginationDto, req.user?.id);
+    return this.diaryService.findAllWithMoreInfo(paginationDto, req.user?.id);
   }
 
   @Get('similar-user')
@@ -141,7 +139,7 @@ export class DiaryController {
     description: '오늘의나를 찾을 수 없음',
   })
   findOne(@Request() req, @Param('id') id: string) {
-    return this.diaryService.findOne(+id, req.user?.id);
+    return this.diaryService.findOneWithMoreInfo(+id, req.user?.id);
   }
 
   @Patch(':id')

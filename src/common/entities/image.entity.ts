@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -8,11 +9,10 @@ import {
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
-  Check,
 } from 'typeorm';
+import { Diary } from '../../diary/entities/diary.entity';
 import { Question } from '../../questions/entities/question.entity';
 import { S3Service } from '../services/s3.service';
-import { Diary } from '../../diary/entities/diary.entity';
 
 @Entity()
 @Check('"order" >= 1 AND "order" <= 3')
@@ -53,12 +53,6 @@ export class Image {
   @ManyToOne(() => Question, (question) => question.images, {
     createForeignKeyConstraints: false,
   })
-  @JoinColumn({
-    name: 'entity_id',
-    referencedColumnName: 'id',
-  })
-  question: Relation<Question>;
-
   @ManyToOne(() => Diary, (diary) => diary.images, {
     createForeignKeyConstraints: false,
   })
@@ -66,7 +60,7 @@ export class Image {
     name: 'entity_id',
     referencedColumnName: 'id',
   })
-  diary: Relation<Diary>;
+  entity: Relation<Question | Diary>;
 
   async getPresignedUrl(s3Service: S3Service): Promise<string> {
     const key = this.url.split('/').slice(-2).join('/'); // S3 키 추출

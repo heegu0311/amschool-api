@@ -59,7 +59,6 @@ export class QuestionsService {
           size: image.size,
           entityType: 'question',
           entityId: savedQuestion.id,
-          question: savedQuestion,
         });
 
         return this.imageRepository.save(imageEntity);

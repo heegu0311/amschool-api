@@ -1,31 +1,29 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
   Body,
-  UseGuards,
-  Req,
+  Controller,
+  Delete,
+  Get,
+  Param,
   ParseIntPipe,
+  Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ReplyService } from './reply.service';
-import { CreateReplyDto } from './dto/create-reply.dto';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import {
   ApiBearerAuth,
-  ApiTags,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiQuery,
+  ApiResponse,
 } from '@nestjs/swagger';
-import { Reply } from './entities/reply.entity';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/pagination.interface';
+import { CreateReplyDto } from './dto/create-reply.dto';
+import { Reply } from './entities/reply.entity';
+import { ReplyService } from './reply.service';
 
-@ApiTags('comment')
 @UseGuards(JwtAuthGuard)
 @Controller(':entityType/:entityId/comments/:commentId/replies')
 @ApiBearerAuth('accessToken')

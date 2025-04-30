@@ -1,9 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { EmotionService } from './emotion.service';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Emotion } from '../entities/emotion.entity';
+import { EmotionService } from './emotion.service';
 
-@ApiTags('emotions')
 @Controller('emotions')
 export class EmotionController {
   constructor(private readonly emotionService: EmotionService) {}

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -10,11 +11,11 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { Comment } from '../../comment/entities/comment.entity';
+import { Image } from '../../common/entities/image.entity';
+import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { User } from '../../users/entities/user.entity';
 import { Emotion } from './emotion.entity';
-import { Image } from '../../common/entities/image.entity';
-import { Comment } from '../../comment/entities/comment.entity';
 
 @Entity()
 export class Diary {
@@ -46,6 +47,23 @@ export class Diary {
   @CreateDateColumn()
   createdAt: Date;
 
+  @ManyToOne(() => Emotion, (emotion) => emotion.id)
+  @JoinColumn({ name: 'emotion_id' })
+  emotion: Relation<Emotion>;
+
+  @ManyToOne(() => Emotion, (emotion) => emotion.id)
+  @JoinColumn({ name: 'sub_emotion_id' })
+  subEmotion: Relation<Emotion>;
+
+  @OneToMany(() => Image, (image) => image.entity)
+  images: Relation<Image[]>;
+
+  @OneToMany(() => Comment, (comment) => comment.diary)
+  comments: Relation<Comment[]>;
+
+  @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.diary)
+  reactions: Relation<ReactionEntity[]>;
+
   @ApiProperty({ description: '수정일' })
   @UpdateDateColumn()
   updatedAt: Date;
@@ -57,18 +75,4 @@ export class Diary {
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
-
-  @ManyToOne(() => Emotion, (emotion) => emotion.id)
-  @JoinColumn({ name: 'emotion_id' })
-  emotion: Relation<Emotion>;
-
-  @ManyToOne(() => Emotion, (emotion) => emotion.id)
-  @JoinColumn({ name: 'sub_emotion_id' })
-  subEmotion: Relation<Emotion>;
-
-  @OneToMany(() => Image, (image) => image.diary)
-  images: Relation<Image[]>;
-
-  @OneToMany(() => Comment, (comment) => comment.diary)
-  comments: Relation<Comment[]>;
 }
