@@ -11,9 +11,9 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Image } from '../../common/entities/image.entity';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
-import { Image } from '../../common/entities/image.entity';
 
 @Entity()
 export class Question {
@@ -42,7 +42,7 @@ export class Question {
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.id)
-  @JoinColumn({ name: 'authorId' })
+  @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 
   @OneToOne(() => AiAnswer, (aiAnswer) => aiAnswer.question, {
@@ -50,6 +50,6 @@ export class Question {
   })
   aiAnswer: Relation<AiAnswer>;
 
-  @OneToMany(() => Image, (image) => image.question)
+  @OneToMany(() => Image, (image) => image.entity)
   images: Relation<Image[]>;
 }
