@@ -92,6 +92,7 @@ export class DiaryController {
   }
 
   @Get('similar-user')
+  @Public()
   @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '유사한 암을 가진 사용자들의 오늘의나 목록 조회',
