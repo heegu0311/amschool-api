@@ -96,19 +96,19 @@ export class UsersService {
     }
 
     // 같은 암을 가진 다른 사용자들 조회
-    const [items, totalItems] = await this.usersRepository.findAndCount({
-      where: {
-        cancerUsers: {
-          cancerId: In(cancerIds),
-        },
-      },
-      relations: ['cancerUsers'],
-      order: {
-        createdAt: 'ASC',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [items, totalItems] = await this.usersRepository
+      .createQueryBuilder('user')
+      .innerJoin('user.cancerUsers', 'cancerUser')
+      .innerJoin('cancerUser.cancer', 'cancer')
+      .leftJoinAndSelect('user.cancerUsers', 'userCancerUsers')
+      .leftJoinAndSelect('userCancerUsers.cancer', 'userCancers')
+      .where('cancerUser.cancerId IN (:...cancerIds)', { cancerIds })
+      .andWhere('user.id != :userId', { userId })
+      .andWhere('user.isPublic = :isPublic', { isPublic: true })
+      .orderBy('user.createdAt', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return {
       items,
