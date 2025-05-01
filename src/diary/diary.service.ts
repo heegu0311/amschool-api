@@ -426,7 +426,7 @@ export class DiaryService {
           name: true,
         },
       },
-      relations: ['emotion', 'author', 'subEmotion', 'images'],
+      relations: ['emotion', 'author', 'subEmotion'],
       order: { createdAt: 'DESC' },
     });
   }
