@@ -127,7 +127,6 @@ export class DiaryController {
   }
 
   @Get(':id')
-  @Public()
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 오늘의나 조회' })
   @ApiResponse({
