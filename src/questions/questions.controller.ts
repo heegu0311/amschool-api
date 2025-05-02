@@ -69,8 +69,8 @@ export class QuestionsController {
     return this.questionsService.findOne(question.id);
   }
 
-  @Public()
   @Get()
+  @Public()
   @ApiOperation({ summary: '모든 질문 목록 조회' })
   @ApiQuery({
     name: 'page',
@@ -96,6 +96,7 @@ export class QuestionsController {
   }
 
   @Get('my')
+  @Public()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '내 질문 목록 조회' })
   @ApiQuery({
