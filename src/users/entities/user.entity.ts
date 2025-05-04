@@ -4,14 +4,15 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
   OneToOne,
+  PrimaryGeneratedColumn,
   Relation,
+  UpdateDateColumn,
 } from 'typeorm';
-import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
-import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
+import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
+import { Comment } from '../../comment/entities/comment.entity';
+import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 
 @Entity()
 export class User {
@@ -62,6 +63,9 @@ export class User {
 
   @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user)
   cancerUsers: Relation<CancerUser[]>;
+
+  @OneToMany(() => Comment, (comment: Comment) => comment.author)
+  comments: Relation<Comment[]>;
 
   @OneToMany(
     () => SurveyAnswerUser,

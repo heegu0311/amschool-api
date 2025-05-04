@@ -80,11 +80,19 @@ export class CommentController {
     description: '댓글 목록 조회 성공',
     type: [Comment],
   })
-  findAllByEntityId(
+  findAllByEntityTypeAndEntityId(
+    @Req() req,
+    @Param('entityType') entityType: string,
     @Param('entityId', ParseIntPipe) entityId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Comment>> {
-    return this.commentService.findAllByEntityId(entityId, paginationDto);
+    const userId = req.user.id;
+    return this.commentService.findAllByEntityTypeAndEntityId(
+      userId,
+      entityType,
+      entityId,
+      paginationDto,
+    );
   }
 
   @Delete(':commentId')
