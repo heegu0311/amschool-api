@@ -14,6 +14,7 @@ import {
 import { Diary } from '../../diary/entities/diary.entity';
 import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { Reply } from '../reply/entities/reply.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity()
 export class Comment {
@@ -49,6 +50,10 @@ export class Comment {
   })
   diary: Relation<Diary>;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'author_id' })
+  author: Relation<User>;
+
   @OneToMany(() => Reply, (reply) => reply.comment)
   replies: Relation<Reply[]>;
 
@@ -64,6 +69,6 @@ export class Comment {
   updatedAt: Date;
 
   @ApiProperty({ description: '삭제일', required: false })
-  @DeleteDateColumn()
+  @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
 }
