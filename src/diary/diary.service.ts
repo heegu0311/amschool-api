@@ -70,8 +70,8 @@ export class DiaryService {
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
 
-    // userId가 없으면 public 일기만 조회
-    // userId가 있으면 public 또는 member 일기 조회
+    // userId가 없으면 public 오늘의나만 조회
+    // userId가 있으면 public 또는 member 오늘의나 조회
     const where = userId
       ? { accessLevel: In(['public', 'member'] as const) }
       : { accessLevel: 'public' as const };
@@ -197,8 +197,8 @@ export class DiaryService {
       };
     }
 
-    // userId가 없으면 public 일기만 조회
-    // userId가 있으면 public 또는 member 일기 조회
+    // userId가 없으면 public 오늘의나만 조회
+    // userId가 있으면 public 또는 member 오늘의나 조회
     const where = userId
       ? { accessLevel: In(['public', 'member'] as const) }
       : { accessLevel: 'public' as const };

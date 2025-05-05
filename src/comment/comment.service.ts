@@ -29,7 +29,7 @@ export class CommentService {
     });
 
     if (!diary) {
-      throw new NotFoundException('일기를 찾을 수 없습니다.');
+      throw new NotFoundException('오늘의나를 찾을 수 없습니다.');
     }
 
     const comment = this.commentRepository.create({
