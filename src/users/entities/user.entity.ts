@@ -25,6 +25,9 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
+  @Column({ type: 'date', nullable: true })
+  birthday: Date;
+
   @Column({ default: true })
   isActive: boolean;
 
@@ -45,6 +48,9 @@ export class User {
 
   @Column()
   intro: string;
+
+  @Column({ type: 'enum', enum: ['M', 'F'], nullable: true })
+  gender: 'M' | 'F';
 
   @Column({ default: false })
   isPublic: boolean;

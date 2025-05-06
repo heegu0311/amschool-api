@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsDate,
   IsEmail,
   IsNumber,
   IsOptional,
@@ -58,6 +59,15 @@ export class CompleteRegistrationDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({ description: '생년월일' })
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  birthday: Date;
+
+  @ApiProperty({ description: '성별' })
+  @IsString()
+  gender: 'M' | 'F';
 
   @ApiProperty({ description: '서비스 이용약관 동의' })
   @IsBoolean()

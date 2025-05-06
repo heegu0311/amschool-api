@@ -126,4 +126,11 @@ export class UsersService {
     const user = await this.usersRepository.findOneBy({ email });
     return !!user;
   }
+
+  async existsByUsername(username: string): Promise<boolean> {
+    const user = await this.usersRepository.findOneBy({
+      username: username ?? '',
+    });
+    return !!user;
+  }
 }
