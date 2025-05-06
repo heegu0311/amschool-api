@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Not } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Repository } from 'typeorm';
+import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -120,5 +120,10 @@ export class UsersService {
         currentPage: page,
       },
     };
+  }
+
+  async existsByEmail(email: string): Promise<boolean> {
+    const user = await this.usersRepository.findOneBy({ email });
+    return !!user;
   }
 }

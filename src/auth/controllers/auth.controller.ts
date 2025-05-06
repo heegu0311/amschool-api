@@ -1,5 +1,19 @@
-import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Res,
+  ConflictException,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from '../../auth/services/auth.service';
 import { Public } from '../decorators/public.decorator';
@@ -12,12 +26,15 @@ import {
   VerifyEmailDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
+import { UsersService } from '../../users/users.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly emailVerificationService: EmailVerificationService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Public()
@@ -37,6 +54,13 @@ export class AuthController {
   async sendVerificationEmail(
     @Body() sendVerificationEmailDto: SendVerificationEmailDto,
   ): Promise<{ message: string }> {
+    // 이미 가입된 유저인지 확인
+    const exists = await this.usersService.existsByEmail(
+      sendVerificationEmailDto.email,
+    );
+    if (exists) {
+      throw new ConflictException('이미 가입된 이메일입니다.');
+    }
     // 이메일 인증 코드 생성 및 발송
     await this.emailVerificationService.sendVerificationEmail(
       sendVerificationEmailDto.email,
@@ -167,6 +191,12 @@ export class AuthController {
 
   @Public()
   @Post('complete-registration')
+  @UseInterceptors(
+    FileInterceptor('profileImage', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '회원가입 완료' })
   @ApiBody({ type: CompleteRegistrationDto })
   @ApiResponse({
@@ -182,7 +212,11 @@ export class AuthController {
   })
   async completeRegistration(
     @Body() completeRegistrationDto: CompleteRegistrationDto,
+    @UploadedFile() profileImage?: Express.Multer.File,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    return this.authService.completeRegistration(completeRegistrationDto);
+    return this.authService.completeRegistration(
+      completeRegistrationDto,
+      profileImage,
+    );
   }
 }

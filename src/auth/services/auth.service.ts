@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { UsersService } from 'src/users/users.service';
 import { CancerUserService } from 'src/cancer-user/cancer-user.service';
+import { ImageService } from 'src/common/services/image.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly cancerUserService: CancerUserService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
+    private readonly imageService: ImageService,
   ) {}
 
   async generateTokens(userId: number, email: string) {
@@ -87,7 +89,7 @@ export class AuthService {
       throw new UnauthorizedException('만료된 refresh token입니다.');
     }
 
-    const user = await tokenEntity.user;
+    const user = tokenEntity.user;
     const payload = { sub: user.id, email: user.email };
     const newAccessToken = await this.jwtService.signAsync(payload);
 
@@ -105,7 +107,10 @@ export class AuthService {
     return { message: '로그아웃되었습니다.' };
   }
 
-  async completeRegistration(completeRegistrationDto: CompleteRegistrationDto) {
+  async completeRegistration(
+    completeRegistrationDto: CompleteRegistrationDto,
+    profileImage?: Express.Multer.File,
+  ) {
     if (!completeRegistrationDto.password) {
       throw new BadRequestException('비밀번호는 필수입니다.');
     }
@@ -123,10 +128,23 @@ export class AuthService {
       10,
     );
 
+    let profileImageUrl = '';
+    if (profileImage) {
+      // diary.service.ts 참고: imageService.uploadImage 사용
+      if (!this.imageService) {
+        throw new Error('imageService가 주입되어야 합니다.');
+      }
+      profileImageUrl = await this.imageService.uploadImage(
+        profileImage,
+        'user',
+      );
+    }
+
     try {
       const user = await this.userService.create({
         ...completeRegistrationDto,
         password: hashedPassword,
+        profileImage: profileImageUrl || completeRegistrationDto.profileImage,
       });
 
       // 선택된 암 정보가 있는 경우 cancer_user 테이블에 추가
