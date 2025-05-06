@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmailVerification } from '../entities/email-verification.entity';
 import { EmailService } from '../../common/services/email.service';
-import * as crypto from 'crypto';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -18,11 +17,8 @@ export class EmailVerificationService {
     // 이전 인증 코드가 있다면 삭제
     await this.emailVerificationRepository.delete({ email });
 
-    // 새로운 인증 코드 생성
-    const verificationCode = crypto
-      .randomBytes(3)
-      .toString('hex')
-      .toUpperCase();
+    // 4자리 숫자 인증 코드 생성 (0000~9999)
+    const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
     // 인증 정보 저장
     const emailVerification = this.emailVerificationRepository.create({

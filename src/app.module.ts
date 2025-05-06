@@ -17,6 +17,7 @@ import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
+
 export class SnakeNamingStrategy extends DefaultNamingStrategy {
   tableName(targetName: string, userSpecifiedName: string): string {
     return (

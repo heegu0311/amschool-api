@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -60,14 +61,17 @@ export class CompleteRegistrationDto {
 
   @ApiProperty({ description: '서비스 이용약관 동의' })
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   agreeService: boolean;
 
   @ApiProperty({ description: '개인정보 처리방침 동의' })
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   agreePrivacy: boolean;
 
   @ApiProperty({ description: '마케팅 정보 수신 동의' })
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   agreeMarketing: boolean;
 
   @ApiProperty({ description: '사용자 유형', enum: ['patient', 'supporter'] })
@@ -76,19 +80,28 @@ export class CompleteRegistrationDto {
 
   @ApiProperty({ description: '암 종류 목록' })
   @IsArray()
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : value ? [Number(value)] : [],
+  )
   cancerIds: number[];
 
   @ApiProperty({ description: '공개 여부' })
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   isPublic: boolean;
 
   @ApiProperty({ description: '프로필 타입', enum: ['default', 'upload'] })
   @IsString()
   profileType: 'default' | 'upload';
 
-  @ApiProperty({ description: '프로필 이미지 URL' })
   @IsString()
   @IsOptional()
+  @ApiProperty({
+    description: '프로필 이미지 URL',
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
   profileImage?: string;
 
   @ApiProperty({ description: '사용자명' })
@@ -102,6 +115,9 @@ export class CompleteRegistrationDto {
 
   @ApiProperty({ description: '설문 응답 목록' })
   @IsArray()
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : value ? [Number(value)] : [],
+  )
   surveyAnswers: number[];
 
   @ApiProperty({ description: '로그인 제공자' })
@@ -110,6 +126,7 @@ export class CompleteRegistrationDto {
 
   @ApiProperty({ description: '관리자 여부' })
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   isAdmin: boolean;
 
   @ApiProperty({ description: '이름' })
