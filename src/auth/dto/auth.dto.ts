@@ -65,6 +65,10 @@ export class CompleteRegistrationDto {
   @Transform(({ value }) => new Date(value))
   birthday: Date;
 
+  @ApiProperty({ description: '성별' })
+  @IsString()
+  gender: 'M' | 'F';
+
   @ApiProperty({ description: '서비스 이용약관 동의' })
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)

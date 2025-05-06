@@ -49,6 +49,9 @@ export class User {
   @Column()
   intro: string;
 
+  @Column({ type: 'enum', enum: ['M', 'F'], nullable: true })
+  gender: 'M' | 'F';
+
   @Column({ default: false })
   isPublic: boolean;
 
