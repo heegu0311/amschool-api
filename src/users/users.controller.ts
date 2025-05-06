@@ -24,16 +24,17 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
+import { Public } from 'src/auth/decorators/public.decorator';
 
-@ApiBearerAuth('accessToken')
-@Controller('users')
 @UseGuards(JwtAuthGuard)
+@Controller('users')
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
 
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '새로운 사용자 생성' })
   @ApiResponse({
     status: 201,
@@ -45,6 +46,7 @@ export class UsersController {
   }
 
   @Get()
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '모든 사용자 목록 조회' })
   @ApiQuery({
     name: 'page',
@@ -68,6 +70,7 @@ export class UsersController {
   }
 
   @Get('similar')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '유사한 암에 관심있는 사용자 목록 조회',
     description:
@@ -99,7 +102,27 @@ export class UsersController {
     return await this.usersService.findSimilarUsers(req.user.id, paginationDto);
   }
 
+  @Get('check-username')
+  @Public()
+  @ApiOperation({ summary: '닉네임(유저네임) 중복 검사' })
+  @ApiQuery({
+    name: 'username',
+    required: true,
+    type: String,
+    description: '중복 확인할 닉네임',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '닉네임 사용 가능 여부',
+    schema: { example: { available: true } },
+  })
+  async checkUsername(@Query('username') username: string) {
+    const exists = await this.usersService.existsByUsername(username);
+    return { available: !exists };
+  }
+
   @Get(':id')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 사용자 조회' })
   @ApiResponse({
     status: 200,
@@ -115,6 +138,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '사용자 정보 수정' })
   @ApiResponse({
     status: 200,
@@ -144,6 +168,7 @@ export class UsersController {
   }
 
   @Get('cancer/:cancerId')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 암에 관심있는 사용자 목록 조회' })
   @ApiQuery({
     name: 'page',
