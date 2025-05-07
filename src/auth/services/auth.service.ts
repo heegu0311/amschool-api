@@ -4,7 +4,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto, CompleteRegistrationDto } from '../dto/auth.dto';
+import {
+  LoginDto,
+  CompleteRegistrationDto,
+  NewPasswordDto,
+} from '../dto/auth.dto';
 import { EmailVerificationService } from './email-verification.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -171,5 +175,16 @@ export class AuthService {
 
       throw error; // 다른 에러는 전역 예외 필터가 처리
     }
+  }
+
+  async resetPassword(newPasswordDto: NewPasswordDto) {
+    const { email, password } = newPasswordDto;
+    await this.emailVerificationService.getVerifiedOrFail(email);
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('존재하지 않는 이메일입니다.');
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.userService.update(user.id, { password: hashedPassword });
   }
 }

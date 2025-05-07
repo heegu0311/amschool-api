@@ -7,6 +7,7 @@ import {
   ConflictException,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -24,6 +25,7 @@ import {
   RefreshTokenDto,
   SendVerificationEmailDto,
   VerifyEmailDto,
+  NewPasswordDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { UsersService } from '../../users/users.service';
@@ -53,13 +55,17 @@ export class AuthController {
   })
   async sendVerificationEmail(
     @Body() sendVerificationEmailDto: SendVerificationEmailDto,
+    @Query('purpose') purpose?: string,
   ): Promise<{ message: string }> {
-    // 이미 가입된 유저인지 확인
-    const exists = await this.usersService.existsByEmail(
-      sendVerificationEmailDto.email,
-    );
-    if (exists) {
-      throw new ConflictException('이미 가입된 이메일입니다.');
+    const isReset = purpose === 'reset-password';
+    // 가입 시에는 중복 이메일 체크, 비밀번호 찾기(purpose=reset-password) 시에는 스킵
+    if (!isReset) {
+      const exists = await this.usersService.existsByEmail(
+        sendVerificationEmailDto.email,
+      );
+      if (exists) {
+        throw new ConflictException('이미 가입된 이메일입니다.');
+      }
     }
     // 이메일 인증 코드 생성 및 발송
     await this.emailVerificationService.sendVerificationEmail(
@@ -218,5 +224,26 @@ export class AuthController {
       completeRegistrationDto,
       profileImage,
     );
+  }
+
+  @Public()
+  @Post('new-password')
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiBody({ type: NewPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: '비밀번호 재설정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '비밀번호가 변경되었습니다.' },
+      },
+    },
+  })
+  async newPassword(
+    @Body() newPasswordDto: NewPasswordDto,
+  ): Promise<{ message: string }> {
+    await this.authService.resetPassword(newPasswordDto);
+    return { message: '비밀번호가 변경되었습니다.' };
   }
 }
