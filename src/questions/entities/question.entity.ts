@@ -14,11 +14,15 @@ import {
 import { Image } from '../../common/entities/image.entity';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
-
+import { ApiProperty } from '@nestjs/swagger';
 @Entity()
 export class Question {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ApiProperty({ description: '질문 타입', example: 'question' })
+  @Column({ default: 'question' })
+  type: string;
 
   @Column()
   authorId: number;

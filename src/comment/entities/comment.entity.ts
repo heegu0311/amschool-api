@@ -22,6 +22,10 @@ export class Comment {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiProperty({ description: '댓글 타입', example: 'comment' })
+  @Column({ default: 'comment' })
+  type: string;
+
   @ApiProperty({ description: '댓글 내용', example: '좋은 글 감사합니다!' })
   @Column('text')
   content: string;

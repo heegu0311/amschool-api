@@ -23,6 +23,10 @@ export class Diary {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiProperty({ description: '오늘의나 타입' })
+  @Column({ default: 'diary' })
+  type: string;
+
   @ApiProperty({ description: '작성자 ID' })
   @Column()
   authorId: number;

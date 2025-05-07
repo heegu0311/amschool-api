@@ -7,6 +7,7 @@ import { Diary } from '../diary/entities/diary.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -100,5 +101,22 @@ export class CommentService {
     }
 
     await this.commentRepository.softRemove(comment);
+  }
+
+  async update(
+    userId: number,
+    commentId: number,
+    updateCommentDto: UpdateCommentDto,
+  ): Promise<Comment> {
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId, authorId: userId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('댓글을 찾을 수 없습니다.');
+    }
+
+    comment.content = updateCommentDto.content;
+    return this.commentRepository.save(comment);
   }
 }

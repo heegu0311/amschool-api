@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -23,6 +24,7 @@ import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Comment } from './entities/comment.entity';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller(':entityType/:entityId/comments')
@@ -113,5 +115,26 @@ export class CommentController {
   ) {
     const userId = req.user.id;
     return this.commentService.remove(userId, commentId);
+  }
+
+  @Patch(':commentId')
+  @ApiOperation({ summary: '댓글 수정' })
+  @ApiParam({
+    name: 'entityType',
+    description: '엔티티 타입 (diary, question 등)',
+    example: 'diary',
+  })
+  @ApiParam({ name: 'entityId', description: '엔티티 ID', example: 1 })
+  @ApiParam({ name: 'commentId', description: '수정할 댓글 ID', example: 1 })
+  @ApiResponse({ status: 200, description: '댓글 수정 성공', type: Comment })
+  @ApiResponse({ status: 404, description: '댓글을 찾을 수 없음' })
+  update(
+    @Param('entityId', ParseIntPipe) entityId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @Req() req,
+  ) {
+    const userId = req.user.id;
+    return this.commentService.update(userId, commentId, updateCommentDto);
   }
 }
