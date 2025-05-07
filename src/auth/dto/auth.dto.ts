@@ -149,3 +149,14 @@ export class LogoutDto {
   @IsNumber()
   userId: number;
 }
+
+export class NewPasswordDto {
+  @ApiProperty({ description: '이메일 주소' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ description: '새 비밀번호' })
+  @IsString()
+  @MinLength(8)
+  password: string;
+}

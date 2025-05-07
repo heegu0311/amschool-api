@@ -25,6 +25,7 @@ import {
   RefreshTokenDto,
   SendVerificationEmailDto,
   VerifyEmailDto,
+  NewPasswordDto,
 } from '../dto/auth.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { UsersService } from '../../users/users.service';
@@ -223,5 +224,26 @@ export class AuthController {
       completeRegistrationDto,
       profileImage,
     );
+  }
+
+  @Public()
+  @Post('new-password')
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiBody({ type: NewPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: '비밀번호 재설정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '비밀번호가 변경되었습니다.' },
+      },
+    },
+  })
+  async newPassword(
+    @Body() newPasswordDto: NewPasswordDto,
+  ): Promise<{ message: string }> {
+    await this.authService.resetPassword(newPasswordDto);
+    return { message: '비밀번호가 변경되었습니다.' };
   }
 }

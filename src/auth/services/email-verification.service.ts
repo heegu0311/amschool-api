@@ -62,4 +62,14 @@ export class EmailVerificationService {
     });
     return !!verification;
   }
+
+  async getVerifiedOrFail(email: string): Promise<void> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { email, isVerified: true },
+      order: { createdAt: 'DESC' },
+    });
+    if (!verification) {
+      throw new BadRequestException('이메일 인증이 완료되지 않았습니다.');
+    }
+  }
 }
