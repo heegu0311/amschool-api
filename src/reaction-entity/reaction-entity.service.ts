@@ -94,7 +94,7 @@ export class ReactionEntityService {
     });
 
     if (reactionEntity) {
-      await this.reactionEntityRepository.remove(reactionEntity);
+      return await this.reactionEntityRepository.remove(reactionEntity);
     }
   }
 

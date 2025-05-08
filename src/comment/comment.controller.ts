@@ -135,6 +135,6 @@ export class CommentController {
     @Req() req,
   ) {
     const userId = req.user.id;
-    return this.commentService.update(userId, commentId, updateCommentDto);
+    return this.commentService.update(userId, +commentId, updateCommentDto);
   }
 }

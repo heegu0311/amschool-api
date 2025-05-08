@@ -55,8 +55,8 @@ export class ReactionEntityController {
   ) {
     return this.reactionEntityService.addReaction(
       entityType,
-      entityId,
-      reactionId,
+      +entityId,
+      +reactionId,
       req.user.id,
     );
   }
