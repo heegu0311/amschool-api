@@ -22,7 +22,7 @@ export class AiAnswer {
   @Column()
   questionId: number;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float', default: 0 })
   feedbackPoint: number;
 
   @Column('text', { nullable: true })

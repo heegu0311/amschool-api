@@ -325,7 +325,7 @@ export class QuestionsService {
     if (!aiAnswer) {
       throw new NotFoundException();
     }
-    aiAnswer.feedbackPoint = feedbackPoint;
+    aiAnswer.feedbackPoint += feedbackPoint;
     return await this.aiAnswerRepository.save(aiAnswer);
   }
 

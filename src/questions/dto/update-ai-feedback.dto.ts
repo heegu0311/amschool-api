@@ -10,7 +10,7 @@ export class UpdateAiFeedbackDto {
   })
   @IsNumber()
   @IsNotEmpty()
-  @Min(1)
+  @Min(-5)
   @Max(5)
   feedbackPoint: number;
 }
