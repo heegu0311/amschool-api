@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReactionEntity } from './entities/reaction-entity.entity';
+import { ReactionService } from '../reaction/reaction.service';
 
 @Injectable()
 export class ReactionEntityService {
   constructor(
     @InjectRepository(ReactionEntity)
     private reactionEntityRepository: Repository<ReactionEntity>,
+    private readonly reactionService: ReactionService,
   ) {}
 
   findAll() {
@@ -141,16 +143,26 @@ export class ReactionEntityService {
         .getRawMany();
     }
 
+    // Reaction 전체 목록 조회
+    const allReactions = await this.reactionService.findAll();
+
     // 결과 매핑
     const result = {};
     entityIds.forEach((id) => {
+      // 해당 entityId에 대한 실제 반응 데이터
+      const entityReactions = reactions.filter((r) => r.entityId === id);
+
+      // 모든 reactionId를 포함해서 count가 없으면 0으로 맞춰줌
+      const formattedReactions = allReactions.map((reaction) => {
+        const found = entityReactions.find((r) => r.reactionId === reaction.id);
+        return {
+          reactionId: reaction.id,
+          count: found ? parseInt(found.count, 10) : 0,
+        };
+      });
+
       result[id] = {
-        reactions: reactions
-          .filter((r) => r.entityId === id)
-          .map(({ reactionId, count }) => ({
-            reactionId,
-            count: parseInt(count, 10),
-          })),
+        reactions: formattedReactions,
         userReactions: userReactions
           .filter((r) => r.entityId === id)
           .map((r) => r.reactionId as number),
