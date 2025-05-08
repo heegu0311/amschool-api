@@ -102,8 +102,16 @@ export class QuestionsService {
   async findOne(id: number): Promise<Question> {
     const question = await this.questionsRepository.findOne({
       where: { id, deletedAt: undefined },
-      relations: ['author', 'aiAnswer', 'images'],
+      relations: ['author', 'aiAnswer'],
     });
+
+    if (question) {
+      // imageRepository에서 entityType과 entityId로 이미지 조회
+      const images = await this.imageRepository.find({
+        where: { entityType: 'question', entityId: question.id },
+      });
+      (question as any).images = images;
+    }
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }
@@ -240,18 +248,18 @@ export class QuestionsService {
     botReply = `<ul>${botReply}</li></ul>`;
 
     // 8. 예약 링크 추가
-    const bookingLinks = {
-      KOREAN:
-        "<br><br>의사와 상담/처방을 원하면 <a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>예약</a>을 눌러서 진행할 수 있습니다.",
-      ENGLISH:
-        "<br><br>If you need a consultation or prescription, click <a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>here</a> to book an appointment.",
-      JAPANESE:
-        "<br><br>医師の相談や処方を希望する場合は、<a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>こちら</a>をクリックしてください。",
-      CHINESE:
-        "<br><br>如果您需要咨询或处方，请点击<a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>此处</a>进行预约。",
-    };
+    // const bookingLinks = {
+    //   KOREAN:
+    //     "<br><br>의사와 상담/처방을 원하면 <a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>예약</a>을 눌러서 진행할 수 있습니다.",
+    //   ENGLISH:
+    //     "<br><br>If you need a consultation or prescription, click <a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>here</a> to book an appointment.",
+    //   JAPANESE:
+    //     "<br><br>医師の相談や処方を希望する場合は、<a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>こちら</a>をクリックしてください。",
+    //   CHINESE:
+    //     "<br><br>如果您需要咨询或处方，请点击<a href='https://patient.vitahealth365.com/booking?cate=1' target='_blank' style='color:blue; font-weight:bold;'>此处</a>进行预约。",
+    // };
 
-    botReply += bookingLinks[language] || bookingLinks.ENGLISH;
+    // botReply += bookingLinks[language] || bookingLinks.ENGLISH;
 
     // 9. 안내 문구 추가
     const noticeMessages = {
