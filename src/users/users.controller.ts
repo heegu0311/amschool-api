@@ -17,14 +17,14 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PaginatedResponse } from 'src/common/interfaces/pagination.interface';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')

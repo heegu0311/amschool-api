@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ReactionEntity } from 'src/reaction-entity/entities/reaction-entity.entity';
+import { ReactionEntity } from '../../../reaction-entity/entities/reaction-entity.entity';
 import {
   Column,
   CreateDateColumn,

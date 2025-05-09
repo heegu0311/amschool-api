@@ -6,7 +6,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { Diary } from '../diary/entities/diary.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
+import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()

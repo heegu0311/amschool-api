@@ -14,7 +14,7 @@ import {
 import { Diary } from '../../diary/entities/diary.entity';
 import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { Reply } from '../reply/entities/reply.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Comment {
@@ -25,6 +25,10 @@ export class Comment {
   @ApiProperty({ description: '댓글 타입', example: 'comment' })
   @Column({ default: 'comment' })
   type: string;
+
+  @ApiProperty({ description: '댓글 타입', example: 'comment' })
+  @Column({ default: 'comment' })
+  type2: string;
 
   @ApiProperty({ description: '댓글 내용', example: '좋은 글 감사합니다!' })
   @Column('text')

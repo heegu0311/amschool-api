@@ -16,9 +16,9 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import { UsersService } from 'src/users/users.service';
-import { CancerUserService } from 'src/cancer-user/cancer-user.service';
-import { ImageService } from 'src/common/services/image.service';
+import { UsersService } from '../../users/users.service';
+import { CancerUserService } from '../../cancer-user/cancer-user.service';
+import { ImageService } from '../../common/services/image.service';
 
 @Injectable()
 export class AuthService {
