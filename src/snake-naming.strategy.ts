@@ -1,7 +1,4 @@
-import * as dotenv from 'dotenv';
 import { DefaultNamingStrategy } from 'typeorm';
-
-dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
 export class SnakeNamingStrategy extends DefaultNamingStrategy {
   tableName(targetName: string, userSpecifiedName: string): string {

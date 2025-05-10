@@ -2,7 +2,8 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSourceOptions, DefaultNamingStrategy } from 'typeorm';
+import { DataSourceOptions } from 'typeorm';
+import { SnakeNamingStrategy } from './snake-naming.strategy';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -17,28 +18,10 @@ import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
-
-export class SnakeNamingStrategy extends DefaultNamingStrategy {
-  tableName(targetName: string, userSpecifiedName: string): string {
-    return (
-      userSpecifiedName ||
-      targetName
-        .replace(/([A-Z])/g, '_$1')
-        .toLowerCase()
-        .replace(/^_/, '')
-    );
-  }
-
-  columnName(propertyName: string, customName: string): string {
-    return (
-      customName ||
-      propertyName
-        .replace(/([A-Z])/g, '_$1')
-        .toLowerCase()
-        .replace(/^_/, '')
-    );
-  }
-}
+import { SectionPrimaryModule } from './section_primary/section_primary.module';
+import { SectionSecondaryModule } from './section_secondary/section_secondary.module';
+import { ArticleModule } from './article/article.module';
+import { ArticleImageModule } from './article-image/article-image.module';
 
 @Module({
   imports: [
@@ -64,8 +47,10 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy {
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: false,
         namingStrategy: new SnakeNamingStrategy(),
+        migrations: ['src/database/migrations/*.ts'],
+        migrationsTableName: 'migrations',
       }),
     }),
     LoggerModule,
@@ -79,6 +64,10 @@ export class SnakeNamingStrategy extends DefaultNamingStrategy {
     CommentModule,
     ReactionModule,
     ReactionEntityModule,
+    SectionPrimaryModule,
+    SectionSecondaryModule,
+    ArticleModule,
+    ArticleImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

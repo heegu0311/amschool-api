@@ -13,7 +13,7 @@ import { AuthService } from './services/auth.service';
 import { EmailVerificationService } from './services/email-verification.service';
 import { SocialAuthService } from './services/social-auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { S3Service } from 'src/common/services/s3.service';
+import { S3Service } from '../common/services/s3.service';
 
 @Module({
   imports: [

@@ -14,7 +14,7 @@ import {
 import { Diary } from '../../diary/entities/diary.entity';
 import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { Reply } from '../reply/entities/reply.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Comment {
