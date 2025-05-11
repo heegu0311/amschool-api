@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ArticleImage } from '../article-image/entities/article-image.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { ArticleImage } from '../article-image/entities/article-image.entity';
 
 @Injectable()
 export class ArticleService {
@@ -16,6 +16,26 @@ export class ArticleService {
     @InjectRepository(ArticleImage)
     private readonly articleImageRepository: Repository<ArticleImage>,
   ) {}
+
+  private stripHtmlTags(html: string): string {
+    if (!html) return '';
+
+    // HTML 엔티티를 공백으로 변환
+    const withoutEntities = html
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&[a-z0-9]+;/gi, ' ');
+
+    // HTML 태그 제거
+    const withoutTags = withoutEntities.replace(/<[^>]*>/g, '');
+
+    // 연속된 공백을 하나로 변환하고 앞뒤 공백 제거
+    return withoutTags.replace(/\s+/g, ' ').trim();
+  }
 
   async create(
     createArticleDto: CreateArticleDto,
@@ -65,8 +85,14 @@ export class ArticleService {
       relations: ['sectionPrimary', 'sectionSecondary', 'images'],
     });
 
+    // HTML 태그 제거
+    const processedArticles = articles.map((article) => ({
+      ...article,
+      content: this.stripHtmlTags(article.content),
+    }));
+
     return {
-      items: articles,
+      items: processedArticles,
       meta: {
         totalItems: total,
         itemCount: articles.length,
@@ -167,6 +193,38 @@ export class ArticleService {
     };
   }
 
+  async findBySectionSecondaryCode(
+    sectionSecondaryCode: string,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Article>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.articleRepository.findAndCount({
+      where: {
+        sectionSecondary: { code: sectionSecondaryCode },
+        isVisible: 'Y',
+      },
+      relations: ['sectionSecondary'],
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      meta: {
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+        itemCount: items.length,
+      },
+    };
+  }
+
   private getImageExt(filename: string): 'J' | 'G' | 'P' | 'B' | 'S' {
     const ext = filename.split('.').pop()?.toLowerCase();
     switch (ext) {
@@ -184,5 +242,30 @@ export class ArticleService {
       default:
         return 'J';
     }
+  }
+
+  async findRandomBySectionSecondaryCode(
+    sectionSecondaryCode: string,
+    limit: number = 3,
+  ): Promise<Article[]> {
+    const articles = await this.articleRepository.find({
+      where: {
+        sectionSecondary: { code: sectionSecondaryCode },
+        isVisible: 'Y',
+      },
+      relations: ['sectionSecondary', 'images'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    const processedArticles = articles.map((article) => ({
+      ...article,
+      content: this.stripHtmlTags(article.content),
+    }));
+
+    // 랜덤으로 limit 개수만큼 선택
+    const shuffled = processedArticles.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, limit);
   }
 }

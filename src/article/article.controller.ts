@@ -22,18 +22,20 @@ import {
   ApiParam,
   ApiQuery,
   ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { S3Service } from '../common/services/s3.service';
+import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { ArticleService } from './article.service';
 
 @ApiBearerAuth('accessToken')
+@ApiTags('articles')
 @Controller('articles')
 export class ArticleController {
   constructor(
@@ -250,5 +252,58 @@ export class ArticleController {
   })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return await this.articleService.delete(id);
+  }
+
+  @Get('section/:sectionSecondaryCode')
+  @ApiOperation({ summary: '특정 섹션의 매거진 목록 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '특정 섹션의 매거진 목록 조회 성공',
+  })
+  async getArticlesBySection(
+    @Param('sectionSecondaryCode') sectionSecondaryCode: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    const result = await this.articleService.findBySectionSecondaryCode(
+      sectionSecondaryCode,
+      paginationDto,
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Get('section/:sectionSecondaryCode/recommend')
+  @Public()
+  @ApiOperation({ summary: '특정 섹션의 랜덤 추천 기사 조회' })
+  @ApiParam({
+    name: 'sectionSecondaryCode',
+    required: true,
+    type: String,
+    description: '섹션 코드',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '추천받을 기사 수 (기본값: 3)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '랜덤 추천 기사 조회 성공',
+  })
+  async getRecommendedArticles(
+    @Param('sectionSecondaryCode') sectionSecondaryCode: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 3,
+  ) {
+    const result = await this.articleService.findRandomBySectionSecondaryCode(
+      sectionSecondaryCode,
+      limit,
+    );
+    return {
+      success: true,
+      data: result,
+    };
   }
 }
