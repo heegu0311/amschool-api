@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
@@ -14,35 +15,39 @@ import {
 import { Image } from '../../common/entities/image.entity';
 import { User } from '../../users/entities/user.entity';
 import { AiAnswer } from './ai-answer.entity';
-import { ApiProperty } from '@nestjs/swagger';
 @Entity()
 export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty({ description: '질문 타입', example: 'question' })
-  @Column({ default: 'question' })
+  @Column({ default: 'question', name: 'type' })
   type: string;
 
-  @Column()
+  @Column({ name: 'author_id' })
   authorId: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'question_summary' })
   questionSummary: string;
 
-  @Column('text')
+  @Column('text', { name: 'content' })
   content: string;
 
-  @Column({ type: 'enum', enum: ['public', 'private'], default: 'private' })
+  @Column({
+    type: 'enum',
+    enum: ['public', 'private'],
+    default: 'private',
+    name: 'access_level',
+  })
   accessLevel: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.id)

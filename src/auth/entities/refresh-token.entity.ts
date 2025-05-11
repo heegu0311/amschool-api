@@ -14,19 +14,19 @@ export class RefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
-  @Column()
+  @Column({ name: 'token' })
   token: string;
 
-  @Column()
+  @Column({ name: 'expires_at' })
   expiresAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @Column({ default: false })
+  @Column({ default: false, name: 'is_revoked' })
   isRevoked: boolean;
 
   @ManyToOne(() => User, (user) => user.refreshToken)

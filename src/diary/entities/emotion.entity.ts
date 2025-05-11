@@ -12,19 +12,19 @@ export class Emotion {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'name' })
   name: string;
 
-  @Column()
+  @Column({ name: 'code' })
   code: string;
 
-  @Column()
+  @Column({ name: 'image_url' })
   imageUrl: string;
 
-  @Column()
+  @Column({ name: 'order' })
   order: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'parent_id' })
   parentId: number;
 
   @ManyToOne(() => Emotion, { nullable: true })

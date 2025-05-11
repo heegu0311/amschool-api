@@ -24,19 +24,19 @@ export class Diary {
   id: number;
 
   @ApiProperty({ description: '오늘의나 타입' })
-  @Column({ default: 'diary' })
+  @Column({ default: 'diary', name: 'type' })
   type: string;
 
   @ApiProperty({ description: '작성자 ID' })
-  @Column()
+  @Column({ name: 'author_id' })
   authorId: number;
 
   @ApiProperty({ description: '내용' })
-  @Column('text')
+  @Column('text', { name: 'content' })
   content: string;
 
   @ApiProperty({ description: '접근 권한' })
-  @Column({ default: 'public' })
+  @Column({ default: 'public', name: 'access_level' })
   accessLevel: 'public' | 'member' | 'private';
 
   @ApiProperty({ description: '감정 ID', required: false })
@@ -48,7 +48,7 @@ export class Diary {
   subEmotionId: number;
 
   @ApiProperty({ description: '작성일' })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @ManyToOne(() => Emotion, (emotion) => emotion.id)
@@ -69,11 +69,11 @@ export class Diary {
   reactions: Relation<ReactionEntity[]>;
 
   @ApiProperty({ description: '수정일' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   @ApiProperty({ description: '삭제일' })
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.id)

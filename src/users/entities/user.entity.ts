@@ -19,52 +19,56 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 60, unique: true })
+  @Column({ length: 60, unique: true, name: 'email' })
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'password' })
   password: string;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true, name: 'birthday' })
   birthday: Date;
 
-  @Column({ default: true })
+  @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'provider' })
   provider: string;
 
-  @Column({ type: 'enum', enum: ['patient', 'supporter'] })
+  @Column({
+    type: 'enum',
+    enum: ['patient', 'supporter'],
+    name: 'user_type',
+  })
   userType: 'patient' | 'supporter';
 
-  @Column({ length: 30 })
+  @Column({ length: 30, name: 'username' })
   username: string;
 
-  @Column({ type: 'enum', enum: ['default', 'upload'] })
+  @Column({ type: 'enum', enum: ['default', 'upload'], name: 'profile_type' })
   profileType: 'default' | 'upload';
 
-  @Column()
+  @Column({ name: 'profile_image' })
   profileImage: string;
 
-  @Column()
+  @Column({ name: 'intro' })
   intro: string;
 
-  @Column({ type: 'enum', enum: ['M', 'F'], nullable: true })
+  @Column({ type: 'enum', enum: ['M', 'F'], nullable: true, name: 'gender' })
   gender: 'M' | 'F';
 
-  @Column({ default: false })
+  @Column({ default: false, name: 'is_public' })
   isPublic: boolean;
 
-  @Column()
+  @Column({ name: 'signin_provider' })
   signinProvider: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user)

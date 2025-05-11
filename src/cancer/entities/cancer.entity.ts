@@ -12,7 +12,7 @@ export class Cancer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'name' })
   name: string;
 
   @OneToMany(() => CancerUser, (cancerUser) => cancerUser.cancer)

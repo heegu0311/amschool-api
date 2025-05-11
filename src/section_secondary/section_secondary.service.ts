@@ -1,15 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSectionSecondaryDto } from './dto/create-section_secondary.dto';
 import { UpdateSectionSecondaryDto } from './dto/update-section_secondary.dto';
+import { SectionSecondary } from './entities/section_secondary.entity';
 
 @Injectable()
 export class SectionSecondaryService {
+  constructor(
+    @InjectRepository(SectionSecondary)
+    private readonly sectionSecondaryRepository: Repository<SectionSecondary>,
+  ) {}
+
   create(createSectionSecondaryDto: CreateSectionSecondaryDto) {
     return 'This action adds a new sectionSecondary';
   }
 
-  findAll() {
-    return `This action returns all sectionSecondary`;
+  async findAll() {
+    return await this.sectionSecondaryRepository.find({
+      where: {
+        isVisible: 'Y',
+      },
+      order: {
+        order: 'ASC',
+      },
+    });
   }
 
   findOne(id: number) {

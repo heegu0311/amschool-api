@@ -16,28 +16,28 @@ export class AiAnswer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text')
+  @Column('text', { name: 'content' })
   content: string;
 
-  @Column()
+  @Column({ name: 'question_id' })
   questionId: number;
 
-  @Column({ type: 'float', default: 0 })
+  @Column({ type: 'float', default: 0, name: 'feedback_point' })
   feedbackPoint: number;
 
-  @Column('text', { nullable: true })
+  @Column('text', { nullable: true, name: 'notice' })
   notice: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'language' })
   language: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
   @OneToOne(() => Question, (question) => question.aiAnswer)

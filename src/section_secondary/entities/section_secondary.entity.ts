@@ -2,15 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryColumn,
   Relation,
-  Index,
 } from 'typeorm';
-import { SectionPrimary } from '../../section_primary/entities/section_primary.entity';
 import { Article } from '../../article/entities/article.entity';
+import { SectionPrimary } from '../../section_primary/entities/section_primary.entity';
 
 @Entity({ name: 'section_secondary', comment: '기사2차섹션' })
 export class SectionSecondary {
@@ -41,6 +41,25 @@ export class SectionSecondary {
     comment: '섹션명',
   })
   name: string;
+
+  @ApiProperty({ description: '노출', enum: ['Y', 'N'], example: 'N' })
+  @Column({
+    type: 'enum',
+    enum: ['Y', 'N'],
+    comment: '노출',
+    name: 'is_visible',
+    nullable: true,
+  })
+  isVisible: 'Y' | 'N';
+
+  @ApiProperty({ description: '순서', example: 1 })
+  @Column({
+    type: 'int',
+    comment: '순서',
+    name: 'order',
+    nullable: true,
+  })
+  order: number;
 
   @ApiProperty({ description: '1차섹션코드', example: 'SEC001' })
   @Column({

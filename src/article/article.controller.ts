@@ -22,7 +22,6 @@ import {
   ApiParam,
   ApiQuery,
   ApiResponse,
-  ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -34,7 +33,6 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 import { ArticleService } from './article.service';
 
-@ApiTags('기사 관리')
 @ApiBearerAuth('accessToken')
 @Controller('articles')
 export class ArticleController {
