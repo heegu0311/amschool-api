@@ -7,6 +7,7 @@ import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
+import { IsNull } from 'typeorm';
 
 @Injectable()
 export class ArticleService {
@@ -202,25 +203,32 @@ export class ArticleService {
 
     const [items, total] = await this.articleRepository.findAndCount({
       where: {
-        sectionSecondary: { code: sectionSecondaryCode },
+        sectionSecondaryCode,
         isVisible: 'Y',
+        deletedAt: IsNull(),
       },
-      relations: ['sectionSecondary'],
-      order: { createdAt: 'DESC' },
+      relations: ['sectionPrimary', 'sectionSecondary', 'images'],
+      order: {
+        createdAt: 'DESC',
+      },
       skip,
       take: limit,
     });
 
-    const totalPages = Math.ceil(total / limit);
+    // HTML 태그 제거
+    const processedItems = items.map((article) => ({
+      ...article,
+      content: this.stripHtmlTags(article.content),
+    }));
 
     return {
-      items,
+      items: processedItems,
       meta: {
-        currentPage: page,
-        totalPages,
         totalItems: total,
-        itemsPerPage: limit,
         itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
       },
     };
   }

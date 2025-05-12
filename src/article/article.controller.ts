@@ -255,23 +255,42 @@ export class ArticleController {
   }
 
   @Get('section/:sectionSecondaryCode')
-  @ApiOperation({ summary: '특정 섹션의 매거진 목록 조회' })
+  @Public()
+  @ApiOperation({
+    summary: '특정 섹션의 암매거진 목록 조회',
+    description:
+      '섹션 코드를 기반으로 암매거진 목록을 페이지네이션하여 조회합니다.',
+  })
+  @ApiParam({
+    name: 'sectionSecondaryCode',
+    required: true,
+    type: String,
+    description: '섹션 코드',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호 (기본값: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수 (기본값: 10)',
+  })
   @ApiResponse({
     status: 200,
-    description: '특정 섹션의 매거진 목록 조회 성공',
+    description: '암매거진 목록이 성공적으로 조회되었습니다.',
   })
   async getArticlesBySection(
     @Param('sectionSecondaryCode') sectionSecondaryCode: string,
     @Query() paginationDto: PaginationDto,
   ) {
-    const result = await this.articleService.findBySectionSecondaryCode(
+    return await this.articleService.findBySectionSecondaryCode(
       sectionSecondaryCode,
       paginationDto,
     );
-    return {
-      success: true,
-      data: result,
-    };
   }
 
   @Get('section/:sectionSecondaryCode/recommend')
