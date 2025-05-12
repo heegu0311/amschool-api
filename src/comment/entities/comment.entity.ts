@@ -26,10 +26,6 @@ export class Comment {
   @Column({ default: 'comment', name: 'type' })
   type: string;
 
-  @ApiProperty({ description: '댓글 타입', example: 'comment' })
-  @Column({ default: 'comment' })
-  type2: string;
-
   @ApiProperty({ description: '댓글 내용', example: '좋은 글 감사합니다!' })
   @Column('text', { name: 'content' })
   content: string;
