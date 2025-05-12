@@ -20,34 +20,34 @@ export class Image {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'url' })
   url: string;
 
-  @Column()
+  @Column({ name: 'original_name' })
   originalName: string;
 
-  @Column()
+  @Column({ name: 'mime_type' })
   mimeType: string;
 
-  @Column()
+  @Column({ name: 'size' })
   size: number;
 
-  @Column()
+  @Column({ name: 'entity_type' })
   entityType: string; // 'question', 'post', 'diary'
 
-  @Column()
+  @Column({ name: 'entity_id' })
   entityId: number;
 
-  @Column({ type: 'int', default: 1 })
+  @Column({ type: 'int', default: 1, name: 'order' })
   order: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
   @ManyToOne(() => Question, (question) => question.images, {

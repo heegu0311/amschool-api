@@ -14,10 +14,10 @@ export class CancerUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
-  @Column()
+  @Column({ name: 'cancer_id' })
   cancerId: number;
 
   @ManyToOne(() => User, (user) => user.cancerUsers)

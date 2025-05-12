@@ -18,6 +18,10 @@ import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
+import { SectionPrimaryModule } from './section_primary/section_primary.module';
+import { SectionSecondaryModule } from './section_secondary/section_secondary.module';
+import { ArticleModule } from './article/article.module';
+import { ArticleImageModule } from './article-image/article-image.module';
 
 @Module({
   imports: [
@@ -60,6 +64,10 @@ import { UsersModule } from './users/users.module';
     CommentModule,
     ReactionModule,
     ReactionEntityModule,
+    SectionPrimaryModule,
+    SectionSecondaryModule,
+    ArticleModule,
+    ArticleImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

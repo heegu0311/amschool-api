@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ReactionEntity } from '../../../reaction-entity/entities/reaction-entity.entity';
 import {
   Column,
   CreateDateColumn,
@@ -12,6 +11,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { ReactionEntity } from '../../../reaction-entity/entities/reaction-entity.entity';
 import { Comment } from '../../entities/comment.entity';
 
 @Entity()
@@ -21,11 +21,11 @@ export class Reply {
   id: number;
 
   @ApiProperty({ description: '답글 내용', example: '좋은 글 감사합니다!' })
-  @Column('text')
+  @Column('text', { name: 'content' })
   content: string;
 
   @ApiProperty({ description: '작성자 ID', example: 1 })
-  @Column()
+  @Column({ name: 'author_id' })
   authorId: number;
 
   @ApiProperty({
@@ -33,15 +33,15 @@ export class Reply {
     example: 'diary',
     enum: ['diary', 'question', 'post'],
   })
-  @Column()
+  @Column({ name: 'entity_type' })
   entityType: string;
 
   @ApiProperty({ description: '엔티티 ID', example: 1 })
-  @Column()
+  @Column({ name: 'entity_id' })
   entityId: number;
 
   @ApiProperty({ description: '댓글 ID', example: 1 })
-  @Column()
+  @Column({ name: 'comment_id' })
   commentId: number;
 
   @ApiProperty({ description: '댓글 정보' })
@@ -56,14 +56,14 @@ export class Reply {
   reactions: Relation<ReactionEntity[]>;
 
   @ApiProperty({ description: '생성일' })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @ApiProperty({ description: '수정일' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   @ApiProperty({ description: '삭제일', required: false })
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 }

@@ -12,13 +12,13 @@ export class SurveyAnswer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'value' })
   value: string;
 
-  @Column()
+  @Column({ name: 'answer' })
   answer: string;
 
-  @Column()
+  @Column({ name: 'emoji' })
   emoji: string;
 
   @OneToMany(

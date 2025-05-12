@@ -13,8 +13,8 @@ import {
 } from 'typeorm';
 import { Diary } from '../../diary/entities/diary.entity';
 import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
-import { Reply } from '../reply/entities/reply.entity';
 import { User } from '../../users/entities/user.entity';
+import { Reply } from '../reply/entities/reply.entity';
 
 @Entity()
 export class Comment {
@@ -23,7 +23,7 @@ export class Comment {
   id: number;
 
   @ApiProperty({ description: '댓글 타입', example: 'comment' })
-  @Column({ default: 'comment' })
+  @Column({ default: 'comment', name: 'type' })
   type: string;
 
   @ApiProperty({ description: '댓글 타입', example: 'comment' })
@@ -31,11 +31,11 @@ export class Comment {
   type2: string;
 
   @ApiProperty({ description: '댓글 내용', example: '좋은 글 감사합니다!' })
-  @Column('text')
+  @Column('text', { name: 'content' })
   content: string;
 
   @ApiProperty({ description: '작성자 ID', example: 1 })
-  @Column()
+  @Column({ name: 'author_id' })
   authorId: number;
 
   @ApiProperty({
@@ -43,11 +43,11 @@ export class Comment {
     example: 'diary',
     enum: ['diary', 'question', 'post'],
   })
-  @Column()
+  @Column({ name: 'entity_type' })
   entityType: string;
 
   @ApiProperty({ description: '엔티티 ID', example: 1 })
-  @Column()
+  @Column({ name: 'entity_id' })
   entityId: number;
 
   @ApiProperty({ description: '엔티티 정보' })
@@ -69,14 +69,14 @@ export class Comment {
   reactions: Relation<ReactionEntity[]>;
 
   @ApiProperty({ description: '생성일' })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @ApiProperty({ description: '수정일' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   @ApiProperty({ description: '삭제일', required: false })
-  @DeleteDateColumn({ nullable: true })
+  @DeleteDateColumn({ nullable: true, name: 'deleted_at' })
   deletedAt: Date;
 }

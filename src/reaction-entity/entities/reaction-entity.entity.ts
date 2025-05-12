@@ -22,16 +22,17 @@ export class ReactionEntity {
     type: 'enum',
     enum: ['diary', 'comment', 'reply'],
     comment: '공감 대상 엔티티 타입',
+    name: 'entity_type',
   })
   entityType: 'diary' | 'comment' | 'reply';
 
-  @Column()
+  @Column({ name: 'entity_id' })
   entityId: number;
 
-  @Column()
+  @Column({ name: 'reaction_id' })
   reactionId: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)

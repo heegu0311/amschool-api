@@ -12,10 +12,10 @@ export class Reaction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'name' })
   name: string;
 
-  @Column()
+  @Column({ name: 'emoji' })
   emoji: string;
 
   @ManyToOne(() => ReactionEntity, (reactionEntity) => reactionEntity.reaction)

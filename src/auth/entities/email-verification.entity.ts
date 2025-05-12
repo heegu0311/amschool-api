@@ -1,8 +1,8 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -11,21 +11,21 @@ export class EmailVerification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'email' })
   email: string;
 
-  @Column()
+  @Column({ name: 'code' })
   code: string;
 
-  @Column({ default: false })
+  @Column({ default: false, name: 'is_verified' })
   isVerified: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column()
+  @Column({ name: 'expires_at' })
   expiresAt: Date;
 }
