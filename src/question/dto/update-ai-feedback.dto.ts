@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsNumber, Max, Min } from 'class-validator';
 
 export class UpdateAiFeedbackDto {
   @ApiProperty({

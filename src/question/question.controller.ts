@@ -31,13 +31,13 @@ import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateAiFeedbackDto } from './dto/update-ai-feedback.dto';
 import { AiAnswer } from './entities/ai-answer.entity';
 import { Question } from './entities/question.entity';
-import { QuestionsService } from './questions.service';
+import { QuestionService } from './question.service';
 
 @ApiBearerAuth('accessToken')
-@Controller('questions')
-export class QuestionsController {
+@Controller('question')
+export class QuestionController {
   constructor(
-    private readonly questionsService: QuestionsService,
+    private readonly questionervice: QuestionService,
     private readonly s3Service: S3Service,
   ) {}
 
@@ -62,11 +62,11 @@ export class QuestionsController {
     if (images) {
       createQuestionDto.images = images;
     }
-    const question = await this.questionsService.create(
+    const question = await this.questionervice.create(
       createQuestionDto,
       req.user.id,
     );
-    return this.questionsService.findOne(question.id);
+    return this.questionervice.findOne(question.id);
   }
 
   @Get()
@@ -92,7 +92,7 @@ export class QuestionsController {
   async findAll(
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Question>> {
-    return await this.questionsService.findAll(paginationDto);
+    return await this.questionervice.findAll(paginationDto);
   }
 
   @Get('my')
@@ -116,14 +116,11 @@ export class QuestionsController {
     description: '내 질문 목록 조회 성공',
     type: [Question],
   })
-  async findMyQuestions(
+  async findMyQuestion(
     @Request() req,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Question>> {
-    return await this.questionsService.findByAuthorId(
-      req.user.id,
-      paginationDto,
-    );
+    return await this.questionervice.findByAuthorId(req.user.id, paginationDto);
   }
 
   @Get(':id')
@@ -138,7 +135,7 @@ export class QuestionsController {
     description: '질문을 찾을 수 없음',
   })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const question = await this.questionsService.findOne(id);
+    const question = await this.questionervice.findOne(id);
 
     // 이미지에 대한 presigned URL 생성
     if (question.images.length > 0) {
@@ -162,7 +159,7 @@ export class QuestionsController {
     description: 'AI 답변을 찾을 수 없음',
   })
   async findAiAnswer(@Param('id', ParseIntPipe) id: number) {
-    return await this.questionsService.findAiAnswer(id);
+    return await this.questionervice.findAiAnswer(id);
   }
 
   @Post(':id/ai-answer')
@@ -178,7 +175,7 @@ export class QuestionsController {
     description: '질문을 찾을 수 없음',
   })
   async createAiAnswer(@Param('id', ParseIntPipe) id: number) {
-    return await this.questionsService.createAiAnswer(id);
+    return await this.questionervice.createAiAnswer(id);
   }
 
   @Patch(':id/ai-answer/feedback')
@@ -197,7 +194,7 @@ export class QuestionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAiFeedbackDto: UpdateAiFeedbackDto,
   ) {
-    return await this.questionsService.updateAiFeedback(
+    return await this.questionervice.updateAiFeedback(
       id,
       updateAiFeedbackDto.feedbackPoint,
     );
@@ -215,6 +212,6 @@ export class QuestionsController {
     description: '질문을 찾을 수 없음',
   })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.questionsService.delete(id);
+    return await this.questionervice.delete(id);
   }
 }

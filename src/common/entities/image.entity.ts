@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Diary } from '../../diary/entities/diary.entity';
-import { Question } from '../../questions/entities/question.entity';
+import { Question } from '../../question/entities/question.entity';
 import { S3Service } from '../services/s3.service';
 
 @Entity()

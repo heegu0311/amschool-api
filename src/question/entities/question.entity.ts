@@ -28,7 +28,7 @@ export class Question {
   authorId: number;
 
   @Column({ nullable: true, name: 'question_summary' })
-  questionSummary: string;
+  questionummary: string;
 
   @Column('text', { name: 'content' })
   content: string;

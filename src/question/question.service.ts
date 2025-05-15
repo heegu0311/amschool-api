@@ -15,12 +15,12 @@ import { CreateQuestionDto } from './dto/create-question.dto';
 import { AiAnswer } from './entities/ai-answer.entity';
 import { Question } from './entities/question.entity';
 @Injectable()
-export class QuestionsService {
+export class QuestionService {
   private openai: OpenAI;
 
   constructor(
     @InjectRepository(Question)
-    private questionsRepository: Repository<Question>,
+    private questionRepository: Repository<Question>,
     @InjectRepository(AiAnswer)
     private aiAnswerRepository: Repository<AiAnswer>,
     @InjectRepository(Image)
@@ -38,12 +38,12 @@ export class QuestionsService {
     createQuestionDto: CreateQuestionDto,
     userId: number,
   ): Promise<Question> {
-    const question = this.questionsRepository.create({
+    const question = this.questionRepository.create({
       ...createQuestionDto,
       authorId: userId,
     });
 
-    const savedQuestion = await this.questionsRepository.save(question);
+    const savedQuestion = await this.questionRepository.save(question);
 
     if (createQuestionDto.images && createQuestionDto.images.length > 0) {
       const uploadPromises = createQuestionDto.images.map(async (image) => {
@@ -79,7 +79,7 @@ export class QuestionsService {
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Question>> {
     const { page = 1, limit = 10 } = paginationDto;
-    const [items, totalItems] = await this.questionsRepository.findAndCount({
+    const [items, totalItems] = await this.questionRepository.findAndCount({
       where: { deletedAt: undefined },
       relations: ['author', 'aiAnswer', 'images'],
       skip: (page - 1) * limit,
@@ -100,7 +100,7 @@ export class QuestionsService {
   }
 
   async findOne(id: number): Promise<Question> {
-    const question = await this.questionsRepository.findOne({
+    const question = await this.questionRepository.findOne({
       where: { id, deletedAt: undefined },
       relations: ['author', 'aiAnswer'],
     });
@@ -165,7 +165,7 @@ export class QuestionsService {
         {
           role: 'system',
           content:
-            'You are a helpful assistant that summarizes questions concisely in 30 characters or less.',
+            'You are a helpful assistant that summarizes question concisely in 30 characters or less.',
         },
         {
           role: 'user',
@@ -178,8 +178,8 @@ export class QuestionsService {
     const summary = summaryCompletion.choices[0].message?.content || '';
 
     // 3. 질문 요약 업데이트
-    await this.questionsRepository.update(questionId, {
-      questionSummary: summary,
+    await this.questionRepository.update(questionId, {
+      questionummary: summary,
     });
 
     // 4. 언어별 시스템 메시지 설정
@@ -344,7 +344,7 @@ export class QuestionsService {
       await this.aiAnswerRepository.softRemove(aiAnswer);
     }
 
-    await this.questionsRepository.softRemove(question);
+    await this.questionRepository.softRemove(question);
   }
 
   async findByAuthorId(
@@ -352,7 +352,7 @@ export class QuestionsService {
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Question>> {
     const { page = 1, limit = 10 } = paginationDto;
-    const [items, totalItems] = await this.questionsRepository.findAndCount({
+    const [items, totalItems] = await this.questionRepository.findAndCount({
       where: {
         authorId: authorId,
         deletedAt: undefined,

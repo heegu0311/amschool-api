@@ -22,7 +22,6 @@ import {
   ApiParam,
   ApiQuery,
   ApiResponse,
-  ApiTags,
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -35,7 +34,6 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
 
 @ApiBearerAuth('accessToken')
-@ApiTags('articles')
 @Controller('articles')
 export class ArticleController {
   constructor(

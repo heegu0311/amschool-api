@@ -3,9 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
-import { SnakeNamingStrategy } from './snake-naming.strategy';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ArticleImageModule } from './article-image/article-image.module';
+import { ArticleModule } from './article/article.module';
 import { AuthModule } from './auth/auth.module';
 import { CancerUserModule } from './cancer-user/cancer-user.module';
 import { CancerModule } from './cancer/cancer.module';
@@ -13,15 +14,14 @@ import { CommentModule } from './comment/comment.module';
 import { DiaryModule } from './diary/diary.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
-import { QuestionsModule } from './questions/questions.module';
+import { QuestionModule } from './question/question.module';
 import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
 import { ReactionModule } from './reaction/reaction.module';
-import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
-import { UsersModule } from './users/users.module';
 import { SectionPrimaryModule } from './section_primary/section_primary.module';
 import { SectionSecondaryModule } from './section_secondary/section_secondary.module';
-import { ArticleModule } from './article/article.module';
-import { ArticleImageModule } from './article-image/article-image.module';
+import { SnakeNamingStrategy } from './snake-naming.strategy';
+import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -59,7 +59,7 @@ import { ArticleImageModule } from './article-image/article-image.module';
     CancerUserModule,
     SurveyAnswerModule,
     AuthModule,
-    QuestionsModule,
+    QuestionModule,
     DiaryModule,
     CommentModule,
     ReactionModule,
