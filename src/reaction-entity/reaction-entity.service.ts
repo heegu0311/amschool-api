@@ -101,7 +101,7 @@ export class ReactionEntityService {
   }
 
   async getReactionsForMultipleEntities(
-    entityType: 'diary' | 'comment' | 'reply',
+    entityType: 'diary' | 'comment' | 'reply' | 'post',
     entityIds: number[],
     userId?: number,
   ): Promise<Record<number, { reactions: any[]; userReactions: number[] }>> {

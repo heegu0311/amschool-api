@@ -1,0 +1,176 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Request,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { S3Service } from '../common/services/s3.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { Post as PostEntity } from './entities/post.entity';
+import { PostService } from './post.service';
+
+@UseGuards(JwtAuthGuard)
+@Controller('post')
+export class PostController {
+  constructor(
+    private readonly postService: PostService,
+    private readonly s3Service: S3Service,
+  ) {}
+
+  @Post()
+  @ApiBearerAuth('accessToken')
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 3 }]))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '새로운 게시글 생성' })
+  @ApiBody({ type: CreatePostDto })
+  @ApiResponse({
+    status: 201,
+    description: '게시글 생성 성공',
+    type: PostEntity,
+  })
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @UploadedFiles()
+    files: {
+      images?: Express.Multer.File[];
+    },
+    @Req() req,
+  ) {
+    const userId = req.user.id;
+    return this.postService.create(userId, createPostDto, files.images);
+  }
+
+  @Get()
+  @Public()
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '게시글 목록 조회' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 목록 조회 성공',
+    type: [Post],
+  })
+  findAll(@Request() req, @Query() paginationDto: PaginationDto) {
+    return this.postService.findAllWithMoreInfo(paginationDto, req.user?.id);
+  }
+
+  @Get('popular')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '지난 1주일간 인기 게시글(조회수순) 10개 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '인기 게시글 목록',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', description: '게시글 ID' },
+          title: { type: 'string', description: '제목' },
+          viewCount: { type: 'number', description: '조회수' },
+          commentsCount: { type: 'number', description: '댓글 수' },
+        },
+      },
+    },
+  })
+  async getPopularPosts() {
+    return this.postService.findPopularPostsOfWeek();
+  }
+
+  @Get(':id')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '특정 게시글 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 조회 성공',
+    type: Post,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '게시글를 찾을 수 없음',
+  })
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.postService.findOneWithMoreInfo(+id, req.user?.id);
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth('accessToken')
+  @UseInterceptors(FilesInterceptor('images'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '게시글 수정' })
+  @ApiBody({ type: UpdatePostDto })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 수정 성공',
+    type: Post,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '게시글를 찾을 수 없음',
+  })
+  async update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+    @UploadedFiles() images?: Express.Multer.File[],
+  ) {
+    const post = await this.postService.update(
+      +id,
+      req.user.id,
+      updatePostDto,
+      images,
+    );
+    return this.postService.findOne(post!.id, req.user.id);
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '게시글 삭제' })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 삭제 성공',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '게시글를 찾을 수 없음',
+  })
+  remove(@Request() req, @Param('id') id: string) {
+    return this.postService.remove(+id, req.user.id);
+  }
+}

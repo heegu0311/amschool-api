@@ -15,7 +15,7 @@ import { Diary } from '../../diary/entities/diary.entity';
 import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.entity';
 import { User } from '../../users/entities/user.entity';
 import { Reply } from '../reply/entities/reply.entity';
-
+import { Post } from '../../post/entities/post.entity';
 @Entity()
 export class Comment {
   @ApiProperty({ description: '댓글 ID', example: 1 })
@@ -52,7 +52,7 @@ export class Comment {
     name: 'entity_id',
     referencedColumnName: 'id',
   })
-  diary: Relation<Diary>;
+  entity: Relation<Diary | Post>;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'author_id' })

@@ -12,7 +12,7 @@ import { Reply } from '../../comment/reply/entities/reply.entity';
 import { Diary } from '../../diary/entities/diary.entity';
 import { Reaction } from '../../reaction/entities/reaction.entity';
 import { User } from '../../users/entities/user.entity';
-
+import { Post } from '../../post/entities/post.entity';
 @Entity()
 export class ReactionEntity {
   @PrimaryGeneratedColumn()
@@ -48,7 +48,7 @@ export class ReactionEntity {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'entity_id' })
-  diary: Relation<Diary>;
+  entity: Relation<Diary | Post>;
 
   @ManyToOne(() => Comment, {
     nullable: true,

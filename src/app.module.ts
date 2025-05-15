@@ -22,6 +22,7 @@ import { SectionSecondaryModule } from './section_secondary/section_secondary.mo
 import { SnakeNamingStrategy } from './snake-naming.strategy';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { UsersModule } from './users/users.module';
     SectionSecondaryModule,
     ArticleModule,
     ArticleImageModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
