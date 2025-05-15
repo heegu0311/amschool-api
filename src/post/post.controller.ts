@@ -35,7 +35,7 @@ import { Post as PostEntity } from './entities/post.entity';
 import { PostService } from './post.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller('post')
+@Controller('posts')
 export class PostController {
   constructor(
     private readonly postService: PostService,
