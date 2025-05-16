@@ -25,11 +25,11 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { S3Service } from 'src/common/services/s3.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { S3Service } from '../common/services/s3.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostService } from './post.service';
@@ -54,13 +54,16 @@ export class PostController {
     type: PostEntity,
   })
   async create(
+    @Req() req,
     @Body() createPostDto: CreatePostDto,
     @UploadedFiles()
     files: {
       images?: Express.Multer.File[];
     },
-    @Req() req,
   ) {
+    if (files.images) {
+      createPostDto.images = files.images;
+    }
     const userId = req.user.id;
     return this.postService.create(userId, createPostDto, files.images);
   }
@@ -86,7 +89,7 @@ export class PostController {
     description: '게시글 목록 조회 성공',
     type: [Post],
   })
-  findAll(@Request() req, @Query() paginationDto: PaginationDto) {
+  findAll(@Request() req, @Query() paginationDto: PostPaginationDto) {
     return this.postService.findAllWithMoreInfo(paginationDto, req.user?.id);
   }
 

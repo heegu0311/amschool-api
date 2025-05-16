@@ -8,6 +8,7 @@ export class CreatePostDto {
     default: 'free',
   })
   @IsString()
+  @IsNotEmpty()
   category: 'free' | 'question';
 
   @ApiProperty({
@@ -31,6 +32,7 @@ export class CreatePostDto {
     default: 'member',
   })
   @IsString()
+  @IsNotEmpty()
   accessLevel: 'public' | 'member' | 'private';
 
   @ApiProperty({

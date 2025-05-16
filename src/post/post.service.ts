@@ -4,17 +4,17 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import dayjs from 'dayjs';
+import { Repository } from 'typeorm';
 import { Image } from '../common/entities/image.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ImageService } from '../common/services/image.service';
 import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
 import { UsersService } from '../users/users.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { PostCategory, PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
-import dayjs from 'dayjs';
 
 @Injectable()
 export class PostService {
@@ -65,58 +65,13 @@ export class PostService {
     return savedPost;
   }
 
-  async findAll(
-    paginationDto: PaginationDto,
-    userId?: number,
-  ): Promise<PaginatedResponse<Post>> {
-    const { page = 1, limit = 10 } = paginationDto;
-
-    // userId가 없으면 public 오늘의나만 조회
-    // userId가 있으면 public 또는 member 오늘의나 조회
-    const where = userId
-      ? { accessLevel: In(['public', 'member'] as const) }
-      : { accessLevel: 'public' as const };
-
-    const [items, totalItems] = await this.postRepository.findAndCount({
-      where,
-      select: {
-        id: true,
-        author: {
-          id: true,
-          username: true,
-          profileImage: true,
-        },
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      relations: ['author', 'images'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      items,
-      meta: {
-        totalItems,
-        itemCount: items.length,
-        itemsPerPage: limit,
-        totalPages: Math.ceil(totalItems / limit),
-        currentPage: page,
-      },
-    };
-  }
-
   async findAllWithMoreInfo(
-    paginationDto: PaginationDto,
+    paginationDto: PostPaginationDto,
     userId?: number,
   ): Promise<PaginatedResponse<Post>> {
-    const { page = 1, limit = 10 } = paginationDto;
+    const { page = 1, limit = 10, category } = paginationDto;
 
-    const where = userId
-      ? { accessLevel: In(['public', 'member'] as const) }
-      : { accessLevel: 'public' as const };
+    const where = category === PostCategory.ALL ? {} : { category };
 
     const [items, totalItems] = await this.postRepository.findAndCount({
       where,
@@ -140,7 +95,7 @@ export class PostService {
       );
 
     // 공감 정보를 각 엔티티에 매핑
-    const diariesWithReactions = items.map((post) => {
+    const postsWithReactions = items.map((post) => {
       const postWithReactions = {
         ...post,
         reactions: postReactions[post.id]?.reactions || [],
@@ -150,7 +105,7 @@ export class PostService {
       return postWithReactions;
     });
     return {
-      items: diariesWithReactions,
+      items: postsWithReactions,
       meta: {
         totalItems,
         itemCount: items.length,
@@ -188,7 +143,13 @@ export class PostService {
 
     const post = await this.postRepository.findOne({
       where: { id },
-      relations: ['author', 'images', 'comments'],
+      relations: [
+        'author',
+        'author.cancerUsers',
+        'author.cancerUsers.cancer',
+        'images',
+        'comments',
+      ],
     });
 
     if (!post) {
@@ -334,10 +295,12 @@ export class PostService {
         'post.id',
         'post.title',
         'post.viewCount',
+        'post.category',
         'COUNT(comment.id) AS commentsCount',
       ])
       .where('post.createdAt >= :oneWeekAgo', { oneWeekAgo })
       .andWhere('post.deletedAt IS NULL')
+      .andWhere('post.category != :notice', { notice: 'notice' }) // notice가 아닌 것만
       .groupBy('post.id')
       .orderBy('post.viewCount', 'DESC')
       .limit(10)
@@ -348,6 +311,7 @@ export class PostService {
       id: p.post_id,
       title: p.post_title,
       viewCount: p.post_viewCount,
+      category: p.post_category,
       commentsCount: Number(p.commentsCount),
     }));
   }
