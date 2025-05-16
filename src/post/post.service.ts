@@ -164,6 +164,12 @@ export class PostService {
       throw new NotFoundException(`Post #${id} has member type`);
     }
 
+    // 이전글/다음글 조회
+    const [prevPost, nextPost] = await Promise.all([
+      this.findPrevPost(id),
+      this.findNextPost(id),
+    ]);
+
     // 다이어리 공감 조회
     const postReactions =
       await this.reactionEntityService.getReactionsForMultipleEntities(
@@ -181,9 +187,35 @@ export class PostService {
       reactions: postReactions[post.id]?.reactions || [],
       userReactions: postReactions[post.id]?.userReactions || [],
       commentsCount: commentIds.length,
+      prevPost,
+      nextPost,
     };
 
     return postWithReactions;
+  }
+
+  // 이전글 조회
+  private async findPrevPost(currentPostId: number) {
+    return this.postRepository
+      .createQueryBuilder('post')
+      .select(['post.id', 'post.title', 'post.createdAt'])
+      .where('post.id < :currentPostId', { currentPostId })
+      .andWhere('post.deletedAt IS NULL')
+      .orderBy('post.id', 'DESC')
+      .limit(1)
+      .getOne();
+  }
+
+  // 다음글 조회
+  private async findNextPost(currentPostId: number) {
+    return this.postRepository
+      .createQueryBuilder('post')
+      .select(['post.id', 'post.title', 'post.createdAt'])
+      .where('post.id > :currentPostId', { currentPostId })
+      .andWhere('post.deletedAt IS NULL')
+      .orderBy('post.id', 'ASC')
+      .limit(1)
+      .getOne();
   }
 
   async update(
