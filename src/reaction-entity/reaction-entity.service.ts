@@ -64,7 +64,7 @@ export class ReactionEntityService {
   }
 
   async addReaction(
-    entityType: 'diary' | 'comment' | 'reply',
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     reactionId: number,
     userId: number,
@@ -81,7 +81,7 @@ export class ReactionEntityService {
   }
 
   async removeReaction(
-    entityType: 'diary' | 'comment' | 'reply',
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     reactionId: number,
     userId: number,

@@ -20,11 +20,11 @@ export class ReactionEntity {
 
   @Column({
     type: 'enum',
-    enum: ['diary', 'comment', 'reply'],
+    enum: ['diary', 'post', 'comment', 'reply'],
     comment: '공감 대상 엔티티 타입',
     name: 'entity_type',
   })
-  entityType: 'diary' | 'comment' | 'reply';
+  entityType: 'diary' | 'post' | 'comment' | 'reply';
 
   @Column({ name: 'entity_id' })
   entityId: number;
