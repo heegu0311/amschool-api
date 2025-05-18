@@ -171,4 +171,41 @@ export class ReactionEntityService {
 
     return result;
   }
+
+  async getReactionsCountForMultipleEntities(
+    entityType: 'diary' | 'comment' | 'reply' | 'post',
+    entityIds: number[],
+    userId?: number,
+  ): Promise<
+    Record<number, { reactionsCount: number; userReactionId?: number }>
+  > {
+    // 여러 엔티티의 총 공감 개수를 한 번에 조회
+    const reactions = await this.reactionEntityRepository
+      .createQueryBuilder('reactionEntity')
+      .select('reactionEntity.entityId', 'entityId')
+      .addSelect('COUNT(*)', 'reactionsCount')
+      .where('reactionEntity.entityType = :entityType', { entityType })
+      .andWhere(
+        entityIds.length > 0
+          ? 'reactionEntity.entityId IN (:...entityIds)'
+          : '1=0',
+        { entityIds },
+      )
+      .groupBy('reactionEntity.entityId')
+      .getRawMany();
+
+    // 결과 매핑
+    const result = {};
+    entityIds.forEach((id) => {
+      const entityReaction = reactions.find((r) => r.entityId === id);
+
+      result[id] = {
+        reactionsCount: entityReaction
+          ? parseInt(entityReaction.reactionsCount, 10)
+          : 0,
+      };
+    });
+
+    return result;
+  }
 }

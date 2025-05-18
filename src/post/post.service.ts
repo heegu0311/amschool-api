@@ -83,12 +83,12 @@ export class PostService {
       take: limit,
     });
 
-    // 다이어리 ID 목록 추출
+    // 게시글 ID 목록 추출
     const postIds = items.map((post) => post.id);
 
-    // 여러 다이어리의 공감을 한 번에 조회
-    const postReactions =
-      await this.reactionEntityService.getReactionsForMultipleEntities(
+    // 여러 게시글의 공감을 한 번에 조회
+    const postWithReactionsCount =
+      await this.reactionEntityService.getReactionsCountForMultipleEntities(
         'post',
         postIds,
         userId,
@@ -98,12 +98,12 @@ export class PostService {
     const postsWithReactions = items.map((post) => {
       const postWithReactions = {
         ...post,
-        reactions: postReactions[post.id]?.reactions || [],
-        userReactions: postReactions[post.id]?.userReactions || [],
+        reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
         commentsCount: post.comments.length,
       };
       return postWithReactions;
     });
+
     return {
       items: postsWithReactions,
       meta: {
@@ -170,7 +170,7 @@ export class PostService {
       this.findNextPost(id),
     ]);
 
-    // 다이어리 공감 조회
+    // 게시글 공감 조회
     const postReactions =
       await this.reactionEntityService.getReactionsForMultipleEntities(
         'post',
