@@ -12,6 +12,7 @@ import {
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { Comment } from '../../comment/entities/comment.entity';
+import { Reply } from '../../comment/reply/entities/reply.entity';
 import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 
 @Entity()
@@ -76,6 +77,9 @@ export class User {
 
   @OneToMany(() => Comment, (comment: Comment) => comment.author)
   comments: Relation<Comment[]>;
+
+  @OneToMany(() => Reply, (reply: Reply) => reply.author)
+  replies: Relation<Reply[]>;
 
   @OneToMany(
     () => SurveyAnswerUser,

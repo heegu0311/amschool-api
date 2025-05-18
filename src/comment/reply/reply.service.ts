@@ -6,6 +6,7 @@ import { Comment } from '../entities/comment.entity';
 import { Reply } from './entities/reply.entity';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/pagination.interface';
+import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
 
 @Injectable()
 export class ReplyService {
@@ -14,6 +15,7 @@ export class ReplyService {
     private readonly replyRepository: Repository<Reply>,
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    private readonly reactionEntityService: ReactionEntityService,
   ) {}
 
   async create(
@@ -43,6 +45,7 @@ export class ReplyService {
   }
 
   async findAllByCommentId(
+    userId: number,
     commentId: number,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Reply>> {
@@ -50,14 +53,34 @@ export class ReplyService {
 
     const [items, totalItems] = await this.replyRepository.findAndCount({
       where: { commentId },
-      relations: ['comment'],
+      relations: ['comment', 'author'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
 
+    // 답글 ID 목록 추출
+    const replyIds = items.map((reply) => reply.id);
+
+    // 여러 댓글의 공감을 한 번에 조회
+    const replyReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'reply',
+        replyIds,
+        userId,
+      );
+
+    const replyWithReactions = items.map((reply) => {
+      const replyWithReactions = {
+        ...reply,
+        reactions: replyReactions[reply.id]?.reactions || [],
+        userReactions: replyReactions[reply.id]?.userReactions || [],
+      };
+      return replyWithReactions;
+    });
+
     return {
-      items,
+      items: replyWithReactions,
       meta: {
         totalItems,
         itemCount: items.length,
@@ -78,5 +101,22 @@ export class ReplyService {
     }
 
     await this.replyRepository.softRemove(reply);
+  }
+
+  async update(
+    userId: number,
+    replyId: number,
+    updateReplyDto: CreateReplyDto,
+  ): Promise<Reply> {
+    const reply = await this.replyRepository.findOne({
+      where: { id: replyId, authorId: userId },
+    });
+
+    if (!reply) {
+      throw new NotFoundException('답글을 찾을 수 없습니다.');
+    }
+
+    reply.content = updateReplyDto.content;
+    return this.replyRepository.save(reply);
   }
 }

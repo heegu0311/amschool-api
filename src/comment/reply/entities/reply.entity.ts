@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ReactionEntity } from '../../../reaction-entity/entities/reaction-entity.entity';
+import { User } from '../../../users/entities/user.entity';
 import { Comment } from '../../entities/comment.entity';
 
 @Entity()
@@ -51,6 +52,10 @@ export class Reply {
     referencedColumnName: 'id',
   })
   comment: Relation<Comment>;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'author_id' })
+  author: Relation<User>;
 
   @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.reply)
   reactions: Relation<ReactionEntity[]>;
