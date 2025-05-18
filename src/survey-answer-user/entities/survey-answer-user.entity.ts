@@ -1,4 +1,5 @@
 import {
+  Column,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -12,6 +13,12 @@ import { User } from '../../users/entities/user.entity';
 export class SurveyAnswerUser {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @Column({ name: 'survey_answer_id' })
+  surveyAnswerId: number;
 
   @ManyToOne(() => User, (user) => user.surveyAnswerUsers, {
     onDelete: 'CASCADE',

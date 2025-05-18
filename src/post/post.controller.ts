@@ -25,9 +25,9 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
-import { S3Service } from 'src/common/services/s3.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { S3Service } from '../common/services/s3.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';

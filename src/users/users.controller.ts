@@ -5,8 +5,8 @@ import {
   Get,
   Logger,
   Param,
-  Patch,
   Post,
+  Put,
   Query,
   Request,
   UseGuards,
@@ -17,14 +17,14 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { Public } from '../auth/decorators/public.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -137,7 +137,7 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '사용자 정보 수정' })
   @ApiResponse({

@@ -13,6 +13,7 @@ import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { Comment } from '../../comment/entities/comment.entity';
 import { Reply } from '../../comment/reply/entities/reply.entity';
+import { Gender } from '../../common/enums/gender.enum';
 import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
 
 @Entity()
@@ -31,6 +32,9 @@ export class User {
 
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
+
+  @Column({ default: false, name: 'is_admin' })
+  isAdmin: boolean;
 
   @Column({ nullable: true, name: 'provider' })
   provider: string;
@@ -54,14 +58,28 @@ export class User {
   @Column({ name: 'intro' })
   intro: string;
 
-  @Column({ type: 'enum', enum: ['M', 'F'], nullable: true, name: 'gender' })
-  gender: 'M' | 'F';
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    nullable: true,
+    name: 'gender',
+  })
+  gender: Gender;
 
   @Column({ default: false, name: 'is_public' })
   isPublic: boolean;
 
   @Column({ name: 'signin_provider' })
   signinProvider: string;
+
+  @Column({ default: false, name: 'agree_service' })
+  agreeService: boolean;
+
+  @Column({ default: false, name: 'agree_privacy' })
+  agreePrivacy: boolean;
+
+  @Column({ default: false, name: 'agree_marketing' })
+  agreeMarketing: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

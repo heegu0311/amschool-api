@@ -1,24 +1,23 @@
 import {
+  BadRequestException,
   Injectable,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import dayjs from 'dayjs';
+import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { ImageService } from '../../common/services/image.service';
+import { UsersService } from '../../users/users.service';
 import {
-  LoginDto,
   CompleteRegistrationDto,
+  LoginDto,
   NewPasswordDto,
 } from '../dto/auth.dto';
-import { EmailVerificationService } from './email-verification.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import dayjs from 'dayjs';
-import { UsersService } from '../../users/users.service';
-import { CancerUserService } from '../../cancer-user/cancer-user.service';
-import { ImageService } from '../../common/services/image.service';
+import { EmailVerificationService } from './email-verification.service';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +25,6 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailVerificationService: EmailVerificationService,
-    private readonly cancerUserService: CancerUserService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
     private readonly imageService: ImageService,
@@ -134,7 +132,6 @@ export class AuthService {
 
     let profileImageUrl = '';
     if (profileImage) {
-      // diary.service.ts 참고: imageService.uploadImage 사용
       if (!this.imageService) {
         throw new Error('imageService가 주입되어야 합니다.');
       }
@@ -151,29 +148,13 @@ export class AuthService {
         profileImage: profileImageUrl || completeRegistrationDto.profileImage,
       });
 
-      // 선택된 암 정보가 있는 경우 cancer_user 테이블에 추가
-      if (
-        completeRegistrationDto.cancerIds &&
-        completeRegistrationDto.cancerIds.length > 0
-      ) {
-        await Promise.all(
-          completeRegistrationDto.cancerIds.map(async (cancerId) => {
-            await this.cancerUserService.create({
-              userId: user.id,
-              cancerId,
-            });
-          }),
-        );
-      }
-
       return this.generateTokens(user.id, user.email);
     } catch (error) {
-      // MySQL 중복 키 에러 코드
       if (error.code === 'ER_DUP_ENTRY') {
         throw new BadRequestException('이미 존재하는 이메일입니다.');
       }
 
-      throw error; // 다른 에러는 전역 예외 필터가 처리
+      throw error;
     }
   }
 

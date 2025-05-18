@@ -13,12 +13,4 @@ export class SurveyAnswerService {
   findAll(): Promise<SurveyAnswer[]> {
     return this.surveyAnswerRepository.find();
   }
-
-  findOne(id: number) {
-    return `This action returns a #${id} surveyAnswer`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} surveyAnswer`;
-  }
 }

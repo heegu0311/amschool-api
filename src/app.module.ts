@@ -14,15 +14,16 @@ import { CommentModule } from './comment/comment.module';
 import { DiaryModule } from './diary/diary.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
+import { PostModule } from './post/post.module';
 import { QuestionModule } from './question/question.module';
 import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { SectionPrimaryModule } from './section_primary/section_primary.module';
 import { SectionSecondaryModule } from './section_secondary/section_secondary.module';
 import { SnakeNamingStrategy } from './snake-naming.strategy';
+import { SurveyAnswerUserModule } from './survey-answer-user/survey-answer-user.module';
 import { SurveyAnswerModule } from './survey-answer/survey-answer.module';
 import { UsersModule } from './users/users.module';
-import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { PostModule } from './post/post.module';
     ArticleModule,
     ArticleImageModule,
     PostModule,
+    SurveyAnswerUserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
