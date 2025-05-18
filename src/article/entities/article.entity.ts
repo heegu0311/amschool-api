@@ -104,10 +104,10 @@ export class Article {
     name: 'section_secondary_code',
     type: 'varchar',
     length: 20,
-    nullable: false,
     comment: '2차섹션',
+    nullable: false,
   })
-  sectionSecondaryCode?: string;
+  sectionSecondaryCode: string;
 
   @ApiProperty({ description: '연재', example: 'SER001' })
   @Column({
@@ -311,11 +311,15 @@ export class Article {
   @Column({ type: 'text', comment: '키워드', nullable: true })
   keywords: string;
 
-  @ManyToOne(() => SectionPrimary, (primary) => primary.articles)
+  @ManyToOne(() => SectionPrimary, (primary) => primary.articles, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'section_primary_code', referencedColumnName: 'code' })
   sectionPrimary: Relation<SectionPrimary>;
 
-  @ManyToOne(() => SectionSecondary, (secondary) => secondary.articles)
+  @ManyToOne(() => SectionSecondary, (secondary) => secondary.articles, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'section_secondary_code', referencedColumnName: 'code' })
   sectionSecondary: Relation<SectionSecondary>;
 

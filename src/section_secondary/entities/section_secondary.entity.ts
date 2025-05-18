@@ -28,7 +28,7 @@ export class SectionSecondary {
   @Column({
     type: 'varchar',
     length: 20,
-    default: '',
+    nullable: false,
     comment: '코드',
   })
   code: string;
@@ -71,7 +71,9 @@ export class SectionSecondary {
   })
   sectionPrimaryCode: string;
 
-  @ManyToOne(() => SectionPrimary, (primary) => primary.secondaries)
+  @ManyToOne(() => SectionPrimary, (primary) => primary.secondaries, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'section_primary_code', referencedColumnName: 'code' })
   sectionPrimary: Relation<SectionPrimary>;
 

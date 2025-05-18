@@ -30,14 +30,14 @@ export class VerifyEmailDto {
 export class LoginDto {
   @ApiProperty({
     description: '이메일 주소',
-    example: 'heegu0311@gmail.com',
+    example: 'example@domain.com',
   })
   @IsEmail()
   email: string;
 
   @ApiProperty({
     description: '비밀번호',
-    example: '1q2w3e4r!!',
+    example: '1q1q1q1q',
   })
   @IsString()
   @MinLength(8)

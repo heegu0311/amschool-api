@@ -8,6 +8,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Reply } from './reply/entities/reply.entity';
 
 @Injectable()
 export class CommentService {
@@ -17,6 +18,8 @@ export class CommentService {
     @InjectRepository(Diary)
     private readonly diaryRepository: Repository<Diary>,
     private readonly reactionEntityService: ReactionEntityService,
+    @InjectRepository(Reply)
+    private readonly replyRepository: Repository<Reply>,
   ) {}
 
   async create(
@@ -70,11 +73,23 @@ export class CommentService {
         userId,
       );
 
+    // 각 댓글의 답글 갯수 조회
+    const replyCounts = await Promise.all(
+      commentIds.map(async (commentId) => {
+        const count = await this.replyRepository.count({
+          where: { commentId, deletedAt: IsNull() },
+        });
+        return { commentId, count };
+      }),
+    );
+
     const commentWithReactions = items.map((comment) => {
       const commentWithReactions = {
         ...comment,
         reactions: commentReactions[comment.id]?.reactions || [],
         userReactions: commentReactions[comment.id]?.userReactions || [],
+        replyCount:
+          replyCounts.find((rc) => rc.commentId === comment.id)?.count || 0,
       };
       return commentWithReactions;
     });

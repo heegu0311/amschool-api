@@ -21,9 +21,14 @@ export class SectionPrimary {
   })
   id: number;
 
-  @ApiProperty({ description: '코드', example: 'SEC001' })
+  @ApiProperty({ description: '코드', example: 'S1N6' })
   @Index({ unique: true })
-  @Column({ type: 'varchar', length: 20, default: '', comment: '코드' })
+  @Column({
+    type: 'varchar',
+    length: 20,
+    nullable: false,
+    comment: '코드',
+  })
   code: string;
 
   @ApiProperty({ description: '섹션명', example: '정치' })

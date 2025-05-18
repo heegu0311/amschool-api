@@ -34,7 +34,7 @@ import { Question } from './entities/question.entity';
 import { QuestionService } from './question.service';
 
 @ApiBearerAuth('accessToken')
-@Controller('question')
+@Controller('questions')
 export class QuestionController {
   constructor(
     private readonly questionervice: QuestionService,

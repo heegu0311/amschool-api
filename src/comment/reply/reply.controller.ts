@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -85,10 +86,16 @@ export class ReplyController {
     type: [Reply],
   })
   findAllByCommentId(
+    @Req() req,
     @Param('commentId', ParseIntPipe) commentId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Reply>> {
-    return this.replyService.findAllByCommentId(commentId, paginationDto);
+    const userId = req.user.id;
+    return this.replyService.findAllByCommentId(
+      userId,
+      commentId,
+      paginationDto,
+    );
   }
 
   @Delete(':replyId')
@@ -111,5 +118,26 @@ export class ReplyController {
   ) {
     const userId = req.user.id;
     return this.replyService.remove(userId, replyId);
+  }
+
+  @Patch(':replyId')
+  @ApiOperation({ summary: '답글 수정' })
+  @ApiParam({
+    name: 'entityType',
+    description: '엔티티 타입 (diary, question 등)',
+    example: 'diary',
+  })
+  @ApiParam({ name: 'entityId', description: '엔티티 ID', example: 1 })
+  @ApiParam({ name: 'commentId', description: '댓글 ID', example: 1 })
+  @ApiParam({ name: 'replyId', description: '수정할 답글 ID', example: 1 })
+  @ApiResponse({ status: 200, description: '답글 수정 성공', type: Reply })
+  @ApiResponse({ status: 404, description: '답글을 찾을 수 없음' })
+  update(
+    @Param('replyId', ParseIntPipe) replyId: number,
+    @Body() updateReplyDto: CreateReplyDto,
+    @Req() req,
+  ) {
+    const userId = req.user.id;
+    return this.replyService.update(userId, replyId, updateReplyDto);
   }
 }

@@ -5,10 +5,12 @@ import { ReactionEntityModule } from '../reaction-entity/reaction-entity.module'
 import { CommentController } from './comment.controller';
 import { CommentService } from './comment.service';
 import { Comment } from './entities/comment.entity';
+import { Reply } from './reply/entities/reply.entity';
 import { ReplyModule } from './reply/reply.module';
+
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Comment, Diary]),
+    TypeOrmModule.forFeature([Comment, Diary, Reply]),
     ReplyModule,
     ReactionEntityModule,
   ],
