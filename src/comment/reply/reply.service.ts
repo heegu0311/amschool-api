@@ -41,7 +41,33 @@ export class ReplyService {
       commentId,
     });
 
-    return this.replyRepository.save(reply);
+    const savedReply = await this.replyRepository.save(reply);
+
+    // 작성자 정보와 리액션 정보를 포함하여 반환
+    const replyWithAuthor = await this.replyRepository.findOne({
+      where: { id: savedReply.id },
+      relations: ['author'],
+    });
+
+    if (!replyWithAuthor) {
+      throw new NotFoundException('답글을 찾을 수 없습니다.');
+    }
+
+    // 리액션 정보 조회
+    const replyReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'reply',
+        [replyWithAuthor.id],
+        userId,
+      );
+
+    const replyWithAuthorAndReactions = {
+      ...replyWithAuthor,
+      reactions: replyReactions[replyWithAuthor.id]?.reactions || [],
+      userReactions: replyReactions[replyWithAuthor.id]?.userReactions || [],
+    };
+
+    return replyWithAuthorAndReactions;
   }
 
   async findAllByCommentId(
