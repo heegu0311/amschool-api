@@ -16,7 +16,7 @@ export class SocialLoginResponseDto {
   @ApiProperty({ description: '소셜 로그인 정보', required: false })
   socialInfo?: {
     email: string;
-    name: string;
+    username: string;
     image?: string;
     provider: string;
     socialId: string;

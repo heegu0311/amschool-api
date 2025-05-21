@@ -202,7 +202,7 @@ export class AuthService {
           needRegistration: true,
           socialInfo: {
             email: socialLoginDto.email,
-            name: socialLoginDto.name,
+            username: socialLoginDto.username || '',
             image: socialLoginDto.image,
             provider: socialLoginDto.provider,
             socialId: socialLoginDto.id || '',
