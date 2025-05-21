@@ -42,8 +42,9 @@ export class LoginDto {
     example: '1q1q1q1q',
   })
   @IsString()
+  @IsOptional()
   @MinLength(8)
-  password: string;
+  password?: string;
 }
 
 export class RefreshTokenDto {

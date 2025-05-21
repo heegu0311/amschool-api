@@ -51,6 +51,10 @@ export class UsersService {
     return this.usersRepository.findOneBy({ email });
   }
 
+  findByEmailAndProvider(email: string, provider: string) {
+    return this.usersRepository.findOneBy({ email, signinProvider: provider });
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
@@ -196,7 +200,10 @@ export class UsersService {
   }
 
   async existsByEmail(email: string): Promise<boolean> {
-    const user = await this.usersRepository.findOneBy({ email });
+    const user = await this.usersRepository.findOneBy({
+      email,
+      signinProvider: 'email',
+    });
     return !!user;
   }
 

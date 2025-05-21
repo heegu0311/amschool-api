@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +17,8 @@ import {
   LoginDto,
   NewPasswordDto,
 } from '../dto/auth.dto';
+import { SocialLoginDto } from '../dto/social-login.dto';
+import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { EmailVerificationService } from './email-verification.service';
 
@@ -47,10 +50,7 @@ export class AuthService {
       expiresAt,
     });
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { userId, accessToken, refreshToken };
   }
 
   async login(loginDto: LoginDto) {
@@ -60,7 +60,7 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
+      loginDto.password || '',
       user.password,
     );
     if (!isPasswordValid) {
@@ -167,5 +167,65 @@ export class AuthService {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     await this.userService.update(user.id, { password: hashedPassword });
+  }
+
+  async socialLogin(
+    socialLoginDto: SocialLoginDto,
+  ): Promise<SocialLoginResponseDto> {
+    try {
+      // 이메일로 사용자 찾기
+      // const existingUser = await this.userService.findByEmail(
+      //   socialLoginDto.email,
+      // );
+
+      // 이메일이 존재하지만 provider가 다른 경우
+      // if (
+      //   existingUser &&
+      //   existingUser.signinProvider !== socialLoginDto.provider
+      // ) {
+      //   throw new BadRequestException(
+      //     `${existingUser.signinProvider.toUpperCase()} 계정으로 가입된 이메일입니다.`,
+      //   );
+      // }
+
+      // 이메일과 provider로 기존 사용자 찾기
+      const user = await this.userService.findByEmailAndProvider(
+        socialLoginDto.email,
+        socialLoginDto.provider,
+      );
+
+      // 사용자가 없는 경우 회원가입 필요
+      if (!user) {
+        await this.emailVerificationService.verifyEmail(socialLoginDto.email);
+        return {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          needRegistration: true,
+          socialInfo: {
+            email: socialLoginDto.email,
+            name: socialLoginDto.name,
+            image: socialLoginDto.image,
+            provider: socialLoginDto.provider,
+            socialId: socialLoginDto.id || '',
+          },
+        };
+      }
+
+      // 토큰 생성
+      const tokens = await this.generateTokens(user.id, user.email);
+      return {
+        ...user,
+        ...tokens,
+        statusCode: HttpStatus.OK,
+        needRegistration: false,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new BadRequestException('이미 가입된 이메일입니다.');
+      }
+      throw error;
+    }
   }
 }

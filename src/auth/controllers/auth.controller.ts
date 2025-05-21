@@ -27,6 +27,8 @@ import {
   VerifyEmailDto,
   NewPasswordDto,
 } from '../dto/auth.dto';
+import { SocialLoginDto } from '../dto/social-login.dto';
+import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { UsersService } from '../../users/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -245,5 +247,28 @@ export class AuthController {
   ): Promise<{ message: string }> {
     await this.authService.resetPassword(newPasswordDto);
     return { message: '비밀번호가 변경되었습니다.' };
+  }
+
+  @Public()
+  @Post('social-login')
+  @ApiOperation({ summary: '소셜 로그인' })
+  @ApiBody({ type: SocialLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: '소셜 로그인 성공',
+    type: SocialLoginResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: '회원가입 필요',
+    type: SocialLoginResponseDto,
+  })
+  async socialLogin(
+    @Body() socialLoginDto: SocialLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<SocialLoginResponseDto> {
+    const result = await this.authService.socialLogin(socialLoginDto);
+    res.status(result.statusCode);
+    return result;
   }
 }

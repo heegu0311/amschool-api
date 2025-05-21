@@ -18,10 +18,10 @@ import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answe
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ length: 60, unique: true, name: 'email' })
+  @Column({ length: 60, name: 'email' })
   email: string;
 
   @Column({ nullable: true, name: 'password' })
@@ -80,6 +80,9 @@ export class User {
 
   @Column({ default: false, name: 'agree_marketing' })
   agreeMarketing: boolean;
+
+  @Column({ nullable: true, name: 'social_id' })
+  socialId: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

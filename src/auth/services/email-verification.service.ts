@@ -55,6 +55,16 @@ export class EmailVerificationService {
     });
   }
 
+  async verifyEmail(email: string): Promise<void> {
+    const emailVerification = this.emailVerificationRepository.create({
+      email,
+      code: '0000',
+      expiresAt: dayjs().add(10, 'minute').toDate(), // 10분 후 만료
+      isVerified: true,
+    });
+    await this.emailVerificationRepository.save(emailVerification);
+  }
+
   async isEmailVerified(email: string): Promise<boolean> {
     const verification = await this.emailVerificationRepository.findOne({
       where: { email, isVerified: true },

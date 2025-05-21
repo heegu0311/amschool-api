@@ -16,8 +16,6 @@ export class SocialAuthController {
   @Get('kakao/callback')
   @UseGuards(AuthGuard('kakao'))
   async kakaoCallback(@Req() req, @Res() res: Response) {
-    console.log(req.user);
-
     const result = await this.socialAuthService.socialLogin(req.user);
     res.redirect(`/auth/callback?token=${result.accessToken}`);
   }
