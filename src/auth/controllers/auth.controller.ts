@@ -32,6 +32,7 @@ import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
 import { EmailVerificationService } from '../services/email-verification.service';
 import { UsersService } from '../../users/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { VerifySocialTokenDto } from '../dto/verify-social-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -247,6 +248,18 @@ export class AuthController {
   ): Promise<{ message: string }> {
     await this.authService.resetPassword(newPasswordDto);
     return { message: '비밀번호가 변경되었습니다.' };
+  }
+
+  @Post('verify-social-token')
+  @ApiOperation({ summary: '소셜 토큰 검증' })
+  @ApiBody({ type: VerifySocialTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: '소셜 토큰 검증 성공',
+    type: SocialLoginResponseDto,
+  })
+  async verifySocialToken(@Body() dto: VerifySocialTokenDto) {
+    return this.authService.verifySocialToken(dto);
   }
 
   @Public()

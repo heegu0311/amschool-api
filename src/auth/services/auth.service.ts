@@ -21,6 +21,10 @@ import { SocialLoginDto } from '../dto/social-login.dto';
 import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { EmailVerificationService } from './email-verification.service';
+import {
+  SocialProvider,
+  VerifySocialTokenDto,
+} from '../dto/verify-social-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -206,6 +210,7 @@ export class AuthService {
             image: socialLoginDto.image,
             provider: socialLoginDto.provider,
             socialId: socialLoginDto.id || '',
+            birthday: socialLoginDto.birthday || '',
           },
         };
       }
@@ -213,10 +218,17 @@ export class AuthService {
       // 토큰 생성
       const tokens = await this.generateTokens(user.id, user.email);
       return {
-        ...user,
         ...tokens,
         statusCode: HttpStatus.OK,
         needRegistration: false,
+        socialInfo: {
+          email: socialLoginDto.email,
+          username: socialLoginDto.username || '',
+          image: socialLoginDto.image,
+          provider: socialLoginDto.provider,
+          socialId: socialLoginDto.id || '',
+          birthday: socialLoginDto.birthday || '',
+        },
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -226,6 +238,127 @@ export class AuthService {
         throw new BadRequestException('이미 가입된 이메일입니다.');
       }
       throw error;
+    }
+  }
+
+  async verifySocialToken(dto: VerifySocialTokenDto) {
+    const { provider, token } = dto;
+
+    // 소셜 제공자별 토큰 검증
+    let socialUserInfo;
+    switch (provider) {
+      case SocialProvider.KAKAO:
+        socialUserInfo = await this.verifyKakaoToken(token);
+        break;
+      case SocialProvider.NAVER:
+        socialUserInfo = await this.verifyNaverToken(token);
+        break;
+      case SocialProvider.GOOGLE:
+        socialUserInfo = await this.verifyGoogleToken(token);
+        break;
+      default:
+        throw new UnauthorizedException(
+          '지원하지 않는 소셜 로그인 제공자입니다.',
+        );
+    }
+
+    // socialLogin 메서드를 통해 사용자 처리
+    const socialLoginDto: SocialLoginDto = {
+      email: socialUserInfo.email,
+      username: socialUserInfo.name,
+      image: socialUserInfo.image,
+      provider: socialUserInfo.provider,
+      id: socialUserInfo.id,
+      birthday: socialUserInfo.birthday,
+    };
+
+    return this.socialLogin(socialLoginDto);
+  }
+
+  private async verifyKakaoToken(token: string) {
+    try {
+      const response = await fetch('https://kapi.kakao.com/v2/user/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new UnauthorizedException('유효하지 않은 카카오 토큰입니다.');
+      }
+
+      const data = await response.json();
+      const birthday =
+        data.kakao_account?.birthyear + data.kakao_account?.birthday;
+
+      return {
+        id: data.id,
+        email: data.kakao_account?.email,
+        name: data.properties?.nickname,
+        image: data.properties?.profile_image,
+        birthday: birthday
+          ? `${birthday.slice(0, 4)}-${birthday.slice(4, 6)}-${birthday.slice(6, 8)}`
+          : null,
+        provider: 'kakao',
+      };
+    } catch {
+      throw new UnauthorizedException('카카오 토큰 검증에 실패했습니다.');
+    }
+  }
+
+  private async verifyNaverToken(token: string) {
+    try {
+      const response = await fetch('https://openapi.naver.com/v1/nid/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new UnauthorizedException('유효하지 않은 네이버 토큰입니다.');
+      }
+
+      const data = await response.json();
+      return {
+        id: data.response.id,
+        email: data.response.email,
+        name: data.response.nickname,
+        image: data.response.profile_image,
+        birthday: data.response.birthyear
+          ? `${data.response.birthyear}-${data.response.birthday}`
+          : null,
+        provider: 'naver',
+      };
+    } catch {
+      throw new UnauthorizedException('네이버 토큰 검증에 실패했습니다.');
+    }
+  }
+
+  private async verifyGoogleToken(token: string) {
+    try {
+      const response = await fetch(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new UnauthorizedException('유효하지 않은 구글 토큰입니다.');
+      }
+
+      const data = await response.json();
+      return {
+        id: data.sub,
+        email: data.email,
+        name: data.name,
+        image: data.picture,
+        provider: 'google',
+      };
+    } catch {
+      throw new UnauthorizedException('구글 토큰 검증에 실패했습니다.');
     }
   }
 }

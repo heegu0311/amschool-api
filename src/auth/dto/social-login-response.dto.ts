@@ -20,5 +20,6 @@ export class SocialLoginResponseDto {
     image?: string;
     provider: string;
     socialId: string;
+    birthday?: string;
   };
 }

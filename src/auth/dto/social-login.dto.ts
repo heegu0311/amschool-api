@@ -29,4 +29,9 @@ export class SocialLoginDto {
   @IsNotEmpty()
   @IsString()
   provider: string;
+
+  @ApiProperty({ description: '생년월일', required: false })
+  @IsOptional()
+  @IsString()
+  birthday?: string;
 }
