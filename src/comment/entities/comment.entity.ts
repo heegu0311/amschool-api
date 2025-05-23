@@ -54,7 +54,7 @@ export class Comment {
   })
   entity: Relation<Diary | Post>;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 

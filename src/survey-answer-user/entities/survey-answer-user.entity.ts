@@ -22,6 +22,7 @@ export class SurveyAnswerUser {
 
   @ManyToOne(() => User, (user) => user.surveyAnswerUsers, {
     onDelete: 'CASCADE',
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'user_id' })
   user: Relation<User>;
