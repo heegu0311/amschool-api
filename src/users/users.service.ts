@@ -1,24 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Image } from 'src/common/entities/image.entity';
 import { Repository } from 'typeorm';
-import { CancerUserService } from '../cancer-user/cancer-user.service';
 import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { SurveyAnswerUserService } from '../survey-answer-user/survey-answer-user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { CancerUserService } from 'src/cancer-user/cancer-user.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
+import { ImageService } from 'src/common/services/image.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private cancerUserService: CancerUserService,
     @InjectRepository(CancerUser)
     private cancerUserRepository: Repository<CancerUser>,
+    @InjectRepository(Image)
+    private imageRepository: Repository<Image>,
+    private cancerUserService: CancerUserService,
     private surveyAnswerUserService: SurveyAnswerUserService,
+    private imageService: ImageService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -55,16 +60,20 @@ export class UsersService {
     return this.usersRepository.findOneBy({ email, signinProvider: provider });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    images?: Express.Multer.File[],
+  ) {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       return null;
     }
 
-    const { cancerIds, surveyAnswers, ...rest } = updateUserDto;
+    const { /*cancerIds, surveyAnswers,*/ ...rest } = updateUserDto;
 
     // DTO에서 undefined가 아닌 값만 업데이트
-    const updateData = Object.entries(rest).reduce((acc, [key, value]) => {
+    const updateData: any = Object.entries(rest).reduce((acc, [key, value]) => {
       if (value !== undefined) {
         acc[key] = value;
       }
@@ -72,42 +81,66 @@ export class UsersService {
     }, {});
 
     // 암 정보 업데이트
-    if (cancerIds) {
-      // 기존 암 정보 삭제
-      const existingCancerUsers = await this.cancerUserService.findByUserId(id);
-      await Promise.all(
-        existingCancerUsers.map((cu) => this.cancerUserService.delete(cu.id)),
-      );
+    // if (cancerIds) {
+    //   // 기존 암 정보 삭제
+    //   const existingCancerUsers = await this.cancerUserService.findByUserId(id);
+    //   await Promise.all(
+    //     existingCancerUsers.map((cu) => this.cancerUserService.delete(cu.id)),
+    //   );
 
-      // 새로운 암 정보 추가
-      if (cancerIds.length > 0) {
-        await Promise.all(
-          cancerIds.map(async (cancerId) => {
-            await this.cancerUserService.create({
-              userId: id,
-              cancerId,
-            });
-          }),
-        );
-      }
-    }
+    //   // 새로운 암 정보 추가
+    //   if (cancerIds.length > 0) {
+    //     await Promise.all(
+    //       cancerIds.map(async (cancerId) => {
+    //         await this.cancerUserService.create({
+    //           userId: id,
+    //           cancerId,
+    //         });
+    //       }),
+    //     );
+    //   }
+    // }
+
     // surveyAnswers가 있을 경우, 각 답변을 순회하며 업데이트
-    if (surveyAnswers && Array.isArray(surveyAnswers)) {
-      // 기존 답변 삭제
-      const existingAnswers =
-        await this.surveyAnswerUserService.findByUserId(id);
-      await Promise.all(
-        existingAnswers.map((answer) =>
-          this.surveyAnswerUserService.delete(id, answer.surveyAnswerId),
-        ),
+    // if (surveyAnswers && Array.isArray(surveyAnswers)) {
+    //   // 기존 답변 삭제
+    //   const existingAnswers =
+    //     await this.surveyAnswerUserService.findByUserId(id);
+    //   await Promise.all(
+    //     existingAnswers.map((answer) =>
+    //       this.surveyAnswerUserService.delete(id, answer.surveyAnswerId),
+    //     ),
+    //   );
+
+    //   // 새로운 답변 추가
+    //   await Promise.all(
+    //     surveyAnswers.map((answerId) =>
+    //       this.surveyAnswerUserService.create(id, answerId),
+    //     ),
+    //   );
+    // }
+
+    // 이미지 업로드 처리
+    if (images && images.length > 0) {
+      const image = images[0]; // 첫 번째 이미지만 사용
+      const uploadedImageUrl = await this.imageService.uploadImage(
+        image,
+        'user',
       );
 
-      // 새로운 답변 추가
-      await Promise.all(
-        surveyAnswers.map((answerId) =>
-          this.surveyAnswerUserService.create(id, answerId),
-        ),
-      );
+      // 새 이미지 정보 저장
+      const imageEntity = this.imageRepository.create({
+        url: uploadedImageUrl,
+        originalName: image.originalname,
+        mimeType: image.mimetype,
+        size: image.size,
+        entityType: 'user',
+        entityId: id,
+        order: 0,
+      });
+
+      await this.imageRepository.save(imageEntity);
+      updateData.profileImage = uploadedImageUrl;
     }
 
     await this.usersRepository.update(id, updateData);
