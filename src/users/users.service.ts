@@ -48,8 +48,13 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  findOne(id: number) {
-    return this.usersRepository.findOneBy({ id });
+  async findOne(id: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['cancerUsers'],
+    });
+
+    return user;
   }
 
   findByEmail(email: string) {
@@ -70,7 +75,7 @@ export class UsersService {
       return null;
     }
 
-    const { /*cancerIds, surveyAnswers,*/ ...rest } = updateUserDto;
+    const { cancerIds, /*surveyAnswers,*/ ...rest } = updateUserDto;
 
     // DTO에서 undefined가 아닌 값만 업데이트
     const updateData: any = Object.entries(rest).reduce((acc, [key, value]) => {
@@ -81,25 +86,25 @@ export class UsersService {
     }, {});
 
     // 암 정보 업데이트
-    // if (cancerIds) {
-    //   // 기존 암 정보 삭제
-    //   const existingCancerUsers = await this.cancerUserService.findByUserId(id);
-    //   await Promise.all(
-    //     existingCancerUsers.map((cu) => this.cancerUserService.delete(cu.id)),
-    //   );
+    if (cancerIds) {
+      // 기존 암 정보 삭제
+      const existingCancerUsers = await this.cancerUserService.findByUserId(id);
+      await Promise.all(
+        existingCancerUsers.map((cu) => this.cancerUserService.delete(cu.id)),
+      );
 
-    //   // 새로운 암 정보 추가
-    //   if (cancerIds.length > 0) {
-    //     await Promise.all(
-    //       cancerIds.map(async (cancerId) => {
-    //         await this.cancerUserService.create({
-    //           userId: id,
-    //           cancerId,
-    //         });
-    //       }),
-    //     );
-    //   }
-    // }
+      // 새로운 암 정보 추가
+      if (cancerIds.length > 0) {
+        await Promise.all(
+          cancerIds.map(async (cancerId) => {
+            await this.cancerUserService.create({
+              userId: id,
+              cancerId,
+            });
+          }),
+        );
+      }
+    }
 
     // surveyAnswers가 있을 경우, 각 답변을 순회하며 업데이트
     // if (surveyAnswers && Array.isArray(surveyAnswers)) {
