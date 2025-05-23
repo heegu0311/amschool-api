@@ -6,7 +6,6 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
-  IsNumber,
   IsOptional,
   IsString,
   MinLength,
@@ -153,7 +152,6 @@ export class CompleteRegistrationDto {
 
 export class LogoutDto {
   @ApiProperty({ description: '사용자 ID' })
-  @IsNumber()
   userId: number;
 }
 
