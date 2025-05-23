@@ -19,7 +19,7 @@ export class SocialLoginResponseDto {
     username: string;
     image?: string;
     provider: string;
-    socialId: string;
+    socialId: string | number;
     birthday?: string;
   };
 }

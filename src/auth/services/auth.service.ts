@@ -58,9 +58,12 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.userService.findByEmail(loginDto.email);
+    const user = await this.userService.findByEmailAndProvider(
+      loginDto.email,
+      'email',
+    );
     if (!user) {
-      throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
+      throw new UnauthorizedException('아이디가 존재하지 않습니다.');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -222,11 +225,11 @@ export class AuthService {
         statusCode: HttpStatus.OK,
         needRegistration: false,
         socialInfo: {
-          email: socialLoginDto.email,
-          username: socialLoginDto.username || '',
-          image: socialLoginDto.image,
-          provider: socialLoginDto.provider,
-          socialId: socialLoginDto.id || '',
+          email: user.email,
+          username: user.username || '',
+          image: user.profileImage,
+          provider: user.signinProvider,
+          socialId: user.id || '',
           birthday: socialLoginDto.birthday || '',
         },
       };
