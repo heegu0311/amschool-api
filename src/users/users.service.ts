@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 import { Image } from 'src/common/entities/image.entity';
+import { ImageService } from 'src/common/services/image.service';
+import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
 import { Repository } from 'typeorm';
 import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
-import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
-import { ImageService } from 'src/common/services/image.service';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -41,6 +41,15 @@ export class UsersService {
       );
     }
 
+    // 설문 응답이 있는 경우 survey_answer_users 테이블에 추가
+    if (createUserDto.surveyAnswers && createUserDto.surveyAnswers.length > 0) {
+      await Promise.all(
+        createUserDto.surveyAnswers.map(async (surveyAnswerId) => {
+          await this.surveyAnswerUserService.create(user.id, surveyAnswerId);
+        }),
+      );
+    }
+
     return user;
   }
 
@@ -51,7 +60,7 @@ export class UsersService {
   async findOne(id: number) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['cancerUsers'],
+      relations: ['cancerUsers', 'surveyAnswerUsers'],
     });
 
     return user;
@@ -75,7 +84,7 @@ export class UsersService {
       return null;
     }
 
-    const { cancerIds, /*surveyAnswers,*/ ...rest } = updateUserDto;
+    const { cancerIds, surveyAnswers, ...rest } = updateUserDto;
 
     // DTO에서 undefined가 아닌 값만 업데이트
     const updateData: any = Object.entries(rest).reduce((acc, [key, value]) => {
@@ -107,23 +116,23 @@ export class UsersService {
     }
 
     // surveyAnswers가 있을 경우, 각 답변을 순회하며 업데이트
-    // if (surveyAnswers && Array.isArray(surveyAnswers)) {
-    //   // 기존 답변 삭제
-    //   const existingAnswers =
-    //     await this.surveyAnswerUserService.findByUserId(id);
-    //   await Promise.all(
-    //     existingAnswers.map((answer) =>
-    //       this.surveyAnswerUserService.delete(id, answer.surveyAnswerId),
-    //     ),
-    //   );
+    if (surveyAnswers && Array.isArray(surveyAnswers)) {
+      // 기존 답변 삭제
+      const existingAnswers =
+        await this.surveyAnswerUserService.findByUserId(id);
+      await Promise.all(
+        existingAnswers.map((answer) =>
+          this.surveyAnswerUserService.delete(id, answer.surveyAnswerId),
+        ),
+      );
 
-    //   // 새로운 답변 추가
-    //   await Promise.all(
-    //     surveyAnswers.map((answerId) =>
-    //       this.surveyAnswerUserService.create(id, answerId),
-    //     ),
-    //   );
-    // }
+      // 새로운 답변 추가
+      await Promise.all(
+        surveyAnswers.map((answerId) =>
+          this.surveyAnswerUserService.create(id, answerId),
+        ),
+      );
+    }
 
     // 이미지 업로드 처리
     if (images && images.length > 0) {
