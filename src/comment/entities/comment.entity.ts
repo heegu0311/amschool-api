@@ -54,7 +54,10 @@ export class Comment {
   })
   entity: Relation<Diary | Post>;
 
-  @ManyToOne(() => User, { createForeignKeyConstraints: false })
+  @ManyToOne(() => User, {
+    createForeignKeyConstraints: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 

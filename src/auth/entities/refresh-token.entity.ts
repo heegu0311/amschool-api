@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -29,7 +30,12 @@ export class RefreshToken {
   @Column({ default: false, name: 'is_revoked' })
   isRevoked: boolean;
 
-  @ManyToOne(() => User, (user) => user.refreshToken)
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.refreshToken, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: Relation<User>;
 }

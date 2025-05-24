@@ -93,21 +93,32 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user)
+  @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user, {
+    onDelete: 'CASCADE',
+  })
   cancerUsers: Relation<CancerUser[]>;
 
-  @OneToMany(() => Comment, (comment: Comment) => comment.author)
+  @OneToMany(() => Comment, (comment: Comment) => comment.author, {
+    onDelete: 'CASCADE',
+  })
   comments: Relation<Comment[]>;
 
-  @OneToMany(() => Reply, (reply: Reply) => reply.author)
+  @OneToMany(() => Reply, (reply: Reply) => reply.author, {
+    onDelete: 'CASCADE',
+  })
   replies: Relation<Reply[]>;
 
   @OneToMany(
     () => SurveyAnswerUser,
     (surveyAnswerUser: SurveyAnswerUser) => surveyAnswerUser.user,
+    {
+      onDelete: 'CASCADE',
+    },
   )
   surveyAnswerUsers: Relation<SurveyAnswerUser[]>;
 
-  @OneToOne(() => RefreshToken)
+  @OneToOne(() => RefreshToken, {
+    onDelete: 'CASCADE',
+  })
   refreshToken: Relation<RefreshToken>;
 }

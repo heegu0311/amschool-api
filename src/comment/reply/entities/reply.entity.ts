@@ -53,7 +53,9 @@ export class Reply {
   })
   comment: Relation<Comment>;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 

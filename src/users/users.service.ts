@@ -4,13 +4,17 @@ import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 import { Image } from 'src/common/entities/image.entity';
 import { ImageService } from 'src/common/services/image.service';
 import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { Comment } from '../comment/entities/comment.entity';
+import { Reply } from '../comment/reply/entities/reply.entity';
+import { SurveyAnswerUser } from '../survey-answer-user/entities/survey-answer-user.entity';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
 
 @Injectable()
 export class UsersService {
@@ -59,7 +63,7 @@ export class UsersService {
 
   async findOne(id: number) {
     const user = await this.usersRepository.findOne({
-      where: { id },
+      where: { id, deletedAt: IsNull() },
       relations: ['cancerUsers', 'surveyAnswerUsers'],
     });
 
@@ -161,8 +165,56 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
-  remove(id: number) {
-    return this.usersRepository.delete(id);
+  async remove(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return this.usersRepository.manager.transaction(async (manager) => {
+      // 익명 사용자 계정 찾기 또는 생성
+      let anonymousUser = await manager.findOne(User, {
+        where: { email: 'anonymous@system.com' },
+      });
+
+      if (!anonymousUser) {
+        anonymousUser = await manager.save(User, {
+          email: 'anonymous@system.com',
+          username: '탈퇴한 사용자',
+          userType: 'patient',
+          profileType: 'default',
+          profileImage: 'default-anonymous.png',
+          intro: '탈퇴한 사용자입니다.',
+          signinProvider: 'system',
+          isActive: false,
+        });
+      }
+
+      // 연관된 엔티티들의 작성자를 익명 사용자로 변경
+      await manager.update(
+        Comment,
+        { authorId: id },
+        {
+          authorId: anonymousUser.id,
+        },
+      );
+      await manager.update(
+        Reply,
+        { authorId: id },
+        {
+          authorId: anonymousUser.id,
+        },
+      );
+
+      // 실제로 삭제해야 하는 연관 엔티티들만 삭제
+      await manager.softDelete(RefreshToken, { userId: id });
+      await manager.softDelete(SurveyAnswerUser, { userId: id });
+      await manager.softDelete(CancerUser, { userId: id });
+
+      // 마지막으로 사용자 삭제
+      return manager.softRemove(user);
+    });
   }
 
   async findUsersByCancer(

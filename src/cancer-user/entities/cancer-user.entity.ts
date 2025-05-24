@@ -1,5 +1,7 @@
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -9,7 +11,7 @@ import {
 import { Cancer } from '../../cancer/entities/cancer.entity';
 import { User } from '../../users/entities/user.entity';
 
-@Entity()
+@Entity('cancer_user')
 export class CancerUser {
   @PrimaryGeneratedColumn()
   id: number;
@@ -20,11 +22,22 @@ export class CancerUser {
   @Column({ name: 'cancer_id' })
   cancerId: number;
 
-  @ManyToOne(() => User, (user) => user.cancerUsers)
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.cancerUsers, {
+    onDelete: 'CASCADE',
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'user_id' })
   user: Relation<User>;
 
-  @ManyToOne(() => Cancer, (cancer) => cancer.cancerUsers)
+  @ManyToOne(() => Cancer, (cancer) => cancer.cancerUsers, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'cancer_id' })
   cancer: Relation<Cancer>;
 }

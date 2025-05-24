@@ -1,5 +1,7 @@
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -19,6 +21,12 @@ export class SurveyAnswerUser {
 
   @Column({ name: 'survey_answer_id' })
   surveyAnswerId: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt: Date;
 
   @ManyToOne(() => User, (user) => user.surveyAnswerUsers, {
     onDelete: 'CASCADE',
