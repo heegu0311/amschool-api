@@ -430,4 +430,54 @@ export class DiaryService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findByAuthorId(
+    authorId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Diary>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [items, totalItems] = await this.diaryRepository.findAndCount({
+      where: {
+        authorId: authorId,
+        deletedAt: undefined,
+      },
+      relations: ['author', 'images', 'comments'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    // 다이어리 ID 목록 추출
+    const diaryIds = items.map((diary) => diary.id);
+
+    // 여러 다이어리의 공감을 한 번에 조회
+    const diaryReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'diary',
+        diaryIds,
+        authorId,
+      );
+
+    // 공감 정보를 각 엔티티에 매핑
+    const diariesWithReactions = items.map((diary) => {
+      const diaryWithReactions = {
+        ...diary,
+        reactions: diaryReactions[diary.id]?.reactions || [],
+        userReactions: diaryReactions[diary.id]?.userReactions || [],
+        commentsCount: diary.comments.length,
+      };
+      return diaryWithReactions;
+    });
+
+    return {
+      items: diariesWithReactions,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
 }

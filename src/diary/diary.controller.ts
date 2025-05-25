@@ -91,6 +91,34 @@ export class DiaryController {
     return this.diaryService.findAllWithMoreInfo(paginationDto, req.user?.id);
   }
 
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '내 오늘의나 목록 조회' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '내 오늘의나 목록 조회 성공',
+    type: [Diary],
+  })
+  async findMyDiaries(
+    @Request() req,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Diary>> {
+    return await this.diaryService.findByAuthorId(req.user.id, paginationDto);
+  }
+
   @Get('similar-user')
   @Public()
   @ApiBearerAuth('accessToken')

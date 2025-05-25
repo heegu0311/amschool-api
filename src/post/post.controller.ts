@@ -33,6 +33,7 @@ import { PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostService } from './post.service';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
@@ -87,7 +88,7 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',
-    type: [Post],
+    type: [PostEntity],
   })
   findAll(@Request() req, @Query() paginationDto: PostPaginationDto) {
     return this.postService.findAllWithMoreInfo(paginationDto, req.user?.id);
@@ -116,13 +117,40 @@ export class PostController {
     return this.postService.findPopularPostsOfWeek();
   }
 
+  @Get('my')
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '내 게시글 목록 조회' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '내 게시글 목록 조회 성공',
+    type: [PostEntity],
+  })
+  async findMyPosts(
+    @Request() req,
+    @Query() paginationDto: PostPaginationDto,
+  ): Promise<PaginatedResponse<PostEntity>> {
+    return await this.postService.findByAuthorId(req.user.id, paginationDto);
+  }
+
   @Get(':id')
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 게시글 조회' })
   @ApiResponse({
     status: 200,
     description: '게시글 조회 성공',
-    type: Post,
+    type: PostEntity,
   })
   @ApiResponse({
     status: 404,
@@ -141,7 +169,7 @@ export class PostController {
   @ApiResponse({
     status: 200,
     description: '게시글 수정 성공',
-    type: Post,
+    type: PostEntity,
   })
   @ApiResponse({
     status: 404,

@@ -347,4 +347,53 @@ export class PostService {
       commentsCount: Number(p.commentsCount),
     }));
   }
+
+  async findByAuthorId(
+    authorId: number,
+    paginationDto: PostPaginationDto,
+  ): Promise<PaginatedResponse<Post>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [items, totalItems] = await this.postRepository.findAndCount({
+      where: {
+        authorId: authorId,
+        deletedAt: undefined,
+      },
+      relations: ['author', 'images', 'comments'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    // 게시글 ID 목록 추출
+    const postIds = items.map((post) => post.id);
+
+    // 여러 게시글의 공감을 한 번에 조회
+    const postWithReactionsCount =
+      await this.reactionEntityService.getReactionsCountForMultipleEntities(
+        'post',
+        postIds,
+        authorId,
+      );
+
+    // 공감 정보를 각 엔티티에 매핑
+    const postsWithReactions = items.map((post) => {
+      const postWithReactions = {
+        ...post,
+        reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
+        commentsCount: post.comments.length,
+      };
+      return postWithReactions;
+    });
+
+    return {
+      items: postsWithReactions,
+      meta: {
+        totalItems,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
 }

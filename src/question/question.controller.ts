@@ -96,7 +96,6 @@ export class QuestionController {
   }
 
   @Get('my')
-  @Public()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '내 질문 목록 조회' })
   @ApiQuery({
