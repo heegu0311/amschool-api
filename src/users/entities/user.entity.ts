@@ -4,10 +4,10 @@ import {
   DeleteDateColumn,
   Entity,
   OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Relation,
   UpdateDateColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
@@ -15,11 +15,23 @@ import { Comment } from '../../comment/entities/comment.entity';
 import { Reply } from '../../comment/reply/entities/reply.entity';
 import { Gender } from '../../common/enums/gender.enum';
 import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
+import { customAlphabet } from 'nanoid';
+
+// 1부터 시작하는 10자리 숫자 ID 생성
+const nanoid = customAlphabet('123456789', 9);
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
+  @PrimaryColumn()
   id: number;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      // 1로 시작하는 10자리 숫자 생성
+      this.id = parseInt('1' + nanoid(), 10);
+    }
+  }
 
   @Column({ length: 60, name: 'email' })
   email: string;
@@ -117,8 +129,12 @@ export class User {
   )
   surveyAnswerUsers: Relation<SurveyAnswerUser[]>;
 
-  @OneToOne(() => RefreshToken, {
-    onDelete: 'CASCADE',
-  })
-  refreshToken: Relation<RefreshToken>;
+  @OneToMany(
+    () => RefreshToken,
+    (refreshToken: RefreshToken) => refreshToken.user,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
+  refreshTokens: Relation<RefreshToken[]>;
 }

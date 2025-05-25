@@ -33,9 +33,7 @@ export class RefreshToken {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.refreshToken, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => User, (user) => user.refreshTokens)
   @JoinColumn({ name: 'user_id' })
   user: Relation<User>;
 }

@@ -53,6 +53,7 @@ import { UsersModule } from './users/users.module';
         namingStrategy: new SnakeNamingStrategy(),
         migrations: ['src/database/migrations/*.ts'],
         migrationsTableName: 'migrations',
+        migrationsRun: true,
       }),
     }),
     LoggerModule,

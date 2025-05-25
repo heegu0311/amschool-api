@@ -31,14 +31,16 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = await this.usersRepository.save(createUserDto);
+    const user = new User();
+    Object.assign(user, createUserDto);
+    const savedUser = await this.usersRepository.save(user);
 
     // 선택된 암 정보가 있는 경우 cancer_user 테이블에 추가
     if (createUserDto.cancerIds && createUserDto.cancerIds.length > 0) {
       await Promise.all(
         createUserDto.cancerIds.map(async (cancerId) => {
           await this.cancerUserService.create({
-            userId: user.id,
+            userId: savedUser.id,
             cancerId,
           });
         }),
@@ -49,12 +51,15 @@ export class UsersService {
     if (createUserDto.surveyAnswers && createUserDto.surveyAnswers.length > 0) {
       await Promise.all(
         createUserDto.surveyAnswers.map(async (surveyAnswerId) => {
-          await this.surveyAnswerUserService.create(user.id, surveyAnswerId);
+          await this.surveyAnswerUserService.create(
+            savedUser.id,
+            surveyAnswerId,
+          );
         }),
       );
     }
 
-    return user;
+    return savedUser;
   }
 
   findAll() {
