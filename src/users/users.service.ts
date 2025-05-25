@@ -64,7 +64,7 @@ export class UsersService {
   async findOne(id: number) {
     const user = await this.usersRepository.findOne({
       where: { id, deletedAt: IsNull() },
-      relations: ['cancerUsers', 'surveyAnswerUsers'],
+      relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
     });
 
     return user;
