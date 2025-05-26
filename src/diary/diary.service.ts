@@ -434,11 +434,13 @@ export class DiaryService {
   async findByAuthorId(
     authorId: number,
     paginationDto: PaginationDto,
+    currentUserId?: number,
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.diaryRepository.findAndCount({
       where: {
         authorId: authorId,
+        accessLevel: In(['public', 'member'] as const),
         deletedAt: undefined,
       },
       relations: ['author', 'images', 'comments'],
@@ -455,7 +457,7 @@ export class DiaryService {
       await this.reactionEntityService.getReactionsForMultipleEntities(
         'diary',
         diaryIds,
-        authorId,
+        currentUserId,
       );
 
     // 공감 정보를 각 엔티티에 매핑

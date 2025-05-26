@@ -144,6 +144,39 @@ export class PostController {
     return await this.postService.findByAuthorId(req.user.id, paginationDto);
   }
 
+  @Get('user/:userId')
+  @Public()
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '특정 사용자의 게시물 목록 조회' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '특정 사용자의 게시물 목록 조회 성공',
+    type: [PostEntity],
+  })
+  async findUserPosts(
+    @Param('userId') userId: string,
+    @Query() paginationDto: PostPaginationDto,
+    @Request() req,
+  ): Promise<PaginatedResponse<PostEntity>> {
+    return await this.postService.findByAuthorId(
+      +userId,
+      paginationDto,
+      req.user?.id,
+    );
+  }
+
   @Get(':id')
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '특정 게시글 조회' })

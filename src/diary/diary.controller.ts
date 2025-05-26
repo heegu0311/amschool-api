@@ -234,4 +234,37 @@ export class DiaryController {
       parseInt(month),
     );
   }
+
+  @Get('user/:userId')
+  @Public()
+  @ApiBearerAuth('accessToken')
+  @ApiOperation({ summary: '특정 사용자의 오늘의나 목록 조회' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '특정 사용자의 오늘의나 목록 조회 성공',
+    type: [Diary],
+  })
+  async findUserDiaries(
+    @Param('userId') userId: string,
+    @Query() paginationDto: PaginationDto,
+    @Request() req,
+  ): Promise<PaginatedResponse<Diary>> {
+    return await this.diaryService.findByAuthorId(
+      +userId,
+      paginationDto,
+      req.user?.id,
+    );
+  }
 }

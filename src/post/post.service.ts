@@ -351,6 +351,7 @@ export class PostService {
   async findByAuthorId(
     authorId: number,
     paginationDto: PostPaginationDto,
+    currentUserId?: number,
   ): Promise<PaginatedResponse<Post>> {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.postRepository.findAndCount({
@@ -372,7 +373,7 @@ export class PostService {
       await this.reactionEntityService.getReactionsCountForMultipleEntities(
         'post',
         postIds,
-        authorId,
+        currentUserId,
       );
 
     // 공감 정보를 각 엔티티에 매핑
