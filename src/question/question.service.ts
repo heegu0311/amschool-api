@@ -179,7 +179,7 @@ export class QuestionService {
 
     // 3. 질문 요약 업데이트
     await this.questionRepository.update(questionId, {
-      questionummary: summary,
+      questionSummary: summary,
     });
 
     // 4. 언어별 시스템 메시지 설정

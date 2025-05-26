@@ -1,18 +1,10 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1748187326802 implements MigrationInterface {
-  name = 'Migration1748187326802';
+export class Migration1748228006910 implements MigrationInterface {
+  name = 'Migration1748228006910';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-            ALTER TABLE \`user\`
-            ADD \`id\` int NOT NULL PRIMARY KEY
-        `);
-    await queryRunner.query(`
-            ALTER TABLE \`refresh_token\`
-            ADD CONSTRAINT \`FK_6bbe63d2fe75e7f0ba1710351d4\` FOREIGN KEY (\`user_id\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION
-        `);
-    await queryRunner.query(`
+    await queryRunner.query(` 
             ALTER TABLE \`question\`
             ADD CONSTRAINT \`FK_45a57d766acc2084c45a8a8a35f\` FOREIGN KEY (\`author_id\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION
         `);
@@ -70,12 +62,6 @@ export class Migration1748187326802 implements MigrationInterface {
         `);
     await queryRunner.query(`
             ALTER TABLE \`question\` DROP FOREIGN KEY \`FK_45a57d766acc2084c45a8a8a35f\`
-        `);
-    await queryRunner.query(`
-            ALTER TABLE \`refresh_token\` DROP FOREIGN KEY \`FK_6bbe63d2fe75e7f0ba1710351d4\`
-        `);
-    await queryRunner.query(`
-            ALTER TABLE \`user\` DROP COLUMN \`id\`
         `);
   }
 }
