@@ -25,12 +25,14 @@ import {
   SocialProvider,
   VerifySocialTokenDto,
 } from '../dto/verify-social-token.dto';
+import { EmailService } from 'src/common/services/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     private readonly emailVerificationService: EmailVerificationService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
@@ -154,6 +156,11 @@ export class AuthService {
         password: hashedPassword,
         profileImage: profileImageUrl || completeRegistrationDto.profileImage,
       });
+
+      await this.emailService.sendRegistrationCompleteEmail(
+        user.email,
+        user.username,
+      );
 
       return this.generateTokens(user.id, user.email);
     } catch (error) {
