@@ -185,6 +185,7 @@ export class UsersService {
 
       if (!anonymousUser) {
         anonymousUser = await manager.save(User, {
+          id: 1000000000,
           email: 'anonymous@system.com',
           username: '탈퇴한 사용자',
           userType: 'patient',
