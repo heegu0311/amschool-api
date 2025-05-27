@@ -15,6 +15,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { PostCategory, PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
+import { Not } from 'typeorm';
 
 @Injectable()
 export class PostService {
@@ -71,20 +72,40 @@ export class PostService {
   ): Promise<PaginatedResponse<Post>> {
     const { page = 1, limit = 10, category } = paginationDto;
 
-    const where = category === PostCategory.ALL ? {} : { category };
+    // 공지사항 조회 (category가 ALL이고 1페이지에서만)
+    let noticePosts: Post[] = [];
+    if (category === PostCategory.ALL && page === 1) {
+      noticePosts = await this.postRepository.find({
+        where: { category: PostCategory.NOTICE },
+        relations: ['author', 'images', 'comments'],
+        order: { createdAt: 'DESC' },
+      });
+    }
 
-    const [items, totalItems] = await this.postRepository.findAndCount({
-      where,
-      relations: ['author', 'images', 'comments'],
-      order: {
-        createdAt: 'DESC',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    // 일반 게시글 조회를 위한 where 조건
+    const where =
+      category === PostCategory.ALL
+        ? { category: Not('notice' as any) }
+        : { category };
+
+    // 일반 게시글 조회 (페이지네이션 적용)
+    const [regularPosts, totalRegularPosts] =
+      await this.postRepository.findAndCount({
+        where,
+        relations: ['author', 'images', 'comments'],
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+    // all+1페이지만 noticePosts 포함, 그 외는 regularPosts만
+    const allPosts =
+      category === PostCategory.ALL && page === 1
+        ? [...noticePosts, ...regularPosts]
+        : regularPosts;
 
     // 게시글 ID 목록 추출
-    const postIds = items.map((post) => post.id);
+    const postIds = allPosts.map((post) => post.id);
 
     // 여러 게시글의 공감을 한 번에 조회
     const postWithReactionsCount =
@@ -95,7 +116,7 @@ export class PostService {
       );
 
     // 공감 정보를 각 엔티티에 매핑
-    const postsWithReactions = items.map((post) => {
+    const postsWithReactions = allPosts.map((post) => {
       const postWithReactions = {
         ...post,
         reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
@@ -104,11 +125,16 @@ export class PostService {
       return postWithReactions;
     });
 
+    // 전체 게시글 수는 noticePosts는 all+1페이지만 포함
+    const totalItems =
+      (category === PostCategory.ALL && page === 1 ? noticePosts.length : 0) +
+      totalRegularPosts;
+
     return {
       items: postsWithReactions,
       meta: {
         totalItems,
-        itemCount: items.length,
+        itemCount: postsWithReactions.length,
         itemsPerPage: limit,
         totalPages: Math.ceil(totalItems / limit),
         currentPage: page,
@@ -318,7 +344,7 @@ export class PostService {
       commentsCount: number;
     }>
   > {
-    const oneWeekAgo = dayjs().subtract(7, 'day').toDate();
+    const oneWeekAgo = dayjs().subtract(30, 'day').toDate();
 
     const posts = await this.postRepository
       .createQueryBuilder('post')

@@ -6,6 +6,7 @@ export enum PostCategory {
   ALL = 'all',
   FREE = 'free',
   QUESTION = 'question',
+  NOTICE = 'notice',
 }
 
 export class PostPaginationDto extends PaginationDto {
