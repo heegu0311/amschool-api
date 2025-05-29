@@ -10,7 +10,6 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { EntityType } from '../../comment/entities/comment.entity';
 import { User } from '../../users/entities/user.entity';
 
 // entity_type에 허용되는 값 정의
@@ -53,17 +52,10 @@ export class Notification {
   @Column('varchar', { length: 36, nullable: true, name: 'target_id' })
   targetId: number;
 
-  @ApiProperty({
-    example: EntityType.COMMENT,
-    enum: EntityType,
-  })
   @Column({
-    type: 'enum',
-    enum: EntityType,
-    nullable: true,
     name: 'target_type',
   })
-  targetType: EntityType;
+  targetType: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({
     example: 0,
@@ -72,16 +64,12 @@ export class Notification {
   entityId: number;
 
   @ApiProperty({
-    example: EntityType.COMMENT,
-    enum: EntityType,
+    example: 'comment',
   })
   @Column({
-    type: 'enum',
-    enum: EntityType,
-    nullable: true,
     name: 'entity_type',
   })
-  entityType: EntityType;
+  entityType: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({ example: false })
   @Column({ default: false, name: 'is_read' })

@@ -9,7 +9,7 @@ import { Post } from '../post/entities/post.entity';
 import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Comment, EntityType } from './entities/comment.entity';
+import { Comment } from './entities/comment.entity';
 import { Reply } from './reply/entities/reply.entity';
 
 @Injectable()
@@ -29,14 +29,14 @@ export class CommentService {
 
   async create(
     userId: number,
-    entityType: EntityType,
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
     let entity;
     let authorId;
 
-    if (entityType === EntityType.DIARY) {
+    if (entityType === 'diary') {
       entity = await this.diaryRepository.findOne({
         where: { id: entityId },
       });
@@ -44,7 +44,7 @@ export class CommentService {
         throw new NotFoundException('오늘의나를 찾을 수 없습니다.');
       }
       authorId = entity.authorId;
-    } else if (entityType === EntityType.POST) {
+    } else if (entityType === 'post') {
       entity = await this.postRepository.findOne({
         where: { id: entityId },
       });
@@ -70,7 +70,7 @@ export class CommentService {
         receiverUserId: authorId,
         senderUserId: userId,
         targetId: savedComment.id,
-        targetType: savedComment.type as EntityType,
+        targetType: savedComment.type,
         entityId,
         entityType,
         isRead: false,
@@ -82,7 +82,7 @@ export class CommentService {
 
   async findAllByEntityTypeAndEntityId(
     userId: number,
-    entityType: EntityType,
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Comment>> {

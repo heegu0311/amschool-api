@@ -24,7 +24,7 @@ import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Comment, EntityType } from './entities/comment.entity';
+import { Comment } from './entities/comment.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller(':entityType/:entityId/comments')
@@ -43,7 +43,7 @@ export class CommentController {
   @ApiResponse({ status: 201, description: '댓글 생성 성공', type: Comment })
   @ApiResponse({ status: 404, description: '엔티티를 찾을 수 없음' })
   create(
-    @Param('entityType') entityType: EntityType,
+    @Param('entityType') entityType: 'diary' | 'post' | 'comment' | 'reply',
     @Param('entityId', ParseIntPipe) entityId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req,
@@ -84,7 +84,7 @@ export class CommentController {
   })
   findAllByEntityTypeAndEntityId(
     @Req() req,
-    @Param('entityType') entityType: EntityType,
+    @Param('entityType') entityType: 'diary' | 'post' | 'comment' | 'reply',
     @Param('entityId', ParseIntPipe) entityId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Comment>> {

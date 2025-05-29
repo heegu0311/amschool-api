@@ -17,14 +17,6 @@ import { ReactionEntity } from '../../reaction-entity/entities/reaction-entity.e
 import { User } from '../../users/entities/user.entity';
 import { Reply } from '../reply/entities/reply.entity';
 
-// entity_type에 허용되는 값 정의
-export enum EntityType {
-  DIARY = 'diary',
-  POST = 'post',
-  COMMENT = 'comment',
-  REPLY = 'reply',
-}
-
 @Entity()
 export class Comment {
   @ApiProperty({ description: '댓글 ID', example: 1 })
@@ -33,7 +25,7 @@ export class Comment {
 
   @ApiProperty({ description: '댓글 타입', example: 'comment' })
   @Column({ default: 'comment', name: 'type' })
-  type: EntityType;
+  type: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({ description: '댓글 내용', example: '좋은 글 감사합니다!' })
   @Column('text', { name: 'content' })
@@ -49,7 +41,7 @@ export class Comment {
     enum: ['diary', 'question', 'post'],
   })
   @Column({ name: 'entity_type' })
-  entityType: EntityType;
+  entityType: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({ description: '엔티티 ID', example: 1 })
   @Column({ name: 'entity_id' })

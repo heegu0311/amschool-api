@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
 import { Repository } from 'typeorm';
-import { CreateReplyDto } from './dto/create-reply.dto';
-import { Comment, EntityType } from '../entities/comment.entity';
-import { Reply } from './entities/reply.entity';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/pagination.interface';
-import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
 import { NotificationService } from '../../notification/notification.service';
+import { Comment } from '../entities/comment.entity';
+import { CreateReplyDto } from './dto/create-reply.dto';
+import { Reply } from './entities/reply.entity';
 
 @Injectable()
 export class ReplyService {
@@ -22,7 +22,7 @@ export class ReplyService {
 
   async create(
     userId: number,
-    entityType: EntityType,
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     commentId: number,
     createReplyDto: CreateReplyDto,

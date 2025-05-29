@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Comment, EntityType } from '../comment/entities/comment.entity';
+import { Comment } from '../comment/entities/comment.entity';
 import { Reply } from '../comment/reply/entities/reply.entity';
 import { Diary } from '../diary/entities/diary.entity';
 import { NotificationService } from '../notification/notification.service';
@@ -78,7 +78,7 @@ export class ReactionEntityService {
   }
 
   async addReaction(
-    entityType: EntityType,
+    entityType: 'diary' | 'post' | 'comment' | 'reply',
     entityId: number,
     reactionId: number,
     userId: number,
@@ -87,7 +87,7 @@ export class ReactionEntityService {
     let authorId;
 
     switch (entityType) {
-      case EntityType.DIARY:
+      case 'diary':
         entity = await this.diaryRepository.findOne({
           where: { id: entityId },
         });
@@ -97,7 +97,7 @@ export class ReactionEntityService {
         authorId = entity.authorId;
         break;
 
-      case EntityType.POST:
+      case 'post':
         entity = await this.postRepository.findOne({
           where: { id: entityId },
         });
@@ -107,7 +107,7 @@ export class ReactionEntityService {
         authorId = entity.authorId;
         break;
 
-      case EntityType.COMMENT:
+      case 'comment':
         entity = await this.commentRepository.findOne({
           where: { id: entityId },
           relations: ['entity'],
@@ -118,7 +118,7 @@ export class ReactionEntityService {
         authorId = entity.authorId;
         break;
 
-      case EntityType.REPLY:
+      case 'reply':
         entity = await this.replyRepository.findOne({
           where: { id: entityId },
           relations: ['comment'],

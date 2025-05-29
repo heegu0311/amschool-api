@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNumber, IsString } from 'class-validator';
-import { EntityType } from '../../comment/entities/comment.entity';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class CreateNotificationDto {
   @ApiProperty({ example: 'comment' })
@@ -23,27 +22,20 @@ export class CreateNotificationDto {
   targetId: number;
 
   @ApiProperty({
-    example: EntityType.COMMENT,
-    enum: EntityType,
-    nullable: true,
+    example: 'comment',
   })
-  @IsEnum(EntityType)
-  targetType: EntityType;
+  targetType: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({
     example: '1',
-    nullable: true,
   })
   @IsString()
   entityId: number;
 
   @ApiProperty({
-    example: EntityType.COMMENT,
-    enum: EntityType,
-    nullable: true,
+    example: 'comment',
   })
-  @IsEnum(EntityType)
-  entityType: EntityType;
+  entityType: 'diary' | 'post' | 'comment' | 'reply';
 
   @ApiProperty({ example: false })
   @IsBoolean()
