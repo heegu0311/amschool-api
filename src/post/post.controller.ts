@@ -27,13 +27,13 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { S3Service } from '../common/services/s3.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostService } from './post.service';
-import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts')
@@ -141,7 +141,9 @@ export class PostController {
     @Request() req,
     @Query() paginationDto: PostPaginationDto,
   ): Promise<PaginatedResponse<PostEntity>> {
-    return await this.postService.findByAuthorId(req.user.id, paginationDto);
+    const userId = req.user.id;
+
+    return await this.postService.findByAuthorId(userId, paginationDto, userId);
   }
 
   @Get('user/:userId')

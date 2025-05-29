@@ -15,7 +15,6 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { PostCategory, PostPaginationDto } from './dto/post-pagination.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
-import { Not } from 'typeorm';
 
 @Injectable()
 export class PostService {
@@ -75,28 +74,42 @@ export class PostService {
     // 공지사항 조회 (category가 ALL이고 1페이지에서만)
     let noticePosts: Post[] = [];
     if (category === PostCategory.ALL && page === 1) {
-      noticePosts = await this.postRepository.find({
-        where: { category: PostCategory.NOTICE },
-        relations: ['author', 'images', 'comments'],
-        order: { createdAt: 'DESC' },
-      });
+      noticePosts = await this.postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.author', 'author')
+        .leftJoinAndSelect('post.images', 'images')
+        .leftJoinAndSelect(
+          'post.comments',
+          'comments',
+          'comments.entityType = :entityType',
+          { entityType: 'post' },
+        )
+        .where('post.category = :category', { category: PostCategory.NOTICE })
+        .orderBy('post.createdAt', 'DESC')
+        .getMany();
     }
 
-    // 일반 게시글 조회를 위한 where 조건
-    const where =
-      category === PostCategory.ALL
-        ? { category: Not('notice' as any) }
-        : { category };
-
     // 일반 게시글 조회 (페이지네이션 적용)
-    const [regularPosts, totalRegularPosts] =
-      await this.postRepository.findAndCount({
-        where,
-        relations: ['author', 'images', 'comments'],
-        order: { createdAt: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    const [regularPosts, totalRegularPosts] = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'post' },
+      )
+      .where(
+        category === PostCategory.ALL
+          ? 'post.category != :notice'
+          : 'post.category = :category',
+        category === PostCategory.ALL ? { notice: 'notice' } : { category },
+      )
+      .orderBy('post.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     // all+1페이지만 noticePosts 포함, 그 외는 regularPosts만
     const allPosts =
@@ -143,10 +156,11 @@ export class PostService {
   }
 
   async findOne(id: number, userId?: number) {
-    const post = await this.postRepository.findOne({
-      where: { id },
-      relations: ['images'],
-    });
+    const post = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.images', 'images')
+      .where('post.id = :id', { id })
+      .getOne();
 
     if (post?.accessLevel === 'private' && post?.authorId !== userId) {
       throw new NotFoundException(`Post #${id} has private type`);
@@ -167,16 +181,20 @@ export class PostService {
     // 조회수 증가
     await this.postRepository.increment({ id }, 'viewCount', 1);
 
-    const post = await this.postRepository.findOne({
-      where: { id },
-      relations: [
-        'author',
-        'author.cancerUsers',
-        'author.cancerUsers.cancer',
-        'images',
+    const post = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
+      .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
+      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.comments',
         'comments',
-      ],
-    });
+        'comments.entityType = :entityType',
+        { entityType: 'post' },
+      )
+      .where('post.id = :id', { id })
+      .getOne();
 
     if (!post) {
       throw new NotFoundException(`Post #${id} not found`);
@@ -380,16 +398,22 @@ export class PostService {
     currentUserId?: number,
   ): Promise<PaginatedResponse<Post>> {
     const { page = 1, limit = 10 } = paginationDto;
-    const [items, totalItems] = await this.postRepository.findAndCount({
-      where: {
-        authorId: authorId,
-        deletedAt: undefined,
-      },
-      relations: ['author', 'images', 'comments'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const [items, totalItems] = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'post' },
+      )
+      .where('post.authorId = :authorId', { authorId })
+      .andWhere('post.deletedAt IS NULL')
+      .orderBy('post.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     // 게시글 ID 목록 추출
     const postIds = items.map((post) => post.id);

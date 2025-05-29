@@ -2,11 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateReplyDto } from './dto/create-reply.dto';
-import { Comment } from '../entities/comment.entity';
+import { Comment, EntityType } from '../entities/comment.entity';
 import { Reply } from './entities/reply.entity';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { PaginatedResponse } from '../../common/interfaces/pagination.interface';
 import { ReactionEntityService } from 'src/reaction-entity/reaction-entity.service';
+import { NotificationService } from '../../notification/notification.service';
 
 @Injectable()
 export class ReplyService {
@@ -16,11 +17,12 @@ export class ReplyService {
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
     private readonly reactionEntityService: ReactionEntityService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
     userId: number,
-    entityType: string,
+    entityType: EntityType,
     entityId: number,
     commentId: number,
     createReplyDto: CreateReplyDto,
@@ -42,6 +44,20 @@ export class ReplyService {
     });
 
     const savedReply = await this.replyRepository.save(reply);
+
+    // 답글 작성자와 댓글 작성자가 다른 경우에만 알림 생성
+    if (comment.authorId !== userId) {
+      await this.notificationService.create({
+        type: 'reply',
+        receiverUserId: comment.authorId,
+        senderUserId: userId,
+        targetId: comment.id,
+        targetType: comment.type,
+        entityId,
+        entityType,
+        isRead: false,
+      });
+    }
 
     // 작성자 정보와 리액션 정보를 포함하여 반환
     const replyWithAuthor = await this.replyRepository.findOne({

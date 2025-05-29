@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
-import { Comment } from './entities/comment.entity';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { Diary } from '../diary/entities/diary.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { Diary } from '../diary/entities/diary.entity';
+import { NotificationService } from '../notification/notification.service';
+import { Post } from '../post/entities/post.entity';
 import { ReactionEntityService } from '../reaction-entity/reaction-entity.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Comment, EntityType } from './entities/comment.entity';
 import { Reply } from './reply/entities/reply.entity';
 
 @Injectable()
@@ -17,23 +19,39 @@ export class CommentService {
     private readonly commentRepository: Repository<Comment>,
     @InjectRepository(Diary)
     private readonly diaryRepository: Repository<Diary>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
     private readonly reactionEntityService: ReactionEntityService,
     @InjectRepository(Reply)
     private readonly replyRepository: Repository<Reply>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
     userId: number,
-    entityType: string,
+    entityType: EntityType,
     entityId: number,
     createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
-    const diary = await this.diaryRepository.findOne({
-      where: { id: entityId },
-    });
+    let entity;
+    let authorId;
 
-    if (!diary) {
-      throw new NotFoundException('오늘의나를 찾을 수 없습니다.');
+    if (entityType === EntityType.DIARY) {
+      entity = await this.diaryRepository.findOne({
+        where: { id: entityId },
+      });
+      if (!entity) {
+        throw new NotFoundException('오늘의나를 찾을 수 없습니다.');
+      }
+      authorId = entity.authorId;
+    } else if (entityType === EntityType.POST) {
+      entity = await this.postRepository.findOne({
+        where: { id: entityId },
+      });
+      if (!entity) {
+        throw new NotFoundException('게시글을 찾을 수 없습니다.');
+      }
+      authorId = entity.authorId;
     }
 
     const comment = this.commentRepository.create({
@@ -43,12 +61,28 @@ export class CommentService {
       entityId,
     });
 
-    return this.commentRepository.save(comment);
+    const savedComment = await this.commentRepository.save(comment);
+
+    // 댓글 작성자와 게시글 작성자가 다른 경우에만 알림 생성
+    if (authorId !== userId) {
+      await this.notificationService.create({
+        type: 'comment',
+        receiverUserId: authorId,
+        senderUserId: userId,
+        targetId: savedComment.id,
+        targetType: savedComment.type as EntityType,
+        entityId,
+        entityType,
+        isRead: false,
+      });
+    }
+
+    return savedComment;
   }
 
   async findAllByEntityTypeAndEntityId(
     userId: number,
-    entityType: string,
+    entityType: EntityType,
     entityId: number,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Comment>> {

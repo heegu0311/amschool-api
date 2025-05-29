@@ -1,4 +1,6 @@
+import { customAlphabet } from 'nanoid';
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
@@ -7,15 +9,14 @@ import {
   PrimaryColumn,
   Relation,
   UpdateDateColumn,
-  BeforeInsert,
 } from 'typeorm';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { Comment } from '../../comment/entities/comment.entity';
 import { Reply } from '../../comment/reply/entities/reply.entity';
 import { Gender } from '../../common/enums/gender.enum';
+import { Notification } from '../../notification/entities/notification.entity';
 import { SurveyAnswerUser } from '../../survey-answer-user/entities/survey-answer-user.entity';
-import { customAlphabet } from 'nanoid';
 
 // 1부터 시작하는 10자리 숫자 ID 생성
 const nanoid = customAlphabet('123456789', 9);
@@ -137,4 +138,13 @@ export class User {
     },
   )
   refreshTokens: Relation<RefreshToken[]>;
+
+  @OneToMany(
+    () => Notification,
+    (notification: Notification) => notification.sender,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
+  notifications: Relation<Notification[]>;
 }

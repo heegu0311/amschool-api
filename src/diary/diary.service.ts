@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Image } from '../common/entities/image.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
@@ -70,38 +70,28 @@ export class DiaryService {
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
 
-    // userId가 없으면 public 오늘의나만 조회
-    // userId가 있으면 public 또는 member 오늘의나 조회
-    const where = userId
-      ? { accessLevel: In(['public', 'member'] as const) }
-      : { accessLevel: 'public' as const };
-
-    const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where,
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-        emotion: {
-          id: true,
-          name: true,
-        },
-        author: {
-          id: true,
-          username: true,
-          profileImage: true,
-        },
-        subEmotion: {
-          id: true,
-          name: true,
-        },
-      },
-      relations: ['emotion', 'author', 'subEmotion', 'images'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const [items, totalItems] = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where(
+        userId
+          ? 'diary.accessLevel IN (:...accessLevels)'
+          : 'diary.accessLevel = :accessLevel',
+        userId
+          ? { accessLevels: ['public', 'member'] }
+          : { accessLevel: 'public' },
+      )
+      .orderBy('diary.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return {
       items,
@@ -121,19 +111,28 @@ export class DiaryService {
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
 
-    const where = userId
-      ? { accessLevel: In(['public', 'member'] as const) }
-      : { accessLevel: 'public' as const };
-
-    const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where,
-      relations: ['author', 'images', 'comments'],
-      order: {
-        createdAt: 'DESC',
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [items, totalItems] = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where(
+        userId
+          ? 'diary.accessLevel IN (:...accessLevels)'
+          : 'diary.accessLevel = :accessLevel',
+        userId
+          ? { accessLevels: ['public', 'member'] }
+          : { accessLevel: 'public' },
+      )
+      .orderBy('diary.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     // 다이어리 ID 목록 추출
     const diaryIds = items.map((diary) => diary.id);
@@ -197,20 +196,30 @@ export class DiaryService {
       };
     }
 
-    // userId가 없으면 public 오늘의나만 조회
-    // userId가 있으면 public 또는 member 오늘의나 조회
-    const where = userId
-      ? { accessLevel: In(['public', 'member'] as const) }
-      : { accessLevel: 'public' as const };
-
     // 2. 유사 사용자들의 오늘의나 조회
-    const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where: { ...where, authorId: In(similarUserIds) },
-      relations: ['author', 'images', 'comments'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const [items, totalItems] = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where('diary.authorId IN (:...similarUserIds)', { similarUserIds })
+      .andWhere(
+        userId
+          ? 'diary.accessLevel IN (:...accessLevels)'
+          : 'diary.accessLevel = :accessLevel',
+        userId
+          ? { accessLevels: ['public', 'member'] }
+          : { accessLevel: 'public' },
+      )
+      .orderBy('diary.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     // 다이어리 ID 목록 추출
     const diaryIds = items.map((diary) => diary.id);
@@ -247,10 +256,11 @@ export class DiaryService {
   }
 
   async findOne(id: number, userId?: number) {
-    const diary = await this.diaryRepository.findOne({
-      where: { id },
-      relations: ['images'],
-    });
+    const diary = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.images', 'images')
+      .where('diary.id = :id', { id })
+      .getOne();
 
     if (diary?.accessLevel === 'private' && diary?.authorId !== userId) {
       throw new NotFoundException(`Diary #${id} has private type`);
@@ -268,10 +278,18 @@ export class DiaryService {
   }
 
   async findOneWithMoreInfo(id: number, userId?: number): Promise<Diary> {
-    const diary = await this.diaryRepository.findOne({
-      where: { id },
-      relations: ['author', 'images', 'comments'],
-    });
+    const diary = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where('diary.id = :id', { id })
+      .getOne();
 
     if (!diary) {
       throw new NotFoundException(`Diary #${id} not found`);
@@ -402,33 +420,31 @@ export class DiaryService {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    return await this.diaryRepository.find({
-      where: {
-        authorId: userId,
-        createdAt: Between(startDate, endDate),
-      },
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-        emotion: {
-          id: true,
-          name: true,
-        },
-        author: {
-          id: true,
-          username: true,
-          profileImage: true,
-        },
-        subEmotion: {
-          id: true,
-          name: true,
-        },
-      },
-      relations: ['emotion', 'author', 'subEmotion'],
-      order: { createdAt: 'DESC' },
-    });
+    return await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.emotion', 'emotion')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.subEmotion', 'subEmotion')
+      .select([
+        'diary.id',
+        'diary.content',
+        'diary.createdAt',
+        'diary.updatedAt',
+        'emotion.id',
+        'emotion.name',
+        'author.id',
+        'author.username',
+        'author.profileImage',
+        'subEmotion.id',
+        'subEmotion.name',
+      ])
+      .where('diary.authorId = :userId', { userId })
+      .andWhere('diary.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      })
+      .orderBy('diary.createdAt', 'DESC')
+      .getMany();
   }
 
   async findByAuthorId(
@@ -437,17 +453,25 @@ export class DiaryService {
     currentUserId?: number,
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
-    const [items, totalItems] = await this.diaryRepository.findAndCount({
-      where: {
-        authorId: authorId,
-        accessLevel: In(['public', 'member'] as const),
-        deletedAt: undefined,
-      },
-      relations: ['author', 'images', 'comments'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const [items, totalItems] = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.comments',
+        'comments',
+        'comments.entityType = :entityType',
+        { entityType: 'diary' },
+      )
+      .where('diary.authorId = :authorId', { authorId })
+      .andWhere('diary.accessLevel IN (:...accessLevels)', {
+        accessLevels: ['public', 'member'],
+      })
+      .andWhere('diary.deletedAt IS NULL')
+      .orderBy('diary.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     // 다이어리 ID 목록 추출
     const diaryIds = items.map((diary) => diary.id);

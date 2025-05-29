@@ -5,11 +5,11 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
   UseGuards,
-  Patch,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -23,8 +23,8 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { Comment } from './entities/comment.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Comment, EntityType } from './entities/comment.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller(':entityType/:entityId/comments')
@@ -43,7 +43,7 @@ export class CommentController {
   @ApiResponse({ status: 201, description: '댓글 생성 성공', type: Comment })
   @ApiResponse({ status: 404, description: '엔티티를 찾을 수 없음' })
   create(
-    @Param('entityType') entityType: string,
+    @Param('entityType') entityType: EntityType,
     @Param('entityId', ParseIntPipe) entityId: number,
     @Body() createCommentDto: CreateCommentDto,
     @Req() req,
@@ -84,7 +84,7 @@ export class CommentController {
   })
   findAllByEntityTypeAndEntityId(
     @Req() req,
-    @Param('entityType') entityType: string,
+    @Param('entityType') entityType: EntityType,
     @Param('entityId', ParseIntPipe) entityId: number,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Comment>> {
