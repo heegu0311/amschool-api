@@ -1,15 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ReactionEntity } from './entities/reaction-entity.entity';
+import { Comment, EntityType } from '../comment/entities/comment.entity';
+import { Reply } from '../comment/reply/entities/reply.entity';
+import { Diary } from '../diary/entities/diary.entity';
+import { NotificationService } from '../notification/notification.service';
+import { Post } from '../post/entities/post.entity';
 import { ReactionService } from '../reaction/reaction.service';
+import { ReactionEntity } from './entities/reaction-entity.entity';
 
 @Injectable()
 export class ReactionEntityService {
   constructor(
     @InjectRepository(ReactionEntity)
     private reactionEntityRepository: Repository<ReactionEntity>,
+    @InjectRepository(Diary)
+    private readonly diaryRepository: Repository<Diary>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Reply)
+    private readonly replyRepository: Repository<Reply>,
     private readonly reactionService: ReactionService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   findAll() {
@@ -64,11 +78,58 @@ export class ReactionEntityService {
   }
 
   async addReaction(
-    entityType: 'diary' | 'post' | 'comment' | 'reply',
+    entityType: EntityType,
     entityId: number,
     reactionId: number,
     userId: number,
   ) {
+    let entity;
+    let authorId;
+
+    switch (entityType) {
+      case EntityType.DIARY:
+        entity = await this.diaryRepository.findOne({
+          where: { id: entityId },
+        });
+        if (!entity) {
+          throw new NotFoundException('오늘의나를 찾을 수 없습니다.');
+        }
+        authorId = entity.authorId;
+        break;
+
+      case EntityType.POST:
+        entity = await this.postRepository.findOne({
+          where: { id: entityId },
+        });
+        if (!entity) {
+          throw new NotFoundException('게시글을 찾을 수 없습니다.');
+        }
+        authorId = entity.authorId;
+        break;
+
+      case EntityType.COMMENT:
+        entity = await this.commentRepository.findOne({
+          where: { id: entityId },
+          relations: ['entity'],
+        });
+        if (!entity) {
+          throw new NotFoundException('댓글을 찾을 수 없습니다.');
+        }
+        authorId = entity.authorId;
+        break;
+
+      case EntityType.REPLY:
+        entity = await this.replyRepository.findOne({
+          where: { id: entityId },
+          relations: ['comment'],
+        });
+        if (!entity) {
+          throw new NotFoundException('답글을 찾을 수 없습니다.');
+        }
+        authorId = entity.authorId;
+        break;
+    }
+
     // 새로운 공감 생성
     const reactionEntity = this.reactionEntityRepository.create({
       entityType,
@@ -77,7 +138,24 @@ export class ReactionEntityService {
       userId,
     });
 
-    return await this.reactionEntityRepository.save(reactionEntity);
+    const savedReaction =
+      await this.reactionEntityRepository.save(reactionEntity);
+
+    // 엔티티 작성자와 공감 작성자가 다른 경우에만 알림 생성
+    if (authorId !== userId) {
+      await this.notificationService.create({
+        type: 'reaction',
+        receiverUserId: authorId,
+        senderUserId: userId,
+        targetId: entityId,
+        targetType: entityType,
+        entityId: entity.id,
+        entityType: entity.entityType || entity.type || '',
+        isRead: false,
+      });
+    }
+
+    return savedReaction;
   }
 
   async removeReaction(
@@ -103,7 +181,7 @@ export class ReactionEntityService {
   async getReactionsForMultipleEntities(
     entityType: 'diary' | 'comment' | 'reply' | 'post',
     entityIds: number[],
-    userId?: number,
+    currentUserId?: number,
   ): Promise<Record<number, { reactions: any[]; userReactions: number[] }>> {
     // 여러 엔티티의 공감을 한 번에 조회
     const reactions = await this.reactionEntityRepository
@@ -124,7 +202,7 @@ export class ReactionEntityService {
 
     // 사용자 공감 조회
     let userReactions: any[] = [];
-    if (userId) {
+    if (currentUserId) {
       userReactions = await this.reactionEntityRepository
         .createQueryBuilder('reactionEntity')
         .select('reactionEntity.entityId', 'entityId')
@@ -137,7 +215,7 @@ export class ReactionEntityService {
             : '1=0',
           { entityIds },
         )
-        .andWhere('reactionEntity.userId = :userId', { userId })
+        .andWhere('reactionEntity.userId = :userId', { userId: currentUserId })
         .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
         .orderBy('reactionEntity.reactionId', 'ASC')
         .getRawMany();
@@ -175,7 +253,7 @@ export class ReactionEntityService {
   async getReactionsCountForMultipleEntities(
     entityType: 'diary' | 'comment' | 'reply' | 'post',
     entityIds: number[],
-    userId?: number,
+    currentUserId?: number,
   ): Promise<
     Record<number, { reactionsCount: number; userReactionId?: number }>
   > {

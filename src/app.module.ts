@@ -14,6 +14,7 @@ import { CommentModule } from './comment/comment.module';
 import { DiaryModule } from './diary/diary.module';
 import { HttpLoggerMiddleware } from './logger/http-logger.middleware';
 import { LoggerModule } from './logger/logger.module';
+import { NotificationModule } from './notification/notification.module';
 import { PostModule } from './post/post.module';
 import { QuestionModule } from './question/question.module';
 import { ReactionEntityModule } from './reaction-entity/reaction-entity.module';
@@ -73,6 +74,7 @@ import { UsersModule } from './users/users.module';
     ArticleImageModule,
     PostModule,
     SurveyAnswerUserModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -24,6 +24,7 @@ import { PaginatedResponse } from '../../common/interfaces/pagination.interface'
 import { CreateReplyDto } from './dto/create-reply.dto';
 import { Reply } from './entities/reply.entity';
 import { ReplyService } from './reply.service';
+import { EntityType } from '../entities/comment.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller(':entityType/:entityId/comments/:commentId/replies')
@@ -43,7 +44,7 @@ export class ReplyController {
   @ApiResponse({ status: 201, description: '답글 생성 성공', type: Reply })
   @ApiResponse({ status: 404, description: '엔티티를 찾을 수 없음' })
   create(
-    @Param('entityType') entityType: string,
+    @Param('entityType') entityType: EntityType,
     @Param('entityId', ParseIntPipe) entityId: number,
     @Param('commentId', ParseIntPipe) commentId: number,
     @Body() createReplyDto: CreateReplyDto,

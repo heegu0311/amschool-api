@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -9,8 +8,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EntityType } from 'src/comment/entities/comment.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AddReactionDto } from './dto/add-reaction.dto';
 import { ReactionEntityService } from './reaction-entity.service';
 
 @ApiBearerAuth('accessToken')
@@ -48,7 +47,7 @@ export class ReactionEntityController {
   @ApiResponse({ status: 201, description: '새로운 공감이 생성되었습니다.' })
   @Post(':entityType/:entityId/:reactionId')
   async addReaction(
-    @Param('entityType') entityType: 'diary' | 'comment' | 'reply',
+    @Param('entityType') entityType: EntityType,
     @Param('entityId') entityId: number,
     @Param('reactionId') reactionId: number,
     @Req() req,
