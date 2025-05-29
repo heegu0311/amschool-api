@@ -69,10 +69,10 @@ export class CommentService {
         type: 'comment',
         receiverUserId: authorId,
         senderUserId: userId,
-        targetId: savedComment.id,
-        targetType: savedComment.type,
-        entityId,
-        entityType,
+        targetId: savedComment.entityId,
+        targetType: savedComment.entityType,
+        entityId: entity.entityId || entity.id,
+        entityType: entity.entityType || entity.type || '',
         isRead: false,
       });
     }

@@ -149,7 +149,7 @@ export class ReactionEntityService {
         senderUserId: userId,
         targetId: entityId,
         targetType: entityType,
-        entityId: entity.id,
+        entityId: entity.entityId || entity.id,
         entityType: entity.entityType || entity.type || '',
         isRead: false,
       });

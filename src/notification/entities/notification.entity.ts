@@ -60,7 +60,7 @@ export class Notification {
   @ApiProperty({
     example: 0,
   })
-  @Column('varchar', { length: 36, nullable: true, name: 'entity_id' })
+  @Column({ name: 'entity_id' })
   entityId: number;
 
   @ApiProperty({
