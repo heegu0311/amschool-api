@@ -34,7 +34,7 @@ export class Notification {
   @Column({ name: 'receiver_user_id' })
   receiverUserId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'receiver_user_id' })
   receiver: Relation<User>;
 
@@ -42,7 +42,7 @@ export class Notification {
   @Column({ name: 'sender_user_id' })
   senderUserId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'sender_user_id' })
   sender: Relation<User>;
 
