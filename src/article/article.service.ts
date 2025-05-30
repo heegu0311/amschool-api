@@ -1,13 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { ArticleImage } from '../article-image/entities/article-image.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { IsNull } from 'typeorm';
 
 @Injectable()
 export class ArticleService {
@@ -71,20 +70,28 @@ export class ArticleService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Article>> {
-    const { page = 1, limit = 10 } = paginationDto;
+    const { page = 1, limit = 10, keyword } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const [articles, total] = await this.articleRepository.findAndCount({
-      where: {
-        deletedAt: undefined,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-      skip,
-      take: limit,
-      relations: ['sectionPrimary', 'sectionSecondary', 'images'],
-    });
+    const queryBuilder = this.articleRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.sectionPrimary', 'sectionPrimary')
+      .leftJoinAndSelect('article.sectionSecondary', 'sectionSecondary')
+      .leftJoinAndSelect('article.images', 'images')
+      .where('article.deletedAt IS NULL');
+
+    if (keyword) {
+      queryBuilder.andWhere(
+        '(article.title LIKE :keyword OR article.content LIKE :keyword)',
+        { keyword: `%${keyword}%` },
+      );
+    }
+
+    const [articles, total] = await queryBuilder
+      .orderBy('article.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
 
     // HTML 태그 제거
     const processedArticles = articles.map((article) => ({

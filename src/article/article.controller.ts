@@ -85,7 +85,8 @@ export class ArticleController {
   @Public()
   @ApiOperation({
     summary: '모든 기사 목록 조회',
-    description: '페이지네이션을 지원하는 기사 목록을 조회합니다.',
+    description:
+      '페이지네이션을 지원하는 기사 목록을 조회합니다. 키워드 검색이 가능합니다.',
   })
   @ApiQuery({
     name: 'page',
@@ -98,6 +99,12 @@ export class ArticleController {
     required: false,
     type: Number,
     description: '페이지당 항목 수 (기본값: 10)',
+  })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    description: '검색 키워드 (제목 또는 내용에서 검색)',
   })
   @ApiResponse({
     status: 200,
@@ -280,6 +287,7 @@ export class ArticleController {
   @ApiResponse({
     status: 200,
     description: '암매거진 목록이 성공적으로 조회되었습니다.',
+    type: [Article],
   })
   async getArticlesBySection(
     @Param('sectionSecondaryCode') sectionSecondaryCode: string,
