@@ -108,10 +108,11 @@ export class DiaryService {
   async findAllWithMoreInfo(
     paginationDto: PaginationDto,
     userId?: number,
+    keyword?: string,
   ): Promise<PaginatedResponse<Diary>> {
     const { page = 1, limit = 10 } = paginationDto;
 
-    const [items, totalItems] = await this.diaryRepository
+    const queryBuilder = this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
@@ -128,7 +129,15 @@ export class DiaryService {
         userId
           ? { accessLevels: ['public', 'member'] }
           : { accessLevel: 'public' },
-      )
+      );
+
+    if (keyword) {
+      queryBuilder.andWhere('(diary.content LIKE :keyword)', {
+        keyword: `%${keyword}%`,
+      });
+    }
+
+    const [items, totalItems] = await queryBuilder
       .orderBy('diary.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)

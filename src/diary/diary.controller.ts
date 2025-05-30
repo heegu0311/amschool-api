@@ -82,13 +82,27 @@ export class DiaryController {
     type: Number,
     description: '페이지당 항목 수',
   })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    description: '검색 키워드',
+  })
   @ApiResponse({
     status: 200,
     description: '오늘의나 목록 조회 성공',
     type: [Diary],
   })
-  findAll(@Request() req, @Query() paginationDto: PaginationDto) {
-    return this.diaryService.findAllWithMoreInfo(paginationDto, req.user?.id);
+  findAll(
+    @Request() req,
+    @Query() paginationDto: PaginationDto,
+    @Query('keyword') keyword?: string,
+  ) {
+    return this.diaryService.findAllWithMoreInfo(
+      paginationDto,
+      req.user?.id,
+      keyword,
+    );
   }
 
   @Get('my')
