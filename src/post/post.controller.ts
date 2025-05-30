@@ -85,6 +85,12 @@ export class PostController {
     type: Number,
     description: '페이지당 항목 수',
   })
+  @ApiQuery({
+    name: 'keyword',
+    required: false,
+    type: String,
+    description: '검색 키워드',
+  })
   @ApiResponse({
     status: 200,
     description: '게시글 목록 조회 성공',

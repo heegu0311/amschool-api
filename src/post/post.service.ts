@@ -69,12 +69,12 @@ export class PostService {
     paginationDto: PostPaginationDto,
     userId?: number,
   ): Promise<PaginatedResponse<Post>> {
-    const { page = 1, limit = 10, category } = paginationDto;
+    const { page = 1, limit = 10, category, keyword } = paginationDto;
 
-    // 공지사항 조회 (category가 ALL이고 1페이지에서만)
+    // 공지사항 조회 (category가 ALL이고 1페이지에서만, 키워드 검색이 아닐 때만)
     let noticePosts: Post[] = [];
-    if (category === PostCategory.ALL && page === 1) {
-      noticePosts = await this.postRepository
+    if (category === PostCategory.ALL && page === 1 && !keyword) {
+      const noticeQueryBuilder = this.postRepository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.author', 'author')
         .leftJoinAndSelect('post.images', 'images')
@@ -84,13 +84,15 @@ export class PostService {
           'comments.entityType = :entityType',
           { entityType: 'post' },
         )
-        .where('post.category = :category', { category: PostCategory.NOTICE })
+        .where('post.category = :category', { category: PostCategory.NOTICE });
+
+      noticePosts = await noticeQueryBuilder
         .orderBy('post.createdAt', 'DESC')
         .getMany();
     }
 
     // 일반 게시글 조회 (페이지네이션 적용)
-    const [regularPosts, totalRegularPosts] = await this.postRepository
+    const regularQueryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.images', 'images')
@@ -105,15 +107,26 @@ export class PostService {
           ? 'post.category != :notice'
           : 'post.category = :category',
         category === PostCategory.ALL ? { notice: 'notice' } : { category },
-      )
+      );
+
+    if (keyword) {
+      regularQueryBuilder.andWhere(
+        '(post.title LIKE :keyword OR post.content LIKE :keyword)',
+        { keyword: `%${keyword}%` },
+      );
+    }
+
+    const [regularPosts, totalRegularPosts] = await regularQueryBuilder
       .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
 
     // all+1페이지만 noticePosts 포함, 그 외는 regularPosts만
-    const allPosts =
-      category === PostCategory.ALL && page === 1
+    // 키워드 검색 시에는 항상 regularPosts만 반환
+    const allPosts = keyword
+      ? regularPosts
+      : category === PostCategory.ALL && page === 1
         ? [...noticePosts, ...regularPosts]
         : regularPosts;
 
@@ -139,9 +152,11 @@ export class PostService {
     });
 
     // 전체 게시글 수는 noticePosts는 all+1페이지만 포함
-    const totalItems =
-      (category === PostCategory.ALL && page === 1 ? noticePosts.length : 0) +
-      totalRegularPosts;
+    // 키워드 검색 시에는 regularPosts의 수만 사용
+    const totalItems = keyword
+      ? totalRegularPosts
+      : (category === PostCategory.ALL && page === 1 ? noticePosts.length : 0) +
+        totalRegularPosts;
 
     return {
       items: postsWithReactions,
