@@ -78,14 +78,27 @@ export class QuestionService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Question>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const [items, totalItems] = await this.questionRepository.findAndCount({
-      where: { deletedAt: undefined },
-      relations: ['author', 'aiAnswer', 'images'],
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const { page = 1, limit = 10, keyword } = paginationDto;
+
+    const queryBuilder = this.questionRepository
+      .createQueryBuilder('question')
+      .leftJoinAndSelect('question.author', 'author')
+      .leftJoinAndSelect('question.aiAnswer', 'aiAnswer')
+      .leftJoinAndSelect('question.images', 'images')
+      .where('question.deletedAt IS NULL');
+
+    if (keyword) {
+      queryBuilder.andWhere(
+        '(question.question_summary LIKE :keyword OR question.content LIKE :keyword)',
+        { keyword: `%${keyword}%` },
+      );
+    }
+
+    const [items, totalItems] = await queryBuilder
+      .orderBy('question.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     return {
       items,
