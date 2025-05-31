@@ -115,6 +115,7 @@ export class PostController {
           title: { type: 'string', description: '제목' },
           viewCount: { type: 'number', description: '조회수' },
           commentsCount: { type: 'number', description: '댓글 수' },
+          createdAt: { type: 'string', description: '작성일자' },
         },
       },
     },

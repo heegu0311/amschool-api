@@ -375,6 +375,7 @@ export class PostService {
       title: string;
       viewCount: number;
       commentsCount: number;
+      createdAt: string;
     }>
   > {
     const oneWeekAgo = dayjs().subtract(30, 'day').toDate();
@@ -387,6 +388,7 @@ export class PostService {
         'post.title',
         'post.viewCount',
         'post.category',
+        'post.createdAt',
         'COUNT(comment.id) AS commentsCount',
       ])
       .where('post.createdAt >= :oneWeekAgo', { oneWeekAgo })
@@ -404,6 +406,7 @@ export class PostService {
       viewCount: p.post_viewCount,
       category: p.post_category,
       commentsCount: Number(p.commentsCount),
+      createdAt: p.post_created_at,
     }));
   }
 
