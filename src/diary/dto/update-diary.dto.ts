@@ -19,7 +19,6 @@ export class UpdateDiaryDto {
 
   @ApiProperty({ description: '오늘의나 내용', required: false, default: '' })
   @IsString()
-  @IsOptional()
   content?: string;
 
   @ApiProperty({

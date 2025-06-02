@@ -15,7 +15,6 @@ export class CreateDiaryDto {
     default: '오늘은 좋은 하루였어요.',
   })
   @IsString()
-  @IsNotEmpty()
   content: string;
 
   @ApiProperty({
