@@ -101,6 +101,7 @@ export class PostController {
   }
 
   @Get('popular')
+  @Public()
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '지난 1주일간 인기 게시글(조회수순) 10개 조회' })
   @ApiResponse({
