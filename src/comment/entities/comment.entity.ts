@@ -48,7 +48,6 @@ export class Comment {
   entityId: number;
 
   @ApiProperty({ description: '엔티티 정보' })
-  @ManyToOne(() => Diary, (diary) => diary.comments)
   @JoinColumn({
     name: 'entity_id',
     referencedColumnName: 'id',

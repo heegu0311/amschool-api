@@ -79,9 +79,9 @@ export class PostService {
         .leftJoinAndSelect('post.author', 'author')
         .leftJoinAndSelect('post.images', 'images')
         .leftJoinAndSelect(
-          'post.comments',
+          'comment',
           'comments',
-          'comments.entityType = :entityType',
+          'comments.entity_id = post.id AND comments.entity_type = :entityType',
           { entityType: 'post' },
         )
         .where('post.category = :category', { category: PostCategory.NOTICE });
@@ -97,9 +97,9 @@ export class PostService {
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect(
-        'post.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
         { entityType: 'post' },
       )
       .where(
@@ -146,7 +146,8 @@ export class PostService {
       const postWithReactions = {
         ...post,
         reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
-        commentsCount: post.comments.length,
+        comments: post.comments || [],
+        commentsCount: post.comments?.length || 0,
       };
       return postWithReactions;
     });
@@ -173,7 +174,14 @@ export class PostService {
   async findOne(id: number, userId?: number) {
     const post = await this.postRepository
       .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'comment',
+        'comments',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
+        { entityType: 'post' },
+      )
       .where('post.id = :id', { id })
       .getOne();
 
@@ -189,7 +197,11 @@ export class PostService {
       throw new NotFoundException(`Post #${id} not found`);
     }
 
-    return post;
+    return {
+      ...post,
+      comments: post.comments || [],
+      commentsCount: post.comments?.length || 0,
+    };
   }
 
   async findOneWithMoreInfo(id: number, userId?: number): Promise<Post> {
@@ -203,9 +215,9 @@ export class PostService {
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect(
-        'post.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
         { entityType: 'post' },
       )
       .where('post.id = :id', { id })
@@ -238,13 +250,14 @@ export class PostService {
       );
 
     // 댓글 ID 목록 추출
-    const commentIds = post.comments.map((comment) => comment.id);
+    const commentIds = post.comments?.map((comment) => comment.id) || [];
 
     // 공감 정보를 엔티티에 매핑
     const postWithReactions = {
       ...post,
       reactions: postReactions[post.id]?.reactions || [],
       userReactions: postReactions[post.id]?.userReactions || [],
+      comments: post.comments || [],
       commentsCount: commentIds.length,
       prevPost,
       nextPost,
@@ -382,7 +395,12 @@ export class PostService {
 
     const posts = await this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.comments', 'comment')
+      .leftJoin(
+        'comment',
+        'comment',
+        'comment.entity_id = post.id AND comment.entity_type = :entityType',
+        { entityType: 'post' },
+      )
       .select([
         'post.id',
         'post.title',
@@ -393,13 +411,12 @@ export class PostService {
       ])
       .where('post.createdAt >= :oneWeekAgo', { oneWeekAgo })
       .andWhere('post.deletedAt IS NULL')
-      .andWhere('post.category != :notice', { notice: 'notice' }) // notice가 아닌 것만
+      .andWhere('post.category != :notice', { notice: 'notice' })
       .groupBy('post.id')
       .orderBy('post.viewCount', 'DESC')
       .limit(10)
       .getRawMany();
 
-    // getRawMany의 결과는 { post_id, post_title, post_viewCount, commentsCount } 형태이므로, 키를 맞춰줌
     return posts.map((p: any) => ({
       id: p.post_id,
       title: p.post_title,
@@ -421,9 +438,9 @@ export class PostService {
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.images', 'images')
       .leftJoinAndSelect(
-        'post.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
         { entityType: 'post' },
       )
       .where('post.authorId = :authorId', { authorId })
@@ -449,7 +466,8 @@ export class PostService {
       const postWithReactions = {
         ...post,
         reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
-        commentsCount: post.comments.length,
+        comments: post.comments || [],
+        commentsCount: post.comments?.length || 0,
       };
       return postWithReactions;
     });

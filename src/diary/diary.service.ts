@@ -75,9 +75,9 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
-        'diary.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
       )
       .where(
@@ -117,9 +117,9 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
-        'diary.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
       )
       .where(
@@ -160,7 +160,8 @@ export class DiaryService {
         ...diary,
         reactions: diaryReactions[diary.id]?.reactions || [],
         userReactions: diaryReactions[diary.id]?.userReactions || [],
-        commentsCount: diary.comments.length,
+        comments: diary.comments || [],
+        commentsCount: diary.comments?.length || 0,
       };
       return diaryWithReactions;
     });
@@ -211,9 +212,9 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
-        'diary.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
       )
       .where('diary.authorId IN (:...similarUserIds)', { similarUserIds })
@@ -247,7 +248,8 @@ export class DiaryService {
         ...diary,
         reactions: diaryReactions[diary.id]?.reactions || [],
         userReactions: diaryReactions[diary.id]?.userReactions || [],
-        commentsCount: diary.comments.length,
+        comments: diary.comments || [],
+        commentsCount: diary.comments?.length || 0,
       };
       return diaryWithReactions;
     });
@@ -268,6 +270,12 @@ export class DiaryService {
     const diary = await this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'comment',
+        'comments',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
+        { entityType: 'diary' },
+      )
       .where('diary.id = :id', { id })
       .getOne();
 
@@ -292,9 +300,9 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
-        'diary.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
       )
       .where('diary.id = :id', { id })
@@ -321,13 +329,14 @@ export class DiaryService {
       );
 
     // 댓글 ID 목록 추출
-    const commentIds = diary.comments.map((comment) => comment.id);
+    const commentIds = diary.comments?.map((comment) => comment.id) || [];
 
     // 공감 정보를 엔티티에 매핑
     const diaryWithReactions = {
       ...diary,
       reactions: diaryReactions[diary.id]?.reactions || [],
       userReactions: diaryReactions[diary.id]?.userReactions || [],
+      comments: diary.comments || [],
       commentsCount: commentIds.length,
     };
 
@@ -467,9 +476,9 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
-        'diary.comments',
+        'comment',
         'comments',
-        'comments.entityType = :entityType',
+        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
       )
       .where('diary.authorId = :authorId', { authorId })
@@ -499,7 +508,8 @@ export class DiaryService {
         ...diary,
         reactions: diaryReactions[diary.id]?.reactions || [],
         userReactions: diaryReactions[diary.id]?.userReactions || [],
-        commentsCount: diary.comments.length,
+        comments: diary.comments || [],
+        commentsCount: diary.comments?.length || 0,
       };
       return diaryWithReactions;
     });
