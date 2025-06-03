@@ -73,7 +73,8 @@ export class CompleteRegistrationDto {
     example: Gender.MALE,
   })
   @IsEnum(Gender)
-  gender: Gender;
+  @IsOptional()
+  gender?: Gender;
 
   @ApiProperty({ description: '서비스 이용약관 동의', example: true })
   @IsBoolean()
