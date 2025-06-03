@@ -67,7 +67,6 @@ export class PostService {
 
   async findAllWithMoreInfo(
     paginationDto: PostPaginationDto,
-    userId?: number,
   ): Promise<PaginatedResponse<Post>> {
     const { page = 1, limit = 10, category, keyword } = paginationDto;
 
@@ -96,12 +95,7 @@ export class PostService {
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.images', 'images')
-      .leftJoinAndSelect(
-        'comment',
-        'comments',
-        'comments.entity_id = post.id AND comments.entity_type = :entityType',
-        { entityType: 'post' },
-      )
+      .leftJoinAndSelect('post.comments', 'comments')
       .where(
         category === PostCategory.ALL
           ? 'post.category != :notice'
@@ -138,7 +132,6 @@ export class PostService {
       await this.reactionEntityService.getReactionsCountForMultipleEntities(
         'post',
         postIds,
-        userId,
       );
 
     // 공감 정보를 각 엔티티에 매핑
@@ -208,18 +201,33 @@ export class PostService {
     // 조회수 증가
     await this.postRepository.increment({ id }, 'viewCount', 1);
 
+    // 댓글 수 조회
+    const commentsCount = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin(
+        'comment',
+        'comments',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
+        { entityType: 'post' },
+      )
+      .select('COUNT(comments.id)', 'count')
+      .where('post.id = :id', { id })
+      .getRawOne();
+
+    // 게시글 정보 조회
     const post = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('post.images', 'images')
-      .leftJoinAndSelect(
+      .leftJoin(
         'comment',
         'comments',
         'comments.entity_id = post.id AND comments.entity_type = :entityType',
         { entityType: 'post' },
       )
+      .addSelect('comments')
       .where('post.id = :id', { id })
       .getOne();
 
@@ -249,21 +257,18 @@ export class PostService {
         userId,
       );
 
-    // 댓글 ID 목록 추출
-    const commentIds = post.comments?.map((comment) => comment.id) || [];
-
     // 공감 정보를 엔티티에 매핑
     const postWithReactions = {
       ...post,
       reactions: postReactions[post.id]?.reactions || [],
       userReactions: postReactions[post.id]?.userReactions || [],
       comments: post.comments || [],
-      commentsCount: commentIds.length,
+      commentsCount: Number(commentsCount?.count) || 0,
       prevPost,
       nextPost,
     };
 
-    return postWithReactions;
+    return postWithReactions as Post;
   }
 
   // 이전글 조회
@@ -430,7 +435,6 @@ export class PostService {
   async findByAuthorId(
     authorId: number,
     paginationDto: PostPaginationDto,
-    currentUserId?: number,
   ): Promise<PaginatedResponse<Post>> {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.postRepository
@@ -458,7 +462,6 @@ export class PostService {
       await this.reactionEntityService.getReactionsCountForMultipleEntities(
         'post',
         postIds,
-        currentUserId,
       );
 
     // 공감 정보를 각 엔티티에 매핑

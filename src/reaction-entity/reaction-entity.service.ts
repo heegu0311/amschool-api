@@ -78,15 +78,17 @@ export class ReactionEntityService {
   }
 
   async addReaction(
-    entityType: 'diary' | 'post' | 'comment' | 'reply',
+    entityType: 'diary' | 'post' | 'comment',
     entityId: number,
+    targetType: 'diary' | 'post' | 'comment' | 'reply',
+    targetId: number,
     reactionId: number,
     userId: number,
   ) {
     let entity;
     let authorId;
 
-    switch (entityType) {
+    switch (targetType) {
       case 'diary':
         entity = await this.diaryRepository.findOne({
           where: { id: entityId },
@@ -109,8 +111,7 @@ export class ReactionEntityService {
 
       case 'comment':
         entity = await this.commentRepository.findOne({
-          where: { id: entityId },
-          relations: ['entity'],
+          where: { id: targetId },
         });
         if (!entity) {
           throw new NotFoundException('댓글을 찾을 수 없습니다.');
@@ -120,8 +121,7 @@ export class ReactionEntityService {
 
       case 'reply':
         entity = await this.replyRepository.findOne({
-          where: { id: entityId },
-          relations: ['comment'],
+          where: { id: targetId },
         });
         if (!entity) {
           throw new NotFoundException('답글을 찾을 수 없습니다.');
@@ -134,6 +134,8 @@ export class ReactionEntityService {
     const reactionEntity = this.reactionEntityRepository.create({
       entityType,
       entityId,
+      targetType,
+      targetId,
       reactionId,
       userId,
     });
@@ -159,8 +161,10 @@ export class ReactionEntityService {
   }
 
   async removeReaction(
-    entityType: 'diary' | 'post' | 'comment' | 'reply',
+    entityType: 'diary' | 'post' | 'comment',
     entityId: number,
+    targetType: 'diary' | 'post' | 'comment' | 'reply',
+    targetId: number,
     reactionId: number,
     userId: number,
   ) {
@@ -168,6 +172,8 @@ export class ReactionEntityService {
       where: {
         entityType,
         entityId,
+        targetType,
+        targetId,
         reactionId,
         userId,
       },
@@ -179,44 +185,50 @@ export class ReactionEntityService {
   }
 
   async getReactionsForMultipleEntities(
-    entityType: 'diary' | 'comment' | 'reply' | 'post',
-    entityIds: number[],
+    targetType: 'diary' | 'comment' | 'reply' | 'post',
+    targetIds: number[],
     currentUserId?: number,
   ): Promise<Record<number, { reactions: any[]; userReactions: number[] }>> {
     // 여러 엔티티의 공감을 한 번에 조회
     const reactions = await this.reactionEntityRepository
       .createQueryBuilder('reactionEntity')
-      .select('reactionEntity.entityId', 'entityId')
+      .select('reactionEntity.targetId', 'targetId')
       .addSelect('reactionEntity.reactionId', 'reactionId')
       .addSelect('COUNT(*)', 'count')
-      .where('reactionEntity.entityType = :entityType', { entityType })
+      .where('reactionEntity.targetType = :targetType', { targetType })
       .andWhere(
-        entityIds.length > 0
-          ? 'reactionEntity.entityId IN (:...entityIds)'
+        targetIds.length > 0
+          ? 'reactionEntity.targetId IN (:...targetIds)'
           : '1=0',
-        { entityIds },
+        { targetIds },
       )
-      .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
+      .groupBy('reactionEntity.targetId, reactionEntity.reactionId')
       .orderBy('reactionEntity.reactionId', 'ASC')
       .getRawMany();
 
     // 사용자 공감 조회
-    let userReactions: any[] = [];
+    let userReactions: {
+      targetId: number;
+      reactionId: number;
+      count: string;
+    }[] = [];
     if (currentUserId) {
       userReactions = await this.reactionEntityRepository
         .createQueryBuilder('reactionEntity')
-        .select('reactionEntity.entityId', 'entityId')
+        .select('reactionEntity.targetId', 'targetId')
         .addSelect('reactionEntity.reactionId', 'reactionId')
         .addSelect('COUNT(*)', 'count')
-        .where('reactionEntity.entityType = :entityType', { entityType })
+        .where('reactionEntity.targetType = :targetType', {
+          targetType,
+        })
         .andWhere(
-          entityIds.length > 0
-            ? 'reactionEntity.entityId IN (:...entityIds)'
+          targetIds.length > 0
+            ? 'reactionEntity.targetId IN (:...targetIds)'
             : '1=0',
-          { entityIds },
+          { targetIds },
         )
         .andWhere('reactionEntity.userId = :userId', { userId: currentUserId })
-        .groupBy('reactionEntity.entityId, reactionEntity.reactionId')
+        .groupBy('reactionEntity.targetId, reactionEntity.reactionId')
         .orderBy('reactionEntity.reactionId', 'ASC')
         .getRawMany();
     }
@@ -226,9 +238,9 @@ export class ReactionEntityService {
 
     // 결과 매핑
     const result = {};
-    entityIds.forEach((id) => {
-      // 해당 entityId에 대한 실제 반응 데이터
-      const entityReactions = reactions.filter((r) => r.entityId === id);
+    targetIds.forEach((id) => {
+      // 해당 targetId에 대한 실제 반응 데이터
+      const entityReactions = reactions.filter((r) => r.targetId === id);
 
       // 모든 reactionId를 포함해서 count가 없으면 0으로 맞춰줌
       const formattedReactions = allReactions.map((reaction) => {
@@ -242,8 +254,8 @@ export class ReactionEntityService {
       result[id] = {
         reactions: formattedReactions,
         userReactions: userReactions
-          .filter((r) => r.entityId === id)
-          .map((r) => r.reactionId as number),
+          .filter((r) => r.targetId === id)
+          .map((r) => r.reactionId),
       };
     });
 
@@ -253,7 +265,6 @@ export class ReactionEntityService {
   async getReactionsCountForMultipleEntities(
     entityType: 'diary' | 'comment' | 'reply' | 'post',
     entityIds: number[],
-    currentUserId?: number,
   ): Promise<
     Record<number, { reactionsCount: number; userReactionId?: number }>
   > {

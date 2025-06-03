@@ -116,12 +116,7 @@ export class DiaryService {
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
-      .leftJoinAndSelect(
-        'comment',
-        'comments',
-        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
-        { entityType: 'diary' },
-      )
+      .leftJoinAndSelect('diary.comments', 'comments')
       .where(
         userId
           ? 'diary.accessLevel IN (:...accessLevels)'
@@ -165,6 +160,7 @@ export class DiaryService {
       };
       return diaryWithReactions;
     });
+
     return {
       items: diariesWithReactions,
       meta: {
@@ -211,12 +207,7 @@ export class DiaryService {
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('diary.images', 'images')
-      .leftJoinAndSelect(
-        'comment',
-        'comments',
-        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
-        { entityType: 'diary' },
-      )
+      .leftJoinAndSelect('diary.comments', 'comments')
       .where('diary.authorId IN (:...similarUserIds)', { similarUserIds })
       .andWhere(
         userId
@@ -295,16 +286,22 @@ export class DiaryService {
   }
 
   async findOneWithMoreInfo(id: number, userId?: number): Promise<Diary> {
+    // 댓글 수 조회
+    const commentsCount = await this.diaryRepository
+      .createQueryBuilder('diary')
+      .leftJoinAndSelect('diary.comments', 'comments')
+      .select('COUNT(comments.id)', 'count')
+      .where('diary.id = :id', { id })
+      .getRawOne();
+
+    // 일기 정보 조회
     const diary = await this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
+      .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
+      .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('diary.images', 'images')
-      .leftJoinAndSelect(
-        'comment',
-        'comments',
-        'comments.entity_id = diary.id AND comments.entity_type = :entityType',
-        { entityType: 'diary' },
-      )
+      .leftJoinAndSelect('diary.comments', 'comments')
       .where('diary.id = :id', { id })
       .getOne();
 
@@ -320,7 +317,13 @@ export class DiaryService {
       throw new NotFoundException(`Diary #${id} has member type`);
     }
 
-    // 다이어리 공감 조회
+    // 이전글/다음글 조회
+    const [prevDiary, nextDiary] = await Promise.all([
+      this.findPrevDiary(id),
+      this.findNextDiary(id),
+    ]);
+
+    // 일기 공감 조회
     const diaryReactions =
       await this.reactionEntityService.getReactionsForMultipleEntities(
         'diary',
@@ -328,19 +331,18 @@ export class DiaryService {
         userId,
       );
 
-    // 댓글 ID 목록 추출
-    const commentIds = diary.comments?.map((comment) => comment.id) || [];
-
     // 공감 정보를 엔티티에 매핑
     const diaryWithReactions = {
       ...diary,
       reactions: diaryReactions[diary.id]?.reactions || [],
       userReactions: diaryReactions[diary.id]?.userReactions || [],
       comments: diary.comments || [],
-      commentsCount: commentIds.length,
+      commentsCount: Number(commentsCount?.count) || 0,
+      prevDiary,
+      nextDiary,
     };
 
-    return diaryWithReactions;
+    return diaryWithReactions as Diary;
   }
 
   async update(
@@ -524,5 +526,21 @@ export class DiaryService {
         currentPage: page,
       },
     };
+  }
+
+  private async findPrevDiary(id: number): Promise<Diary | null> {
+    return this.diaryRepository
+      .createQueryBuilder('diary')
+      .where('diary.id < :id', { id })
+      .orderBy('diary.id', 'DESC')
+      .getOne();
+  }
+
+  private async findNextDiary(id: number): Promise<Diary | null> {
+    return this.diaryRepository
+      .createQueryBuilder('diary')
+      .where('diary.id > :id', { id })
+      .orderBy('diary.id', 'ASC')
+      .getOne();
   }
 }

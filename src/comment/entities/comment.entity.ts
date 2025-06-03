@@ -47,12 +47,24 @@ export class Comment {
   @Column({ name: 'entity_id' })
   entityId: number;
 
-  @ApiProperty({ description: '엔티티 정보' })
-  @JoinColumn({
-    name: 'entity_id',
-    referencedColumnName: 'id',
+  @ManyToOne(() => Diary, {
+    createForeignKeyConstraints: false,
   })
-  entity: Relation<Diary | Post>;
+  @JoinColumn([
+    { name: 'entity_id', referencedColumnName: 'id' },
+    { name: 'entity_type', referencedColumnName: 'type' },
+  ])
+  diary: Relation<Diary>;
+
+  @ApiProperty({ description: '엔티티 정보' })
+  @ManyToOne(() => Post, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn([
+    { name: 'entity_id', referencedColumnName: 'id' },
+    { name: 'entity_type', referencedColumnName: 'type' },
+  ])
+  post: Relation<Post>;
 
   @ManyToOne(() => User, {
     createForeignKeyConstraints: false,

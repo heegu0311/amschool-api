@@ -29,6 +29,17 @@ export class ReactionEntity {
   @Column({ name: 'entity_id' })
   entityId: number;
 
+  @Column({
+    type: 'enum',
+    enum: ['diary', 'post', 'comment', 'reply'],
+    comment: '공감 대상 엔티티 타입',
+    name: 'target_type',
+  })
+  targetType: 'diary' | 'post' | 'comment' | 'reply';
+
+  @Column({ name: 'target_id' })
+  targetId: number;
+
   @Column({ name: 'reaction_id' })
   reactionId: number;
 

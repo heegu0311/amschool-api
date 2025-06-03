@@ -62,7 +62,7 @@ export class Diary {
   @OneToMany(() => Image, (image) => image.entity)
   images: Relation<Image[]>;
 
-  @OneToMany(() => Comment, (comment) => comment.entity)
+  @OneToMany(() => Comment, (comment) => comment.diary)
   comments: Relation<Comment[]>;
 
   @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.entity)

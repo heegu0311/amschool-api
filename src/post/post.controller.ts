@@ -97,7 +97,7 @@ export class PostController {
     type: [PostEntity],
   })
   findAll(@Request() req, @Query() paginationDto: PostPaginationDto) {
-    return this.postService.findAllWithMoreInfo(paginationDto, req.user?.id);
+    return this.postService.findAllWithMoreInfo(paginationDto);
   }
 
   @Get('popular')
@@ -151,7 +151,7 @@ export class PostController {
   ): Promise<PaginatedResponse<PostEntity>> {
     const userId = req.user.id;
 
-    return await this.postService.findByAuthorId(userId, paginationDto, userId);
+    return await this.postService.findByAuthorId(userId, paginationDto);
   }
 
   @Get('user/:userId')
@@ -178,13 +178,8 @@ export class PostController {
   async findUserPosts(
     @Param('userId') userId: string,
     @Query() paginationDto: PostPaginationDto,
-    @Request() req,
   ): Promise<PaginatedResponse<PostEntity>> {
-    return await this.postService.findByAuthorId(
-      +userId,
-      paginationDto,
-      req.user?.id,
-    );
+    return await this.postService.findByAuthorId(+userId, paginationDto);
   }
 
   @Get(':id')

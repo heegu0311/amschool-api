@@ -74,7 +74,7 @@ export class Post {
   @OneToMany(() => Image, (image) => image.entity)
   images: Relation<Image[]>;
 
-  @OneToMany(() => Comment, (comment) => comment.entity)
+  @OneToMany(() => Comment, (comment) => comment.post)
   comments: Relation<Comment[]>;
 
   @OneToMany(() => ReactionEntity, (reactionEntity) => reactionEntity.entity)

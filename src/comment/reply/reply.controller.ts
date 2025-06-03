@@ -26,7 +26,7 @@ import { Reply } from './entities/reply.entity';
 import { ReplyService } from './reply.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller(':entityType/:entityId/comments/:commentId/replies')
+@Controller('/replies/:entityType/:entityId/comments/:commentId/replies')
 @ApiBearerAuth('accessToken')
 export class ReplyController {
   constructor(private readonly replyService: ReplyService) {}

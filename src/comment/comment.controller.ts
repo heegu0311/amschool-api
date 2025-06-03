@@ -27,7 +27,7 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
 
 @UseGuards(JwtAuthGuard)
-@Controller(':entityType/:entityId/comments')
+@Controller('/comments/:entityType/:entityId/comments')
 @ApiBearerAuth('accessToken')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
