@@ -396,7 +396,7 @@ export class PostService {
       createdAt: string;
     }>
   > {
-    const oneWeekAgo = dayjs().subtract(30, 'day').toDate();
+    const threeMonthsAgo = dayjs().subtract(90, 'day').toDate();
 
     const posts = await this.postRepository
       .createQueryBuilder('post')
@@ -414,7 +414,7 @@ export class PostService {
         'post.createdAt',
         'COUNT(comment.id) AS commentsCount',
       ])
-      .where('post.createdAt >= :oneWeekAgo', { oneWeekAgo })
+      .where('post.createdAt >= :oneWeekAgo', { oneWeekAgo: threeMonthsAgo })
       .andWhere('post.deletedAt IS NULL')
       .andWhere('post.category != :notice', { notice: 'notice' })
       .groupBy('post.id')
