@@ -177,6 +177,7 @@ export class ArticleService {
     const [articles, total] = await this.articleRepository.findAndCount({
       where: {
         author: authorId,
+        isUsed: true,
         deletedAt: undefined,
       },
       order: {
@@ -228,6 +229,7 @@ export class ArticleService {
     const [items, total] = await this.articleRepository.findAndCount({
       where: {
         cancerId: +cancerId,
+        isUsed: true,
         deletedAt: IsNull(),
       },
       relations: ['images'],
