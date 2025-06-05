@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty({ description: '제목', required: true })
@@ -143,6 +149,15 @@ export class CreateArticleDto {
   @IsOptional()
   @IsString()
   keywords?: string;
+
+  @ApiProperty({ description: '암 카테고리', required: false })
+  @IsOptional()
+  cancerId?: number;
+
+  @ApiProperty({ description: '사용여부', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isUsed?: boolean;
 
   @ApiProperty({
     description: '이미지 파일들',

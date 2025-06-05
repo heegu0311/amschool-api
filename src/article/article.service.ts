@@ -18,7 +18,7 @@ export class ArticleService {
   ) {}
 
   private stripHtmlTags(html: string): string {
-    if (!html) return '';
+    if (!html) return 'ㅊ';
 
     // HTML 엔티티를 공백으로 변환
     const withoutEntities = html
@@ -46,6 +46,7 @@ export class ArticleService {
     const article = this.articleRepository.create({
       ...articleData,
       adminId: userId.toString(),
+      isUsed: true,
     });
 
     const savedArticle = await this.articleRepository.save(article);

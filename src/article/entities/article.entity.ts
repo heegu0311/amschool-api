@@ -313,7 +313,7 @@ export class Article {
 
   @ApiProperty({ description: '암 카테고리', example: 1 })
   @Column({
-    name: 'cancer_category',
+    name: 'cancer_id',
     type: 'int',
     comment: '암 카테고리',
     nullable: true,
