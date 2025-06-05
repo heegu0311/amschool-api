@@ -259,46 +259,6 @@ export class ArticleController {
     return await this.articleService.delete(id);
   }
 
-  @Get('section/:sectionSecondaryCode')
-  @Public()
-  @ApiOperation({
-    summary: '특정 섹션의 암매거진 목록 조회',
-    description:
-      '섹션 코드를 기반으로 암매거진 목록을 페이지네이션하여 조회합니다.',
-  })
-  @ApiParam({
-    name: 'sectionSecondaryCode',
-    required: true,
-    type: String,
-    description: '섹션 코드',
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: '페이지 번호 (기본값: 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: '페이지당 항목 수 (기본값: 10)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '암매거진 목록이 성공적으로 조회되었습니다.',
-    type: [Article],
-  })
-  async getArticlesBySection(
-    @Param('sectionSecondaryCode') sectionSecondaryCode: string,
-    @Query() paginationDto: PaginationDto,
-  ) {
-    return await this.articleService.findBySectionSecondaryCode(
-      sectionSecondaryCode,
-      paginationDto,
-    );
-  }
-
   @Get('section/:sectionSecondaryCode/recommend')
   @Public()
   @ApiOperation({ summary: '특정 섹션의 랜덤 추천 기사 조회' })
@@ -322,8 +282,78 @@ export class ArticleController {
     @Param('sectionSecondaryCode') sectionSecondaryCode: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 3,
   ) {
-    const result = await this.articleService.findRandomBySectionSecondaryCode(
+    const result = await this.articleService.findRandomBycancerId(
       sectionSecondaryCode,
+      limit,
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Get('cancerId/:cancerId')
+  @Public()
+  @ApiOperation({
+    summary: '특정 섹션의 암매거진 목록 조회',
+    description:
+      '섹션 코드를 기반으로 암매거진 목록을 페이지네이션하여 조회합니다.',
+  })
+  @ApiParam({
+    name: 'cancerId',
+    required: true,
+    type: String,
+    description: '섹션 코드',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '페이지 번호 (기본값: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '페이지당 항목 수 (기본값: 10)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '암매거진 목록이 성공적으로 조회되었습니다.',
+    type: [Article],
+  })
+  async getArticlesBycancerId(
+    @Param('cancerId') cancerId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return await this.articleService.findBycancerId(cancerId, paginationDto);
+  }
+
+  @Get('cancerId/:cancerId/recommend')
+  @Public()
+  @ApiOperation({ summary: '특정 섹션의 랜덤 추천 기사 조회' })
+  @ApiParam({
+    name: 'cancerId',
+    required: true,
+    type: String,
+    description: '섹션 코드',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '추천받을 기사 수 (기본값: 3)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '랜덤 추천 기사 조회 성공',
+  })
+  async getRecommendedArticlesBycancerId(
+    @Param('cancerId') cancerId: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 3,
+  ) {
+    const result = await this.articleService.findRandomBycancerId(
+      cancerId,
       limit,
     );
     return {

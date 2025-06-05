@@ -75,10 +75,8 @@ export class ArticleService {
 
     const queryBuilder = this.articleRepository
       .createQueryBuilder('article')
-      .leftJoinAndSelect('article.sectionPrimary', 'sectionPrimary')
-      .leftJoinAndSelect('article.sectionSecondary', 'sectionSecondary')
       .leftJoinAndSelect('article.images', 'images')
-      .where('article.deletedAt IS NULL');
+      .where('article.deletedAt IS NULL AND article.isUsed = true');
 
     if (keyword) {
       queryBuilder.andWhere(
@@ -201,8 +199,27 @@ export class ArticleService {
     };
   }
 
-  async findBySectionSecondaryCode(
-    sectionSecondaryCode: string,
+  private getImageExt(filename: string): 'J' | 'G' | 'P' | 'B' | 'S' {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'J';
+      case 'gif':
+        return 'G';
+      case 'png':
+        return 'P';
+      case 'bmp':
+        return 'B';
+      case 'svg':
+        return 'S';
+      default:
+        return 'J';
+    }
+  }
+
+  async findBycancerId(
+    cancerId: string,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Article>> {
     const { page = 1, limit = 10 } = paginationDto;
@@ -210,11 +227,10 @@ export class ArticleService {
 
     const [items, total] = await this.articleRepository.findAndCount({
       where: {
-        sectionSecondaryCode,
-        isVisible: 'Y',
+        cancerId: +cancerId,
         deletedAt: IsNull(),
       },
-      relations: ['sectionPrimary', 'sectionSecondary', 'images'],
+      relations: ['images'],
       order: {
         createdAt: 'DESC',
       },
@@ -240,35 +256,16 @@ export class ArticleService {
     };
   }
 
-  private getImageExt(filename: string): 'J' | 'G' | 'P' | 'B' | 'S' {
-    const ext = filename.split('.').pop()?.toLowerCase();
-    switch (ext) {
-      case 'jpg':
-      case 'jpeg':
-        return 'J';
-      case 'gif':
-        return 'G';
-      case 'png':
-        return 'P';
-      case 'bmp':
-        return 'B';
-      case 'svg':
-        return 'S';
-      default:
-        return 'J';
-    }
-  }
-
-  async findRandomBySectionSecondaryCode(
-    sectionSecondaryCode: string,
+  async findRandomBycancerId(
+    cancerId: string,
     limit: number = 3,
   ): Promise<Article[]> {
     const articles = await this.articleRepository.find({
       where: {
-        sectionSecondary: { code: sectionSecondaryCode },
-        isVisible: 'Y',
+        cancerId: +cancerId,
+        deletedAt: IsNull(),
       },
-      relations: ['sectionSecondary', 'images'],
+      relations: ['images'],
       order: {
         createdAt: 'DESC',
       },

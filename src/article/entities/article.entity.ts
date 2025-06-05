@@ -311,6 +311,25 @@ export class Article {
   @Column({ type: 'text', comment: '키워드', nullable: true })
   keywords: string;
 
+  @ApiProperty({ description: '암 카테고리', example: 1 })
+  @Column({
+    name: 'cancer_category',
+    type: 'int',
+    comment: '암 카테고리',
+    nullable: true,
+  })
+  cancerId: number;
+
+  @ApiProperty({ description: '사용여부', example: true })
+  @Column({
+    name: 'is_used',
+    type: 'boolean',
+    comment: '사용여부',
+    nullable: true,
+    default: false,
+  })
+  isUsed: boolean;
+
   @ManyToOne(() => SectionPrimary, (primary) => primary.articles, {
     createForeignKeyConstraints: false,
   })
