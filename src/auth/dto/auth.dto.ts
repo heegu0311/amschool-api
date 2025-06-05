@@ -125,6 +125,10 @@ export class CompleteRegistrationDto {
   })
   profileImage?: string;
 
+  @IsString()
+  @IsOptional()
+  images?: string;
+
   @ApiProperty({ description: '사용자명', example: '암투게더' })
   @IsString()
   username: string;
