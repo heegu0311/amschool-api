@@ -217,7 +217,8 @@ export class PostService {
     // 게시글 정보 조회
     const post = await this.postRepository
       .createQueryBuilder('post')
-      .leftJoinAndSelect('post.author', 'author')
+      .leftJoin('post.author', 'author')
+      .addSelect(['author.id', 'author.username', 'author.profileImage'])
       .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('post.images', 'images')

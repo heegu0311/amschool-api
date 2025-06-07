@@ -194,6 +194,7 @@ export class PostController {
     status: 404,
     description: '게시글를 찾을 수 없음',
   })
+  @Public()
   findOne(@Request() req, @Param('id') id: string) {
     return this.postService.findOneWithMoreInfo(+id, req.user?.id);
   }
