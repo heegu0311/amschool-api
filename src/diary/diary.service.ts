@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -271,7 +272,7 @@ export class DiaryService {
       .getOne();
 
     if (diary?.accessLevel === 'private' && diary?.authorId !== userId) {
-      throw new NotFoundException(`Diary #${id} has private type`);
+      throw new ForbiddenException('비공개 글은 작성자만 볼 수 있습니다.');
     }
 
     if (diary?.accessLevel === 'member' && !userId) {
@@ -310,7 +311,7 @@ export class DiaryService {
     }
 
     if (diary.accessLevel === 'private' && diary.authorId !== userId) {
-      throw new NotFoundException(`Diary #${id} has private type`);
+      throw new ForbiddenException('비공개 글은 작성자만 볼 수 있습니다.');
     }
 
     if (diary.accessLevel === 'member' && !userId) {
