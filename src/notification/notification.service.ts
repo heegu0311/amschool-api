@@ -176,4 +176,17 @@ export class NotificationService {
     notification.isRead = updateNotificationReadDto.isRead;
     return await this.notificationRepository.save(notification);
   }
+
+  // 최근 30일간의 읽지 않은 알림 수 조회
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const thirtyDaysAgo = dayjs().subtract(30, 'day').toDate();
+
+    return await this.notificationRepository.count({
+      where: {
+        receiverUserId: userId,
+        isRead: false,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      },
+    });
+  }
 }

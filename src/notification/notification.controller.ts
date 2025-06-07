@@ -143,4 +143,12 @@ export class NotificationController {
       updateNotificationReadDto,
     );
   }
+
+  @Get('unread/count')
+  @ApiOperation({ summary: '최근 30일간의 읽지 않은 알림 수 조회' })
+  @ApiOkResponse({ description: '읽지 않은 알림 수 반환', type: Number })
+  async getUnreadNotificationCount(@Req() req) {
+    const userId = req.user.id;
+    return await this.notificationService.getUnreadNotificationCount(userId);
+  }
 }
