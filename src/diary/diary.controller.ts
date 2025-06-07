@@ -180,6 +180,7 @@ export class DiaryController {
     status: 404,
     description: '오늘의나를 찾을 수 없음',
   })
+  @Public()
   findOne(@Request() req, @Param('id') id: string) {
     return this.diaryService.findOneWithMoreInfo(+id, req.user?.id);
   }

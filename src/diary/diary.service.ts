@@ -315,7 +315,7 @@ export class DiaryService {
     }
 
     if (diary.accessLevel === 'member' && !userId) {
-      throw new NotFoundException(`Diary #${id} has member type`);
+      throw new ForbiddenException(`회원공개 글은 로그인 후 볼 수 있습니다.`);
     }
 
     // 이전글/다음글 조회
