@@ -256,10 +256,10 @@ export class UsersService {
 
     const [items, totalItems] = await this.usersRepository
       .createQueryBuilder('user')
-      .select(User.getSelectFields())
       .innerJoin('user.cancerUsers', 'cancerUser')
       .where('cancerUser.cancerId = :cancerId', { cancerId })
       .andWhere('user.isPublic = :isPublic', { isPublic: true })
+      .select(User.getSelectFields())
       .orderBy('user.createdAt', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)

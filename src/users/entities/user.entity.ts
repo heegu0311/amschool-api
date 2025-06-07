@@ -10,7 +10,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { Comment } from '../../comment/entities/comment.entity';
@@ -125,6 +125,8 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
+  @Expose()
+  @Type(() => CancerUser)
   @OneToMany(() => CancerUser, (cancerUser: CancerUser) => cancerUser.user, {
     onDelete: 'CASCADE',
   })
@@ -140,6 +142,8 @@ export class User {
   })
   replies: Relation<Reply[]>;
 
+  @Expose()
+  @Type(() => SurveyAnswerUser)
   @OneToMany(
     () => SurveyAnswerUser,
     (surveyAnswerUser: SurveyAnswerUser) => surveyAnswerUser.user,
@@ -190,6 +194,7 @@ export class User {
       'createdAt',
       'updatedAt',
       'deletedAt',
+      'cancerUsers',
     ];
 
     return fields.map((field) => `${alias}.${field}`);
