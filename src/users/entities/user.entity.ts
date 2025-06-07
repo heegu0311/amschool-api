@@ -10,6 +10,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude, Expose } from 'class-transformer';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { CancerUser } from '../../cancer-user/entities/cancer-user.entity';
 import { Comment } from '../../comment/entities/comment.entity';
@@ -23,6 +24,7 @@ const nanoid = customAlphabet('123456789', 9);
 
 @Entity()
 export class User {
+  @Expose()
   @PrimaryColumn()
   id: number;
 
@@ -34,24 +36,27 @@ export class User {
     }
   }
 
+  @Expose()
   @Column({ length: 60, name: 'email' })
   email: string;
 
+  @Exclude()
   @Column({ nullable: true, name: 'password' })
   password: string;
 
+  @Expose()
   @Column({ type: 'date', nullable: true, name: 'birthday' })
   birthday: Date;
 
+  @Expose()
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
+  @Expose()
   @Column({ default: false, name: 'is_admin' })
   isAdmin: boolean;
 
-  @Column({ nullable: true, name: 'provider' })
-  provider: string;
-
+  @Expose()
   @Column({
     type: 'enum',
     enum: ['patient', 'supporter'],
@@ -59,18 +64,23 @@ export class User {
   })
   userType: 'patient' | 'supporter';
 
+  @Expose()
   @Column({ length: 30, name: 'username' })
   username: string;
 
+  @Expose()
   @Column({ type: 'enum', enum: ['default', 'upload'], name: 'profile_type' })
   profileType: 'default' | 'upload';
 
+  @Expose()
   @Column({ name: 'profile_image' })
   profileImage: string;
 
+  @Expose()
   @Column({ name: 'intro' })
   intro: string;
 
+  @Expose()
   @Column({
     type: 'enum',
     enum: Gender,
@@ -79,30 +89,39 @@ export class User {
   })
   gender: Gender;
 
+  @Expose()
   @Column({ default: false, name: 'is_public' })
   isPublic: boolean;
 
+  @Expose()
   @Column({ name: 'signin_provider' })
   signinProvider: string;
 
+  @Expose()
   @Column({ default: false, name: 'agree_service' })
   agreeService: boolean;
 
+  @Expose()
   @Column({ default: false, name: 'agree_privacy' })
   agreePrivacy: boolean;
 
+  @Expose()
   @Column({ default: false, name: 'agree_marketing' })
   agreeMarketing: boolean;
 
+  @Expose()
   @Column({ nullable: true, name: 'social_id' })
   socialId: string;
 
+  @Expose()
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
+  @Expose()
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
+  @Expose()
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
@@ -147,4 +166,32 @@ export class User {
     },
   )
   notifications: Relation<Notification[]>;
+
+  static getSelectFields(alias: string = 'user'): string[] {
+    const fields = [
+      'id',
+      'email',
+      'birthday',
+      'isActive',
+      'isAdmin',
+      'provider',
+      'userType',
+      'username',
+      'profileType',
+      'profileImage',
+      'intro',
+      'gender',
+      'isPublic',
+      'signinProvider',
+      'agreeService',
+      'agreePrivacy',
+      'agreeMarketing',
+      'socialId',
+      'createdAt',
+      'updatedAt',
+      'deletedAt',
+    ];
+
+    return fields.map((field) => `${alias}.${field}`);
+  }
 }

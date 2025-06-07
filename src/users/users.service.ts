@@ -17,6 +17,7 @@ import { SurveyAnswerUser } from '../survey-answer-user/entities/survey-answer-u
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { Diary } from '../diary/entities/diary.entity';
 import { Post } from '../post/entities/post.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -65,7 +66,11 @@ export class UsersService {
   }
 
   findAll() {
-    return this.usersRepository.find();
+    return this.usersRepository
+      .find()
+      .then((users) =>
+        plainToInstance(User, users, { excludeExtraneousValues: true }),
+      );
   }
 
   async findOne(id: number) {
@@ -74,7 +79,7 @@ export class UsersService {
       relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
     });
 
-    return user;
+    return plainToInstance(User, user, { excludeExtraneousValues: true });
   }
 
   findByEmail(email: string) {
@@ -251,6 +256,7 @@ export class UsersService {
 
     const [items, totalItems] = await this.usersRepository
       .createQueryBuilder('user')
+      .select(User.getSelectFields())
       .innerJoin('user.cancerUsers', 'cancerUser')
       .where('cancerUser.cancerId = :cancerId', { cancerId })
       .andWhere('user.isPublic = :isPublic', { isPublic: true })
@@ -259,8 +265,12 @@ export class UsersService {
       .take(limit)
       .getManyAndCount();
 
+    const transformedItems = plainToInstance(User, items, {
+      excludeExtraneousValues: true,
+    });
+
     return {
-      items,
+      items: transformedItems,
       meta: {
         totalItems,
         itemCount: items.length,
@@ -300,6 +310,7 @@ export class UsersService {
     // 같은 암을 가진 다른 사용자들 조회
     const [items, totalItems] = await this.usersRepository
       .createQueryBuilder('user')
+      .select(User.getSelectFields())
       .innerJoin('user.cancerUsers', 'cancerUser')
       .innerJoin('cancerUser.cancer', 'cancer')
       .leftJoinAndSelect('user.cancerUsers', 'userCancerUsers')
@@ -312,8 +323,12 @@ export class UsersService {
       .take(limit)
       .getManyAndCount();
 
+    const transformedItems = plainToInstance(User, items, {
+      excludeExtraneousValues: true,
+    });
+
     return {
-      items,
+      items: transformedItems,
       meta: {
         totalItems,
         itemCount: items.length,
