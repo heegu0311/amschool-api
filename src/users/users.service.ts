@@ -15,6 +15,8 @@ import { Comment } from '../comment/entities/comment.entity';
 import { Reply } from '../comment/reply/entities/reply.entity';
 import { SurveyAnswerUser } from '../survey-answer-user/entities/survey-answer-user.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { Diary } from '../diary/entities/diary.entity';
+import { Post } from '../post/entities/post.entity';
 
 @Injectable()
 export class UsersService {
@@ -207,6 +209,24 @@ export class UsersService {
       );
       await manager.update(
         Reply,
+        { authorId: id },
+        {
+          authorId: anonymousUser.id,
+        },
+      );
+
+      // Diary 작성자를 익명 사용자로 변경
+      await manager.update(
+        Diary,
+        { authorId: id },
+        {
+          authorId: anonymousUser.id,
+        },
+      );
+
+      // Post 작성자를 익명 사용자로 변경
+      await manager.update(
+        Post,
         { authorId: id },
         {
           authorId: anonymousUser.id,
