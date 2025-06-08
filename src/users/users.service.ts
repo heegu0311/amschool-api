@@ -97,9 +97,7 @@ export class UsersService {
       where: { email, signinProvider: provider },
       relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
     });
-    return user
-      ? plainToInstance(User, user, { excludeExtraneousValues: true })
-      : null;
+    return user || null;
   }
 
   async update(
