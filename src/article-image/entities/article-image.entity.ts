@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { S3Service } from 'src/common/services/s3.service';
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  JoinColumn,
-  Relation,
-  CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Article } from '../../article/entities/article.entity';
-import { S3Service } from 'src/common/services/s3.service';
 
 @Entity({ name: 'article_image', comment: '기사사진' })
 export class ArticleImage {
@@ -23,7 +23,6 @@ export class ArticleImage {
     name: 'article_id',
     type: 'int',
     unsigned: true,
-    default: () => '0',
     comment: '기사번호',
   })
   articleId: number;
@@ -129,9 +128,26 @@ export class ArticleImage {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => Article, (article) => article.images)
-  @JoinColumn({ name: 'article_id' })
-  article: Relation<Article>;
+  @ApiProperty({
+    description: '삭제일',
+    example: '2024-06-03T14:00:00.000Z',
+    required: false,
+  })
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'datetime',
+    precision: 6,
+  })
+  deletedAt: Date;
+
+  @ManyToOne(() => Article, (article) => article.images, {
+    createForeignKeyConstraints: true,
+  })
+  @JoinColumn({
+    name: 'article_id',
+    foreignKeyConstraintName: 'FK_ARTICLE_IMAGE_ARTICLE',
+  })
+  article: Article;
 
   async getPresignedUrl(s3Service: S3Service): Promise<string> {
     const key = this.filePath.split('/').slice(-2).join('/'); // S3 키 추출

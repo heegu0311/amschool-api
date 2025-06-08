@@ -1,16 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryColumn,
-  Relation,
-} from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 import { Article } from '../../article/entities/article.entity';
-import { SectionPrimary } from '../../section_primary/entities/section_primary.entity';
 
 @Entity({ name: 'section_secondary', comment: '기사2차섹션' })
 export class SectionSecondary {
@@ -66,17 +56,10 @@ export class SectionSecondary {
     name: 'section_primary_code',
     type: 'varchar',
     length: 20,
-    default: '',
+    nullable: false,
     comment: '1차섹션코드',
   })
   sectionPrimaryCode: string;
 
-  @ManyToOne(() => SectionPrimary, (primary) => primary.secondaries, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({ name: 'section_primary_code', referencedColumnName: 'code' })
-  sectionPrimary: Relation<SectionPrimary>;
-
-  @OneToMany(() => Article, (article) => article.sectionSecondary)
-  articles: Relation<Article[]>;
+  articles: Article[];
 }

@@ -121,7 +121,6 @@ export class NotificationService {
   }
 
   update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    console.log(updateNotificationDto);
     return `This action updates a #${id} notification`;
   }
 

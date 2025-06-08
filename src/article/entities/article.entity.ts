@@ -1,18 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  JoinColumn,
-  Relation,
-  CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
-import { SectionPrimary } from '../../section_primary/entities/section_primary.entity';
-import { SectionSecondary } from '../../section_secondary/entities/section_secondary.entity';
 import { ArticleImage } from '../../article-image/entities/article-image.entity';
 
 @Entity({ name: 'article', comment: '기사' })
@@ -95,9 +90,9 @@ export class Article {
     type: 'varchar',
     length: 20,
     comment: '1차섹션',
-    nullable: false,
+    nullable: true,
   })
-  sectionPrimaryCode: string;
+  sectionPrimaryCode?: string;
 
   @ApiProperty({ description: '2차섹션', example: 'S2N18' })
   @Column({
@@ -105,9 +100,9 @@ export class Article {
     type: 'varchar',
     length: 20,
     comment: '2차섹션',
-    nullable: false,
+    nullable: true,
   })
-  sectionSecondaryCode: string;
+  sectionSecondaryCode?: string;
 
   @ApiProperty({ description: '연재', example: 'SER001' })
   @Column({
@@ -330,20 +325,8 @@ export class Article {
   })
   isUsed: boolean;
 
-  @ManyToOne(() => SectionPrimary, (primary) => primary.articles, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({ name: 'section_primary_code', referencedColumnName: 'code' })
-  sectionPrimary: Relation<SectionPrimary>;
-
-  @ManyToOne(() => SectionSecondary, (secondary) => secondary.articles, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({ name: 'section_secondary_code', referencedColumnName: 'code' })
-  sectionSecondary: Relation<SectionSecondary>;
-
   @OneToMany(() => ArticleImage, (image) => image.article)
-  images: Relation<ArticleImage[]>;
+  images: ArticleImage[];
 
   @CreateDateColumn({ name: 'created_at', comment: '등록일', nullable: true })
   createdAt: Date;

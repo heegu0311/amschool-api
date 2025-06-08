@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ArticleImageService } from 'src/article-image/article-image.service';
 import { IsNull, Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 import { ArticleImage } from '../article-image/entities/article-image.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
@@ -49,7 +49,7 @@ export class ArticleService {
 
   private generateFileName(originalName: string): string {
     const ext = originalName.split('.').pop();
-    return `${uuidv4()}.${ext}`;
+    return `${nanoid(10)}.${ext}`;
   }
 
   async create(
@@ -139,10 +139,12 @@ export class ArticleService {
   }
 
   async findOne(id: number): Promise<Article> {
-    const article = await this.articleRepository.findOne({
-      where: { id, deletedAt: undefined },
-      relations: ['sectionPrimary', 'sectionSecondary', 'images'],
-    });
+    const article = await this.articleRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.images', 'images')
+      .where('article.id = :id', { id })
+      .andWhere('article.deletedAt IS NULL')
+      .getOne();
 
     if (!article) {
       throw new NotFoundException(`Article with ID ${id} not found`);
@@ -156,42 +158,74 @@ export class ArticleService {
     updateArticleDto: UpdateArticleDto,
     images?: Express.Multer.File[],
   ): Promise<Article> {
-    const article = await this.findOne(id);
+    const article = await this.articleRepository.findOne({
+      where: { id, deletedAt: undefined },
+    });
 
-    if (images && images.length > 0) {
-      // 첫 번째 이미지를 썸네일로 사용
-      const thumbnailImage = images[0];
-      const thumbnailUrl = await this.articleImageService.uploadImage(
-        thumbnailImage,
-        'news/photos',
-      );
-
-      // 썸네일 URL 업데이트
-      article.thumbnail = thumbnailUrl;
-      await this.articleRepository.save(article);
-
-      // 기존 이미지 삭제
-      await this.articleImageRepository.delete({ articleId: id });
-
-      // 새 이미지 추가
-      const articleImages = images.map((image, index) => {
-        return this.articleImageRepository.create({
-          articleId: id,
-          fileName: image.originalname,
-          filePath: image.path,
-          imageExt: this.getImageExt(image.originalname),
-          imageSort: index + 1,
-          isFeatured: index === 0 ? 'Y' : 'N',
-        });
-      });
-      await this.articleImageRepository.save(articleImages);
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
     }
 
-    // 이미지 필드 제외하고 업데이트
-    const { images: _, ...updateData } = updateArticleDto;
+    const { imageUpdates, deletedImageIds, ...updateData } = updateArticleDto;
     Object.assign(article, updateData);
+    const savedArticle = await this.articleRepository.save(article);
 
-    return await this.articleRepository.save(article);
+    // 기존 이미지 삭제 처리
+    if (deletedImageIds && deletedImageIds.length > 0) {
+      for (const deletedImageId of deletedImageIds) {
+        const imageToDelete = await this.articleImageRepository.findOne({
+          where: { id: deletedImageId },
+        });
+        if (imageToDelete) {
+          await this.articleImageService.deleteImage(imageToDelete.id);
+          await this.articleImageRepository.remove(imageToDelete);
+        }
+      }
+    }
+
+    // 이미지 업데이트 처리
+    if (imageUpdates && imageUpdates.length > 0) {
+      for (const imageUpdate of imageUpdates) {
+        if (!imageUpdate.id && images && images.length > 0) {
+          const filePath = this.generateFilePath();
+          const fileName = this.generateFileName(
+            images[imageUpdate.order].originalname,
+          );
+          const thumbnailUrl = await this.articleImageService.uploadImage(
+            images[imageUpdate.order],
+            `news/photo/${filePath}`,
+            fileName,
+          );
+          const savedFileName = thumbnailUrl
+            .replace(process.env.AWS_S3_BUCKET || '', '')
+            .replace(`/news/photo/${filePath}`, '');
+
+          const articleImage = this.articleImageRepository.create({
+            articleId: savedArticle.id,
+            fileName: savedFileName,
+            filePath: filePath,
+            imageExt: this.getImageExt(images[imageUpdate.order].originalname),
+            imageSort: imageUpdate.order,
+            isFeatured: imageUpdate.order === 0 ? 'Y' : 'N',
+          });
+
+          await this.articleImageRepository.save(articleImage);
+        }
+      }
+
+      // 썸네일 업데이트
+      const firstImage = await this.articleImageRepository.findOne({
+        where: { articleId: savedArticle.id },
+        order: { imageSort: 'ASC' },
+      });
+
+      if (firstImage) {
+        savedArticle.thumbnail = firstImage.filePath + firstImage.fileName;
+        await this.articleRepository.save(savedArticle);
+      }
+    }
+
+    return savedArticle;
   }
 
   async delete(id: number): Promise<void> {
@@ -225,7 +259,7 @@ export class ArticleService {
       },
       skip,
       take: limit,
-      relations: ['sectionPrimary', 'sectionSecondary', 'images'],
+      relations: ['images'],
     });
 
     return {

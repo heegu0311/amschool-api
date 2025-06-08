@@ -175,12 +175,6 @@ export class ArticleController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const article = await this.articleService.findOne(id);
 
-    if (article.images.length > 0) {
-      for (const image of article.images) {
-        image.filePath = await image.getPresignedUrl(this.s3Service);
-      }
-    }
-
     return article;
   }
 
@@ -225,17 +219,14 @@ export class ArticleController {
     @Body() updateArticleDto: UpdateArticleDto,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
-    if (images) {
-      updateArticleDto.images = images;
-    }
-    return await this.articleService.update(id, updateArticleDto);
+    return await this.articleService.update(id, updateArticleDto, images);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '기사 삭제',
-    description: '특정 기사를 삭제합니다.',
+    description: '특정 기사를 삭제합니다. (소프트 삭제)',
   })
   @ApiParam({
     name: 'id',

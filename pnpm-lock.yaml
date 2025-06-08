@@ -75,7 +75,7 @@ importers:
         specifier: ^3.12.0
         version: 3.12.0
       nanoid:
-        specifier: ^3.0.0
+        specifier: ^3.3.11
         version: 3.3.11
       nest-winston:
         specifier: ^1.10.2

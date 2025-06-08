@@ -1,14 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryColumn,
-  Relation,
-  Index,
-} from 'typeorm';
-import { SectionSecondary } from '../../section_secondary/entities/section_secondary.entity';
-import { Article } from '../../article/entities/article.entity';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'section_primary', comment: '기사1차섹션' })
 export class SectionPrimary {
@@ -34,10 +25,4 @@ export class SectionPrimary {
   @ApiProperty({ description: '섹션명', example: '정치' })
   @Column({ type: 'varchar', length: 200, default: '', comment: '섹션명' })
   name: string;
-
-  @OneToMany(() => SectionSecondary, (secondary) => secondary.sectionPrimary)
-  secondaries: Relation<SectionSecondary[]>;
-
-  @OneToMany(() => Article, (article) => article.sectionPrimary)
-  articles: Relation<Article[]>;
 }
