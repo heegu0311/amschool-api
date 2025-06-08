@@ -33,107 +33,115 @@ export class UsersService {
     private imageService: ImageService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = new User();
     Object.assign(user, createUserDto);
     const savedUser = await this.usersRepository.save(user);
 
-    // 선택된 암 정보가 있는 경우 cancer_user 테이블에 추가
-    if (createUserDto.cancerIds && createUserDto.cancerIds.length > 0) {
+    if (createUserDto.cancerIds?.length > 0) {
       await Promise.all(
-        createUserDto.cancerIds.map(async (cancerId) => {
-          await this.cancerUserService.create({
+        createUserDto.cancerIds.map((cancerId) =>
+          this.cancerUserService.create({
             userId: savedUser.id,
             cancerId,
-          });
-        }),
+          }),
+        ),
       );
     }
 
-    // 설문 응답이 있는 경우 survey_answer_users 테이블에 추가
-    if (createUserDto.surveyAnswers && createUserDto.surveyAnswers.length > 0) {
+    if (createUserDto.surveyAnswers?.length > 0) {
       await Promise.all(
-        createUserDto.surveyAnswers.map(async (surveyAnswerId) => {
-          await this.surveyAnswerUserService.create(
-            savedUser.id,
-            surveyAnswerId,
-          );
-        }),
+        createUserDto.surveyAnswers.map((surveyAnswerId) =>
+          this.surveyAnswerUserService.create(savedUser.id, surveyAnswerId),
+        ),
       );
     }
 
-    return savedUser;
+    const userAfterCreation = await this.findOne(savedUser.id);
+    if (!userAfterCreation) throw new Error('User not found after creation');
+    return userAfterCreation;
   }
 
-  findAll() {
-    return this.usersRepository
-      .find()
-      .then((users) =>
-        plainToInstance(User, users, { excludeExtraneousValues: true }),
-      );
+  async findAll(): Promise<User[]> {
+    const users = await this.usersRepository.find({
+      relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
+    });
+    return plainToInstance(User, users, { excludeExtraneousValues: true });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<User | null> {
     const user = await this.usersRepository.findOne({
       where: { id, deletedAt: IsNull() },
       relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
     });
-
-    return plainToInstance(User, user, { excludeExtraneousValues: true });
+    return user
+      ? plainToInstance(User, user, { excludeExtraneousValues: true })
+      : null;
   }
 
-  findByEmail(email: string) {
-    return this.usersRepository.findOneBy({ email });
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
+    });
+    return user
+      ? plainToInstance(User, user, { excludeExtraneousValues: true })
+      : null;
   }
 
-  findByEmailAndProvider(email: string, provider: string) {
-    return this.usersRepository.findOneBy({ email, signinProvider: provider });
+  async findByEmailAndProvider(
+    email: string,
+    provider: string,
+  ): Promise<User | null> {
+    const user = await this.usersRepository.findOne({
+      where: { email, signinProvider: provider },
+      relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
+    });
+    return user
+      ? plainToInstance(User, user, { excludeExtraneousValues: true })
+      : null;
   }
 
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
     images?: Express.Multer.File[],
-  ) {
+  ): Promise<User | null> {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       return null;
     }
 
     const { cancerIds, surveyAnswers, ...rest } = updateUserDto;
+    const updateData = Object.entries(rest).reduce<Partial<User>>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value as User[keyof User];
+        }
+        return acc;
+      },
+      {},
+    );
 
-    // DTO에서 undefined가 아닌 값만 업데이트
-    const updateData: any = Object.entries(rest).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {});
-
-    // 암 정보 업데이트
     if (cancerIds) {
-      // 기존 암 정보 삭제
       const existingCancerUsers = await this.cancerUserService.findByUserId(id);
       await Promise.all(
         existingCancerUsers.map((cu) => this.cancerUserService.delete(cu.id)),
       );
 
-      // 새로운 암 정보 추가
       if (cancerIds.length > 0) {
         await Promise.all(
-          cancerIds.map(async (cancerId) => {
-            await this.cancerUserService.create({
+          cancerIds.map((cancerId) =>
+            this.cancerUserService.create({
               userId: id,
               cancerId,
-            });
-          }),
+            }),
+          ),
         );
       }
     }
 
-    // surveyAnswers가 있을 경우, 각 답변을 순회하며 업데이트
-    if (surveyAnswers && Array.isArray(surveyAnswers)) {
-      // 기존 답변 삭제
+    if (surveyAnswers && surveyAnswers?.length > 0) {
       const existingAnswers =
         await this.surveyAnswerUserService.findByUserId(id);
       await Promise.all(
@@ -142,7 +150,6 @@ export class UsersService {
         ),
       );
 
-      // 새로운 답변 추가
       await Promise.all(
         surveyAnswers.map((answerId) =>
           this.surveyAnswerUserService.create(id, answerId),
@@ -150,15 +157,12 @@ export class UsersService {
       );
     }
 
-    // 이미지 업로드 처리
     if (images && images.length > 0) {
-      const image = images[0]; // 첫 번째 이미지만 사용
+      const image = images[0];
       const uploadedImageUrl = await this.imageService.uploadImage(
         image,
         'user',
       );
-
-      // 새 이미지 정보 저장
       const imageEntity = this.imageRepository.create({
         url: uploadedImageUrl,
         originalName: image.originalname,
@@ -168,13 +172,12 @@ export class UsersService {
         entityId: id,
         order: 0,
       });
-
       await this.imageRepository.save(imageEntity);
       updateData.profileImage = uploadedImageUrl;
     }
 
     await this.usersRepository.update(id, updateData);
-    return this.usersRepository.findOneBy({ id });
+    return this.findOne(id);
   }
 
   async remove(id: number) {
@@ -256,10 +259,11 @@ export class UsersService {
 
     const [items, totalItems] = await this.usersRepository
       .createQueryBuilder('user')
-      .innerJoin('user.cancerUsers', 'cancerUser')
+      .leftJoinAndSelect('user.cancerUsers', 'cancerUser')
+      .leftJoinAndSelect('cancerUser.cancer', 'cancer')
+      .leftJoinAndSelect('user.surveyAnswerUsers', 'surveyAnswerUser')
       .where('cancerUser.cancerId = :cancerId', { cancerId })
       .andWhere('user.isPublic = :isPublic', { isPublic: true })
-      .select(User.getSelectFields())
       .orderBy('user.createdAt', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)
@@ -287,11 +291,11 @@ export class UsersService {
   ): Promise<PaginatedResponse<User>> {
     const { page = 1, limit = 10 } = paginationDto;
 
-    // 현재 사용자의 암 ID 목록 조회
     const userCancers = await this.cancerUserRepository.find({
       where: { userId },
-      select: ['cancerId'],
+      relations: ['cancer'],
     });
+
     const cancerIds = userCancers.map((cu) => cu.cancerId);
 
     if (cancerIds.length === 0) {
@@ -307,14 +311,11 @@ export class UsersService {
       };
     }
 
-    // 같은 암을 가진 다른 사용자들 조회
     const [items, totalItems] = await this.usersRepository
       .createQueryBuilder('user')
-      .select(User.getSelectFields())
-      .innerJoin('user.cancerUsers', 'cancerUser')
-      .innerJoin('cancerUser.cancer', 'cancer')
-      .leftJoinAndSelect('user.cancerUsers', 'userCancerUsers')
-      .leftJoinAndSelect('userCancerUsers.cancer', 'userCancers')
+      .leftJoinAndSelect('user.cancerUsers', 'cancerUser')
+      .leftJoinAndSelect('cancerUser.cancer', 'cancer')
+      .leftJoinAndSelect('user.surveyAnswerUsers', 'surveyAnswerUser')
       .where('cancerUser.cancerId IN (:...cancerIds)', { cancerIds })
       .andWhere('user.id != :userId', { userId })
       .andWhere('user.isPublic = :isPublic', { isPublic: true })

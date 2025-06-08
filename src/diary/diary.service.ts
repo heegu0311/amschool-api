@@ -476,7 +476,10 @@ export class DiaryService {
     const { page = 1, limit = 10 } = paginationDto;
     const [items, totalItems] = await this.diaryRepository
       .createQueryBuilder('diary')
-      .leftJoinAndSelect('diary.author', 'author')
+      .leftJoin('diary.author', 'author')
+      .addSelect(['author.id', 'author.username', 'author.profileImage'])
+      .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
+      .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect(
         'comment',
