@@ -22,7 +22,7 @@ export class S3Service {
   }
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
-    const key = `${folder}/${Date.now()}-${file.originalname}`;
+    const key = `${folder}${Date.now()}-${file.originalname}`;
 
     const uploadResult = await this.s3
       .upload({

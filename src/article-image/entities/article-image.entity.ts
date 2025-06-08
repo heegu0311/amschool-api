@@ -6,6 +6,8 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   Relation,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Article } from '../../article/entities/article.entity';
 import { S3Service } from 'src/common/services/s3.service';
@@ -108,26 +110,24 @@ export class ArticleImage {
     example: '2024-06-01T12:00:00.000Z',
     required: false,
   })
-  @Column({
+  @CreateDateColumn({
     name: 'created_at',
     type: 'datetime',
     precision: 6,
-    nullable: true,
   })
-  createdAt?: Date;
+  createdAt: Date;
 
   @ApiProperty({
     description: '수정일',
     example: '2024-06-02T13:00:00.000Z',
     required: false,
   })
-  @Column({
+  @UpdateDateColumn({
     name: 'updated_at',
     type: 'datetime',
     precision: 6,
-    nullable: true,
   })
-  updatedAt?: Date;
+  updatedAt: Date;
 
   @ManyToOne(() => Article, (article) => article.images)
   @JoinColumn({ name: 'article_id' })

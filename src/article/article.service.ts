@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ArticleImageService } from 'src/article-image/article-image.service';
 import { IsNull, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { ArticleImage } from '../article-image/entities/article-image.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
@@ -15,10 +17,11 @@ export class ArticleService {
     private readonly articleRepository: Repository<Article>,
     @InjectRepository(ArticleImage)
     private readonly articleImageRepository: Repository<ArticleImage>,
+    private readonly articleImageService: ArticleImageService,
   ) {}
 
   private stripHtmlTags(html: string): string {
-    if (!html) return 'ㅊ';
+    if (!html) return '';
 
     // HTML 엔티티를 공백으로 변환
     const withoutEntities = html
@@ -37,12 +40,23 @@ export class ArticleService {
     return withoutTags.replace(/\s+/g, ' ').trim();
   }
 
+  private generateFilePath(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}${month}/`;
+  }
+
+  private generateFileName(originalName: string): string {
+    const ext = originalName.split('.').pop();
+    return `${uuidv4()}.${ext}`;
+  }
+
   async create(
     createArticleDto: CreateArticleDto,
     userId: number,
-    images?: Express.Multer.File[],
   ): Promise<Article> {
-    const { images: _, ...articleData } = createArticleDto;
+    const { images: articleThumbnails, ...articleData } = createArticleDto;
     const article = this.articleRepository.create({
       ...articleData,
       adminId: userId.toString(),
@@ -51,18 +65,32 @@ export class ArticleService {
 
     const savedArticle = await this.articleRepository.save(article);
 
-    if (images && images.length > 0) {
-      const articleImages = images.map((image, index) => {
-        return this.articleImageRepository.create({
-          articleId: savedArticle.id,
-          fileName: image.originalname,
-          filePath: image.path,
-          imageExt: this.getImageExt(image.originalname),
-          imageSort: index + 1,
-          isFeatured: index === 0 ? 'Y' : 'N',
-        });
+    if (articleThumbnails && articleThumbnails.length > 0) {
+      // 첫 번째 이미지를 썸네일로 사용
+      const thumbnailImage = articleThumbnails[0];
+      const filePath = this.generateFilePath();
+      const thumbnailUrl = await this.articleImageService.uploadImage(
+        thumbnailImage,
+        `news/photo/${filePath}`,
+      );
+      const fileName = thumbnailUrl
+        .replace(process.env.AWS_S3_BUCKET || '', '')
+        .replace(`/news/photo/${filePath}`, '');
+
+      // 썸네일 URL 저장
+      article.thumbnail = filePath + fileName;
+      await this.articleRepository.save(article);
+
+      const articleImage = this.articleImageRepository.create({
+        articleId: savedArticle.id,
+        fileName: fileName,
+        filePath: filePath,
+        imageExt: this.getImageExt(thumbnailImage.originalname),
+        imageSort: 1,
+        isFeatured: 'Y',
       });
-      await this.articleImageRepository.save(articleImages);
+
+      await this.articleImageRepository.save(articleImage);
     }
 
     return savedArticle;
@@ -131,6 +159,17 @@ export class ArticleService {
     const article = await this.findOne(id);
 
     if (images && images.length > 0) {
+      // 첫 번째 이미지를 썸네일로 사용
+      const thumbnailImage = images[0];
+      const thumbnailUrl = await this.articleImageService.uploadImage(
+        thumbnailImage,
+        'news/photos',
+      );
+
+      // 썸네일 URL 업데이트
+      article.thumbnail = thumbnailUrl;
+      await this.articleRepository.save(article);
+
       // 기존 이미지 삭제
       await this.articleImageRepository.delete({ articleId: id });
 
