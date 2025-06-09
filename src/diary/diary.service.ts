@@ -307,7 +307,7 @@ export class DiaryService {
       .getOne();
 
     if (!diary) {
-      throw new NotFoundException(`Diary #${id} not found`);
+      throw new NotFoundException(`삭제되었거나 없는 글입니다.`);
     }
 
     if (diary.accessLevel === 'private' && diary.authorId !== userId) {
