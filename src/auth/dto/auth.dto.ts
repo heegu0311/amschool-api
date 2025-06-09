@@ -72,7 +72,6 @@ export class CompleteRegistrationDto {
     enum: Gender,
     example: Gender.MALE,
   })
-  @IsEnum(Gender)
   @IsOptional()
   gender?: Gender;
 
