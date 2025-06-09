@@ -198,7 +198,7 @@ export class UsersService {
           username: '탈퇴한 사용자',
           userType: 'patient',
           profileType: 'default',
-          profileImage: 'default-anonymous.png',
+          profileImage: '',
           intro: '탈퇴한 사용자입니다.',
           signinProvider: 'system',
           isActive: false,
