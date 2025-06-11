@@ -73,6 +73,7 @@ export class AuthController {
     // 이메일 인증 코드 생성 및 발송
     await this.emailVerificationService.sendVerificationEmail(
       sendVerificationEmailDto.email,
+      purpose,
     );
     return { message: '인증 이메일이 발송되었습니다.' };
   }

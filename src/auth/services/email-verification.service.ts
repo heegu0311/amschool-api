@@ -1,9 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { EmailVerification } from '../entities/email-verification.entity';
-import { EmailService } from '../../common/services/email.service';
 import dayjs from 'dayjs';
+import { Repository } from 'typeorm';
+import { EmailService } from '../../common/services/email.service';
+import { EmailVerification } from '../entities/email-verification.entity';
 
 @Injectable()
 export class EmailVerificationService {
@@ -13,7 +13,7 @@ export class EmailVerificationService {
     private emailService: EmailService,
   ) {}
 
-  async sendVerificationEmail(email: string): Promise<void> {
+  async sendVerificationEmail(email: string, purpose?: string): Promise<void> {
     // 이전 인증 코드가 있다면 삭제
     await this.emailVerificationRepository.delete({ email });
 
@@ -29,7 +29,11 @@ export class EmailVerificationService {
     await this.emailVerificationRepository.save(emailVerification);
 
     // 이메일 발송
-    await this.emailService.sendVerificationEmail(email, verificationCode);
+    await this.emailService.sendVerificationEmail(
+      email,
+      verificationCode,
+      purpose,
+    );
   }
 
   async verifyCode(email: string, code: string): Promise<void> {
