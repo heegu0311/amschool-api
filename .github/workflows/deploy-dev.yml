@@ -3,11 +3,12 @@ name: Server App Build and Deploy to AWS ECR
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev # 환경 이름 (dev, stage, prod 등)
 
     steps:
       # 1. Repository Checkout

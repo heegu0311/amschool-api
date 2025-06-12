@@ -8,7 +8,7 @@ export class S3Service {
   private readonly bucket: string;
 
   constructor(private configService: ConfigService) {
-    this.bucket = 'amschool-bucket-dev';
+    this.bucket = process.env.AWS_S3_BUCKET_NAME || '';
 
     this.s3 = new AWS.S3({
       region: 'ap-northeast-2',

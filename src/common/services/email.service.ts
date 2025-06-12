@@ -57,7 +57,7 @@ export class EmailService {
     try {
       const htmlContent = `
         <body>
-          <img src="https://amschool-bucket-dev.s3.ap-northeast-2.amazonaws.com/logo/logo_kr.png" alt="암투게더 로고" style="height: 40px; padding: 40px 20px" >
+          <img src="${process.env.AWS_S3_BUCKET}/logo/logo_kr.png" alt="암투게더 로고" style="height: 40px; padding: 40px 20px" >
           <div style="width: 100%; border-collapse: collapse;">
             <div>
               <div style="padding: 0 20px;">
@@ -150,7 +150,7 @@ export class EmailService {
     try {
       const htmlContent = `
         <body>
-          <img src="https://amschool-bucket-dev.s3.ap-northeast-2.amazonaws.com/logo/logo_kr.png" alt="암투게더 로고" style="height: 40px; padding: 40px 20px" >
+          <img src="https://im-together-bucket-dev.s3.ap-northeast-2.amazonaws.com/logo/logo_kr.png" alt="암투게더 로고" style="height: 40px; padding: 40px 20px" >
           <div style="width: 100%; border-collapse: collapse;">
             <div>
               <div style="padding: 0 20px;">
