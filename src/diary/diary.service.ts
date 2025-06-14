@@ -332,9 +332,12 @@ export class DiaryService {
         userId,
       );
 
+    const sortedImages = diary.images.sort((a, b) => a.order - b.order);
+
     // 공감 정보를 엔티티에 매핑
     const diaryWithReactions = {
       ...diary,
+      images: sortedImages,
       reactions: diaryReactions[diary.id]?.reactions || [],
       userReactions: diaryReactions[diary.id]?.userReactions || [],
       comments: diary.comments || [],
