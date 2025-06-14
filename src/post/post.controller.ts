@@ -154,6 +154,22 @@ export class PostController {
     return await this.postService.findByAuthorId(userId, paginationDto);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: '특정 게시글 조회' })
+  @ApiResponse({
+    status: 200,
+    description: '게시글 조회 성공',
+    type: PostEntity,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '게시글를 찾을 수 없음',
+  })
+  @Public()
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.postService.findOneWithMoreInfo(+id, req.user?.id);
+  }
+
   @Get('user/:userId')
   @Public()
   @ApiBearerAuth('accessToken')
@@ -180,23 +196,6 @@ export class PostController {
     @Query() paginationDto: PostPaginationDto,
   ): Promise<PaginatedResponse<PostEntity>> {
     return await this.postService.findByAuthorId(+userId, paginationDto);
-  }
-
-  @Get(':id')
-  @ApiBearerAuth('accessToken')
-  @ApiOperation({ summary: '특정 게시글 조회' })
-  @ApiResponse({
-    status: 200,
-    description: '게시글 조회 성공',
-    type: PostEntity,
-  })
-  @ApiResponse({
-    status: 404,
-    description: '게시글를 찾을 수 없음',
-  })
-  @Public()
-  findOne(@Request() req, @Param('id') id: string) {
-    return this.postService.findOneWithMoreInfo(+id, req.user?.id);
   }
 
   @Patch(':id')

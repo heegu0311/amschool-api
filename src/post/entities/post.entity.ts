@@ -51,6 +51,10 @@ export class Post {
   @Column('text', { name: 'content' })
   content: string;
 
+  @ApiProperty({ description: '익명여부' })
+  @Column('boolean', { name: 'is-anonymous' })
+  isAnonymous: boolean;
+
   @ApiProperty({ description: '접근 권한' })
   @Column({ default: 'member', name: 'access_level' })
   accessLevel: 'public' | 'member' | 'private';

@@ -136,6 +136,12 @@ export class PostService {
 
     // 공감 정보를 각 엔티티에 매핑
     const postsWithReactions = allPosts.map((post) => {
+      // 익명 게시글 처리
+      if (post.isAnonymous) {
+        post.author.username = '*******';
+        post.author.profileImage = '/images/anonymous.png';
+      }
+      // 기존 매핑
       const postWithReactions = {
         ...post,
         reactionsCount: postWithReactionsCount[post.id]?.reactionsCount || 0,
@@ -236,12 +242,9 @@ export class PostService {
       throw new NotFoundException(`Post #${id} not found`);
     }
 
-    if (post.accessLevel === 'private' && post.authorId !== userId) {
-      throw new NotFoundException(`Post #${id} has private type`);
-    }
-
-    if (post.accessLevel === 'member' && !userId) {
-      throw new NotFoundException(`Post #${id} has member type`);
+    if (post.isAnonymous) {
+      post.author.username = '*******';
+      post.author.profileImage = '/images/anonymous.png';
     }
 
     // 이전글/다음글 조회

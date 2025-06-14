@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -25,6 +26,14 @@ export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  @ApiProperty({
+    description: '익명여부',
+    default: false,
+  })
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isAnonymous: boolean;
 
   @ApiProperty({
     description: '접근 권한',
