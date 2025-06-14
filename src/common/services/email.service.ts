@@ -174,7 +174,7 @@ export class EmailService {
             </div>
             <div>
               <div style="padding: 0 20px; text-align: center; display: inline-flex; justify-content: start;">
-                <a href="[Link to Amstool]" style="padding: 12px 24px; background-color: #fff4f2; border: 1px solid #f87171; color: #1c1917; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; text-decoration: none; border-radius: 8px;">암투게더 시작하기</a>
+                <a href="https://im-together.com" style="padding: 12px 24px; background-color: #fff4f2; border: 1px solid #f87171; color: #1c1917; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; text-decoration: none; border-radius: 8px;">암투게더 시작하기</a>
               </div>
             </div>
             <div>
