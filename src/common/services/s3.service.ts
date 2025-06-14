@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
+import * as AWS from 'aws-sdk';
 
 @Injectable()
 export class S3Service {
@@ -21,12 +21,8 @@ export class S3Service {
     });
   }
 
-  async uploadFile(
-    file: Express.Multer.File,
-    folder: string,
-    fileName?: string,
-  ): Promise<string> {
-    const key = `${folder}${Date.now()}-${fileName}`;
+  async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
+    const key = `${folder}/${Date.now()}-${file.originalname}`;
 
     const uploadResult = await this.s3
       .upload({

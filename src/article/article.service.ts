@@ -188,13 +188,9 @@ export class ArticleService {
       for (const imageUpdate of imageUpdates) {
         if (!imageUpdate.id && images && images.length > 0) {
           const filePath = this.generateFilePath();
-          const fileName = this.generateFileName(
-            images[imageUpdate.order].originalname,
-          );
           const thumbnailUrl = await this.articleImageService.uploadImage(
             images[imageUpdate.order],
             `news/photo/${filePath}`,
-            fileName,
           );
           const savedFileName = thumbnailUrl
             .replace(process.env.AWS_S3_BUCKET || '', '')

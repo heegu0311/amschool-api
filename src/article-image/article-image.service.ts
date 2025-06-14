@@ -15,13 +15,8 @@ export class ArticleImageService {
   async uploadImage(
     file: Express.Multer.File,
     entityType: string,
-    fileName?: string,
   ): Promise<string> {
-    const filePath = await this.s3Service.uploadFile(
-      file,
-      entityType,
-      fileName,
-    );
+    const filePath = await this.s3Service.uploadFile(file, entityType);
 
     return filePath;
   }
