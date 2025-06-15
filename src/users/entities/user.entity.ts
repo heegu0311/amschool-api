@@ -41,7 +41,7 @@ export class User {
   email: string;
 
   @Exclude()
-  @Column({ nullable: true, name: 'password' })
+  @Column({ nullable: true, name: 'password', select: false })
   password: string;
 
   @Expose()
