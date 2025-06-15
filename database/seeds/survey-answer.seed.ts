@@ -1,4 +1,4 @@
-import { SurveyAnswer } from 'src/survey-answer/entities/survey-answer.entity';
+import { SurveyAnswer } from '../../src/survey-answer/entities/survey-answer.entity';
 import { DataSource } from 'typeorm';
 export const surveyAnswerSeeds = [
   {

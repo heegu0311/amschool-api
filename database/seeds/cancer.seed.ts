@@ -1,4 +1,4 @@
-import { Cancer } from 'src/cancer/entities/cancer.entity';
+import { Cancer } from '../../src/cancer/entities/cancer.entity';
 import { DataSource } from 'typeorm';
 
 export const cancerSeeds = [
