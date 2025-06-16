@@ -510,7 +510,7 @@ export class DiaryService {
         { entityType: 'diary' },
       )
       .leftJoinAndSelect(
-        'comment',
+        'diary.comments',
         'comments',
         'comments.entity_id = diary.id AND comments.entity_type = :entityType',
         { entityType: 'diary' },
