@@ -84,12 +84,7 @@ export class QuestionService {
       .createQueryBuilder('question')
       .leftJoinAndSelect('question.author', 'author')
       .leftJoinAndSelect('question.aiAnswer', 'aiAnswer')
-      .leftJoinAndSelect(
-        'question.images',
-        'images',
-        'images.entityType = :entityType',
-        { entityType: 'question' },
-      )
+      .leftJoinAndSelect('question.images', 'images')
       .where('question.deletedAt IS NULL');
 
     if (keyword) {
@@ -334,11 +329,12 @@ export class QuestionService {
   }
 
   async updateAiFeedback(
+    questionId: number,
     answerId: number,
     feedbackPoint: number,
   ): Promise<AiAnswer> {
     const aiAnswer = await this.aiAnswerRepository.findOne({
-      where: { id: answerId, deletedAt: undefined },
+      where: { questionId, id: answerId, deletedAt: undefined },
     });
     if (!aiAnswer) {
       throw new NotFoundException();

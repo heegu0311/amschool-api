@@ -183,7 +183,7 @@ export class QuestionController {
     return await this.questionervice.createAiAnswer(id);
   }
 
-  @Patch(':id/ai-answer/feedback')
+  @Patch(':questionId/ai-answer/:answerId/feedback')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'AI 답변에 대한 피드백 업데이트' })
   @ApiResponse({
@@ -196,11 +196,13 @@ export class QuestionController {
     description: 'AI 답변을 찾을 수 없음',
   })
   async updateAiFeedback(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('questionId', ParseIntPipe) questionId: number,
+    @Param('answerId', ParseIntPipe) answerId: number,
     @Body() updateAiFeedbackDto: UpdateAiFeedbackDto,
   ) {
     return await this.questionervice.updateAiFeedback(
-      id,
+      questionId,
+      answerId,
       updateAiFeedbackDto.feedbackPoint,
     );
   }
