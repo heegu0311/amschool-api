@@ -73,7 +73,7 @@ export class EmailService {
             </div>
             <div>
               <div style="padding: 20px;">
-                <div style="width: auto; padding: 16px 32px; background: #FFF4F2; border-radius: 8px;">
+                <div style="width: auto; max-width: 171px; padding: 16px 32px; background: #FFF4F2; border-radius: 8px;">
                   <div>
                     <div style="text-align: center; color: #FF7A6D; font-size: 30px; font-family: 'Noto Sans KR', sans-serif; font-weight: 700; line-height: 36px; word-wrap: break-word;">${verificationCode}</div>
                   </div>
