@@ -30,7 +30,7 @@ export class EmailService {
     try {
       const mailOptions = {
         from: {
-          name: 'AMSCHOOL',
+          name: '암투게더',
           address: this.configService.get<string>('SMTP_FROM'),
         },
         to: options.to,
