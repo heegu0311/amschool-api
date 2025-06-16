@@ -74,7 +74,12 @@ export class DiaryService {
     const [items, totalItems] = await this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
-      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'diary' },
+      )
       .leftJoinAndSelect(
         'comment',
         'comments',
@@ -116,7 +121,12 @@ export class DiaryService {
     const queryBuilder = this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
-      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'diary' },
+      )
       .leftJoinAndSelect('diary.comments', 'comments')
       .where(
         userId
@@ -207,7 +217,12 @@ export class DiaryService {
     const [items, totalItems] = await this.diaryRepository
       .createQueryBuilder('diary')
       .leftJoinAndSelect('diary.author', 'author')
-      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'diary' },
+      )
       .leftJoinAndSelect('diary.comments', 'comments')
       .where('diary.authorId IN (:...similarUserIds)', { similarUserIds })
       .andWhere(
@@ -304,6 +319,7 @@ export class DiaryService {
       .leftJoinAndSelect('diary.images', 'images')
       .leftJoinAndSelect('diary.comments', 'comments')
       .where('diary.id = :id', { id })
+      .andWhere('images.entityType = :entityType', { entityType: 'diary' })
       .getOne();
 
     if (!diary) {
@@ -483,7 +499,12 @@ export class DiaryService {
       .addSelect(['author.id', 'author.username', 'author.profileImage'])
       .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
-      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'diary' },
+      )
       .leftJoinAndSelect(
         'comment',
         'comments',

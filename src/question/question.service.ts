@@ -84,7 +84,12 @@ export class QuestionService {
       .createQueryBuilder('question')
       .leftJoinAndSelect('question.author', 'author')
       .leftJoinAndSelect('question.aiAnswer', 'aiAnswer')
-      .leftJoinAndSelect('question.images', 'images')
+      .leftJoinAndSelect(
+        'question.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'question' },
+      )
       .where('question.deletedAt IS NULL');
 
     if (keyword) {

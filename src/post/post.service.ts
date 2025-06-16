@@ -76,7 +76,12 @@ export class PostService {
       const noticeQueryBuilder = this.postRepository
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.author', 'author')
-        .leftJoinAndSelect('post.images', 'images')
+        .leftJoinAndSelect(
+          'post.images',
+          'images',
+          'images.entityType = :entityType',
+          { entityType: 'post' },
+        )
         .leftJoinAndSelect(
           'comment',
           'comments',
@@ -94,7 +99,12 @@ export class PostService {
     const regularQueryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'post' },
+      )
       .leftJoinAndSelect('post.comments', 'comments')
       .where(
         category === PostCategory.ALL
@@ -174,7 +184,12 @@ export class PostService {
     const post = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
-      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'post' },
+      )
       .leftJoinAndSelect(
         'comment',
         'comments',
@@ -227,7 +242,12 @@ export class PostService {
       .addSelect(['author.id', 'author.username', 'author.profileImage'])
       .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
-      .leftJoinAndSelect('post.images', 'images')
+      .leftJoinAndSelect(
+        'post.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'post' },
+      )
       .leftJoin(
         'comment',
         'comments',
