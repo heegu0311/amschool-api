@@ -316,10 +316,14 @@ export class DiaryService {
       .leftJoinAndSelect('diary.author', 'author')
       .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
-      .leftJoinAndSelect('diary.images', 'images')
+      .leftJoinAndSelect(
+        'diary.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'diary' },
+      )
       .leftJoinAndSelect('diary.comments', 'comments')
       .where('diary.id = :id', { id })
-      .andWhere('images.entityType = :entityType', { entityType: 'diary' })
       .getOne();
 
     if (!diary) {
