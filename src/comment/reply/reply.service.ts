@@ -96,7 +96,7 @@ export class ReplyService {
     const [items, totalItems] = await this.replyRepository.findAndCount({
       where: { commentId },
       relations: ['comment', 'author'],
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
     });
