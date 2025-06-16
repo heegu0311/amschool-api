@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import dayjs from 'dayjs';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
@@ -133,7 +134,7 @@ export class EmailService {
 
       await this.sendEmail({
         to: email,
-        subject: '암투게더 이메일 인증',
+        subject: `암투게더 이메일 인증 - [${verificationCode}] - ${dayjs().format('YYYY.MM.DD HH:MM')}`,
         text: `인증 코드: ${verificationCode}\n이 코드는 10분 동안 유효합니다.`,
         html: htmlContent,
       });
