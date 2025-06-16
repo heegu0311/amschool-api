@@ -14,4 +14,5 @@ export default new DataSource({
   entities: [join(__dirname, '..', 'src', '**', '*.entity{.ts,.js}')],
   migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
   synchronize: false,
+  timezone: 'Asia/Seoul',
 });
