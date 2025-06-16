@@ -93,10 +93,15 @@ export class UsersService {
     email: string,
     provider: string,
   ): Promise<User | null> {
-    const user = await this.usersRepository.findOne({
-      where: { email, signinProvider: provider },
-      relations: ['cancerUsers', 'cancerUsers.cancer', 'surveyAnswerUsers'],
-    });
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.cancerUsers', 'cancerUsers')
+      .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
+      .leftJoinAndSelect('user.surveyAnswerUsers', 'surveyAnswerUsers')
+      .addSelect('user.password') // password 컬럼 명시적 select
+      .where('user.email = :email', { email })
+      .andWhere('user.signinProvider = :provider', { provider })
+      .getOne();
     return user || null;
   }
 
