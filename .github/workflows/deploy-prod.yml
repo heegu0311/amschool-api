@@ -1,4 +1,4 @@
-name: Server App Build and Deploy to AWS ECR
+name: PROD - Server App Build and Deploy to AWS ECR
 
 on:
   push:
