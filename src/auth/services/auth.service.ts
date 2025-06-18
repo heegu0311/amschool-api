@@ -49,6 +49,20 @@ export class AuthService {
     const refreshToken = uuidv4();
     const expiresAt = dayjs().add(14, 'day').toDate();
 
+    const refreshTokens = await this.refreshTokenRepository.find({
+      where: { userId },
+    });
+
+    if (refreshTokens.length > 0) {
+      await Promise.all(
+        refreshTokens.map((rt) =>
+          this.refreshTokenRepository.delete({
+            id: rt.id,
+          }),
+        ),
+      );
+    }
+
     // Refresh Token DB 저장
     await this.refreshTokenRepository.save({
       userId,
