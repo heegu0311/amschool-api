@@ -18,6 +18,7 @@ import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { Diary } from '../diary/entities/diary.entity';
 import { Post } from '../post/entities/post.entity';
 import { plainToInstance } from 'class-transformer';
+import { Question } from 'src/question/entities/question.entity';
 
 @Injectable()
 export class UsersService {
@@ -244,10 +245,19 @@ export class UsersService {
         },
       );
 
+      // Question 작성자를 익명 사용자로 변경
+      await manager.update(
+        Question,
+        { authorId: id },
+        {
+          authorId: anonymousUser.id,
+        },
+      );
+
       // 실제로 삭제해야 하는 연관 엔티티들만 삭제
-      await manager.softDelete(RefreshToken, { userId: id });
-      await manager.softDelete(SurveyAnswerUser, { userId: id });
-      await manager.softDelete(CancerUser, { userId: id });
+      await manager.delete(RefreshToken, { userId: id });
+      await manager.delete(SurveyAnswerUser, { userId: id });
+      await manager.delete(CancerUser, { userId: id });
 
       // 마지막으로 사용자 삭제
       return manager.softRemove(user);
