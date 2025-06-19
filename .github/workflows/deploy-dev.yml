@@ -48,5 +48,6 @@ jobs:
           script: |
             cd amschool
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker system prune -a --volumes
             docker pull ${{ secrets.ECR_REGISTRY }}/amschool/server:latest
             docker-compose -f docker-compose.dev.yml up -d --no-deps --build amschool-api
