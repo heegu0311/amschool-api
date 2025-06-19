@@ -119,7 +119,7 @@ export class EmailService {
                         </div>
                         <div>
                           <div style="width: 552px; color: #A8A29E; font-size: 12px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; line-height: 20px; word-wrap: break-word; padding-top: 16px;">
-                            Copyright © 2025 시에라헬스케어암스쿨. All rights reserved. mail to admin@naver.com
+                            Copyright © 2025 시에라헬스케어암스쿨. All rights reserved. mail to amsch365@gmail.com
                           </div>
                         </div>
                       </div>
