@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 import { Image } from 'src/common/entities/image.entity';
 import { ImageService } from 'src/common/services/image.service';
+import { Notification } from 'src/notification/entities/notification.entity';
 import { Question } from 'src/question/entities/question.entity';
 import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
 import { IsNull, Repository } from 'typeorm';
@@ -255,6 +256,9 @@ export class UsersService {
           authorId: anonymousUser.id,
         },
       );
+
+      // Notification sender를 익명 사용자로 변경
+      await manager.delete(Notification, { senderUserId: id });
 
       // 실제로 삭제해야 하는 연관 엔티티들만 삭제
       await manager.delete(RefreshToken, { userId: id });
