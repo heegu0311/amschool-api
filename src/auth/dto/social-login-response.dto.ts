@@ -13,6 +13,9 @@ export class SocialLoginResponseDto {
   @ApiProperty({ description: '회원가입 필요 여부' })
   needRegistration: boolean;
 
+  @ApiProperty({ description: '탈퇴회원 여부' })
+  deleted: boolean;
+
   @ApiProperty({ description: '소셜 로그인 정보', required: false })
   socialInfo?: {
     email: string;

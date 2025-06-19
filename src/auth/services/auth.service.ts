@@ -1,13 +1,14 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
-  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import dayjs from 'dayjs';
+import { EmailService } from 'src/common/services/email.service';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ImageService } from '../../common/services/image.service';
@@ -17,15 +18,14 @@ import {
   LoginDto,
   NewPasswordDto,
 } from '../dto/auth.dto';
-import { SocialLoginDto } from '../dto/social-login.dto';
 import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { EmailVerificationService } from './email-verification.service';
+import { SocialLoginDto } from '../dto/social-login.dto';
 import {
   SocialProvider,
   VerifySocialTokenDto,
 } from '../dto/verify-social-token.dto';
-import { EmailService } from 'src/common/services/email.service';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { EmailVerificationService } from './email-verification.service';
 
 @Injectable()
 export class AuthService {
@@ -197,6 +197,28 @@ export class AuthService {
     await this.userService.update(user.id, { password: hashedPassword });
   }
 
+  private async buildSocialLoginResponse(
+    socialLoginDto: SocialLoginDto,
+    needRegistration: boolean,
+    deleted: boolean,
+    statusCode: number = HttpStatus.UNAUTHORIZED,
+  ): Promise<SocialLoginResponseDto> {
+    await this.emailVerificationService.verifyEmail(socialLoginDto.email);
+    return {
+      statusCode,
+      needRegistration,
+      deleted,
+      socialInfo: {
+        email: socialLoginDto.email,
+        username: socialLoginDto.username || '',
+        image: socialLoginDto.image,
+        provider: socialLoginDto.provider,
+        socialId: socialLoginDto.id || '',
+        birthday: socialLoginDto.birthday || '',
+      },
+    };
+  }
+
   async socialLogin(
     socialLoginDto: SocialLoginDto,
   ): Promise<SocialLoginResponseDto> {
@@ -222,21 +244,39 @@ export class AuthService {
         socialLoginDto.provider,
       );
 
+      // deletedAt이 존재하면 30일 경과 여부 체크
+      if (!!user && user.deletedAt) {
+        const deletedAt = new Date(user.deletedAt);
+        const now = new Date();
+        const diffDays =
+          (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 30) {
+          return {
+            statusCode: HttpStatus.UNAUTHORIZED,
+            needRegistration: false,
+            deleted: true,
+            socialInfo: {
+              email: socialLoginDto.email,
+              username: socialLoginDto.username || '',
+              image: socialLoginDto.image,
+              provider: socialLoginDto.provider,
+              socialId: socialLoginDto.id || '',
+              birthday: socialLoginDto.birthday || '',
+            },
+          };
+        } else {
+          return await this.buildSocialLoginResponse(
+            socialLoginDto,
+            true,
+            false,
+          );
+        }
+      }
+
       // 사용자가 없는 경우 회원가입 필요
       if (!user) {
-        await this.emailVerificationService.verifyEmail(socialLoginDto.email);
-        return {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          needRegistration: true,
-          socialInfo: {
-            email: socialLoginDto.email,
-            username: socialLoginDto.username || '',
-            image: socialLoginDto.image,
-            provider: socialLoginDto.provider,
-            socialId: socialLoginDto.id || '',
-            birthday: socialLoginDto.birthday || '',
-          },
-        };
+        return await this.buildSocialLoginResponse(socialLoginDto, true, false);
       }
 
       // 토큰 생성
@@ -245,6 +285,7 @@ export class AuthService {
         ...tokens,
         statusCode: HttpStatus.OK,
         needRegistration: false,
+        deleted: false,
         socialInfo: {
           email: user.email,
           username: user.username || '',

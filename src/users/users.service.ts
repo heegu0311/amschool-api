@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
 import { CancerUserService } from 'src/cancer-user/cancer-user.service';
 import { Image } from 'src/common/entities/image.entity';
 import { ImageService } from 'src/common/services/image.service';
+import { Question } from 'src/question/entities/question.entity';
 import { SurveyAnswerUserService } from 'src/survey-answer-user/survey-answer-user.service';
 import { IsNull, Repository } from 'typeorm';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { CancerUser } from '../cancer-user/entities/cancer-user.entity';
+import { Comment } from '../comment/entities/comment.entity';
+import { Reply } from '../comment/reply/entities/reply.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { Diary } from '../diary/entities/diary.entity';
+import { Post } from '../post/entities/post.entity';
+import { SurveyAnswerUser } from '../survey-answer-user/entities/survey-answer-user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Comment } from '../comment/entities/comment.entity';
-import { Reply } from '../comment/reply/entities/reply.entity';
-import { SurveyAnswerUser } from '../survey-answer-user/entities/survey-answer-user.entity';
-import { RefreshToken } from '../auth/entities/refresh-token.entity';
-import { Diary } from '../diary/entities/diary.entity';
-import { Post } from '../post/entities/post.entity';
-import { plainToInstance } from 'class-transformer';
-import { Question } from 'src/question/entities/question.entity';
 
 @Injectable()
 export class UsersService {
@@ -100,9 +100,11 @@ export class UsersService {
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
       .leftJoinAndSelect('user.surveyAnswerUsers', 'surveyAnswerUsers')
       .addSelect('user.password') // password 컬럼 명시적 select
-      .where('user.email = :email', { email })
+      .andWhere('user.email = :email', { email })
       .andWhere('user.signinProvider = :provider', { provider })
+      .withDeleted()
       .getOne();
+
     return user || null;
   }
 
