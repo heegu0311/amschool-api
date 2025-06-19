@@ -130,7 +130,11 @@ export class DiaryController {
     @Request() req,
     @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<Diary>> {
-    return await this.diaryService.findByAuthorId(req.user.id, paginationDto);
+    return await this.diaryService.findByAuthorId(
+      req.user.id,
+      paginationDto,
+      req.user?.id,
+    );
   }
 
   @Get('similar-user')

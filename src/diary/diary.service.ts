@@ -517,7 +517,10 @@ export class DiaryService {
       )
       .where('diary.authorId = :authorId', { authorId })
       .andWhere('diary.accessLevel IN (:...accessLevels)', {
-        accessLevels: ['public', 'member'],
+        accessLevels:
+          authorId === currentUserId
+            ? ['public', 'member', 'private']
+            : ['public', 'member'],
       })
       .andWhere('diary.deletedAt IS NULL')
       .orderBy('diary.createdAt', 'DESC')
