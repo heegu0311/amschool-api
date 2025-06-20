@@ -79,7 +79,7 @@ export class AuthController {
         }
       }
 
-      if (foundUser?.deletedAt !== null) {
+      if (foundUser?.deletedAt === null) {
         throw new ConflictException('이미 가입된 이메일입니다.');
       }
     }
