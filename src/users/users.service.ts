@@ -94,8 +94,8 @@ export class UsersService {
   async findByEmailAndProvider(
     email: string,
     provider: string,
-  ): Promise<User | null> {
-    const user = await this.usersRepository
+  ): Promise<User[]> {
+    const users = await this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.cancerUsers', 'cancerUsers')
       .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
@@ -104,9 +104,9 @@ export class UsersService {
       .andWhere('user.email = :email', { email })
       .andWhere('user.signinProvider = :provider', { provider })
       .withDeleted()
-      .getOne();
+      .getMany();
 
-    return user || null;
+    return users;
   }
 
   async update(

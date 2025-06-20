@@ -75,30 +75,43 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.userService.findByEmailAndProvider(
+    const users = await this.userService.findByEmailAndProvider(
       loginDto.email,
       'email',
     );
 
-    if (user?.deletedAt) {
-      throw new GoneException('탈퇴한 사용자입니다.');
-    }
-
-    if (!user) {
+    // 해당 정보로 유저를 못찾은 경우
+    if (users.length === 0) {
       throw new UnauthorizedException('아이디가 존재하지 않습니다.');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password || '',
-      user.password,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('이메일 또는 비밀번호가 잘못되었습니다.');
+    // 로그인 가능한 유저 -> 로그인 처리
+    const registeredUser = users.find((u) => !u.deletedAt);
+
+    if (registeredUser) {
+      const isPasswordValid = await bcrypt.compare(
+        loginDto.password || '',
+        registeredUser?.password || '',
+      );
+      if (!isPasswordValid) {
+        throw new UnauthorizedException(
+          '이메일 또는 비밀번호가 잘못되었습니다.',
+        );
+      }
+
+      const tokens = await this.generateTokens(
+        registeredUser.id,
+        registeredUser.email,
+      );
+
+      return { ...registeredUser, ...tokens };
     }
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const hasOnlyDeletedUsers = users.some((u) => u.deletedAt);
 
-    return { ...user, ...tokens };
+    if (hasOnlyDeletedUsers) {
+      throw new GoneException('탈퇴한 사용자입니다.');
+    }
   }
 
   async refreshAccessToken(refreshToken: string) {
@@ -245,62 +258,59 @@ export class AuthService {
       // }
 
       // 이메일과 provider로 기존 사용자 찾기
-      const user = await this.userService.findByEmailAndProvider(
+      const users = await this.userService.findByEmailAndProvider(
         socialLoginDto.email,
         socialLoginDto.provider,
       );
 
-      // deletedAt이 존재하면 30일 경과 여부 체크
-      if (!!user && user.deletedAt) {
-        const deletedAt = new Date(user.deletedAt);
-        const now = new Date();
-        const diffDays =
-          (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
-
-        if (diffDays <= 30) {
-          return {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            needRegistration: false,
-            deleted: true,
-            socialInfo: {
-              email: socialLoginDto.email,
-              username: socialLoginDto.username || '',
-              image: socialLoginDto.image,
-              provider: socialLoginDto.provider,
-              socialId: socialLoginDto.id || '',
-              birthday: socialLoginDto.birthday || '',
-            },
-          };
-        } else {
-          return await this.buildSocialLoginResponse(
-            socialLoginDto,
-            true,
-            false,
-          );
-        }
+      // 해당 정보로 유저를 못찾은 경우
+      if (users.length === 0) {
+        throw new UnauthorizedException('아이디가 존재하지 않습니다.');
       }
 
-      // 사용자가 없는 경우 회원가입 필요
-      if (!user) {
+      // 로그인 가능한 유저 -> 로그인 처리
+      const registeredUser = users.find((u) => !u.deletedAt);
+
+      if (registeredUser) {
+        const tokens = await this.generateTokens(
+          registeredUser.id,
+          registeredUser.email,
+        );
+        return {
+          ...tokens,
+          statusCode: HttpStatus.OK,
+          needRegistration: false,
+          deleted: false,
+          socialInfo: {
+            email: registeredUser.email,
+            username: registeredUser.username || '',
+            image: registeredUser.profileImage,
+            provider: registeredUser.signinProvider,
+            socialId: registeredUser.id || '',
+            birthday: socialLoginDto.birthday || '',
+          },
+        };
+      }
+
+      // 30일 이내에 탈퇴한 사용자만 있는 경우
+      const now = new Date();
+      const hasUserWithin30Days = users.some(
+        (u) =>
+          u.deletedAt &&
+          (now.getTime() - new Date(u.deletedAt).getTime()) /
+            (1000 * 60 * 60 * 24) <=
+            30,
+      );
+
+      if (hasUserWithin30Days) {
+        return {
+          statusCode: HttpStatus.GONE,
+          needRegistration: false,
+          deleted: true,
+        };
+      } else {
         return await this.buildSocialLoginResponse(socialLoginDto, true, false);
       }
-
-      // 토큰 생성
-      const tokens = await this.generateTokens(user.id, user.email);
-      return {
-        ...tokens,
-        statusCode: HttpStatus.OK,
-        needRegistration: false,
-        deleted: false,
-        socialInfo: {
-          email: user.email,
-          username: user.username || '',
-          image: user.profileImage,
-          provider: user.signinProvider,
-          socialId: user.id || '',
-          birthday: socialLoginDto.birthday || '',
-        },
-      };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
