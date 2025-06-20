@@ -168,7 +168,6 @@ export class QuestionController {
   }
 
   @Post(':id/ai-answer')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '질문에 대한 AI 답변 생성' })
   @ApiResponse({
     status: 201,
@@ -179,6 +178,7 @@ export class QuestionController {
     status: 404,
     description: '질문을 찾을 수 없음',
   })
+  @Public()
   async createAiAnswer(@Param('id', ParseIntPipe) id: number) {
     return await this.questionervice.createAiAnswer(id);
   }

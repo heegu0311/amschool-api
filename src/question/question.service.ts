@@ -14,6 +14,9 @@ import { S3Service } from '../common/services/s3.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { AiAnswer } from './entities/ai-answer.entity';
 import { Question } from './entities/question.entity';
+import { ChatCompletion } from 'openai/resources/chat';
+import { loadEsm } from 'load-esm';
+
 @Injectable()
 export class QuestionService {
   private openai: OpenAI;
@@ -143,6 +146,17 @@ export class QuestionService {
     return aiAnswer;
   }
 
+  async callGptApi(params): Promise<ChatCompletion> {
+    // 실제 OpenAI 호출
+    const completion = await this.openai.chat.completions.create(params);
+    const content = completion.choices[0].message?.content || '';
+    // 응답이 100자 미만이면 에러를 throw해서 p-retry가 재시도하게 함
+    if (content.length < 200) {
+      throw new Error('GPT response too short');
+    }
+    return completion;
+  }
+
   async createAiAnswer(questionId: number): Promise<AiAnswer> {
     const question = await this.findOne(questionId);
 
@@ -244,12 +258,25 @@ export class QuestionService {
         content,
       },
     ];
+    const { default: pRetry } =
+      await loadEsm<typeof import('p-retry')>('p-retry');
 
-    const completion = await this.openai.chat.completions.create({
-      model,
-      messages,
-      max_tokens: 1000,
-    });
+    const completion = await pRetry(
+      () =>
+        this.callGptApi({
+          model,
+          messages,
+          max_tokens: 1000,
+        }),
+      {
+        retries: 3, // 최대 3회 재시도
+        onFailedAttempt: (error) => {
+          console.log(
+            `Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left. Reason: ${error.message}`,
+          );
+        },
+      },
+    );
 
     let botReply =
       completion.choices[0].message?.content ||
