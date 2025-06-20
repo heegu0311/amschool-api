@@ -142,7 +142,7 @@ export class CommentService {
 
   async remove(userId: number, commentId: number): Promise<void> {
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, authorId: userId },
+      where: { id: commentId },
     });
 
     if (!comment) {

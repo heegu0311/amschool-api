@@ -135,7 +135,7 @@ export class ReplyService {
 
   async remove(userId: number, replyId: number): Promise<void> {
     const reply = await this.replyRepository.findOne({
-      where: { id: replyId, authorId: userId },
+      where: { id: replyId },
     });
 
     if (!reply) {
