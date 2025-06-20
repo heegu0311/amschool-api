@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  GoneException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
@@ -78,6 +79,11 @@ export class AuthService {
       loginDto.email,
       'email',
     );
+
+    if (user?.deletedAt) {
+      throw new GoneException('탈퇴한 사용자입니다.');
+    }
+
     if (!user) {
       throw new UnauthorizedException('아이디가 존재하지 않습니다.');
     }

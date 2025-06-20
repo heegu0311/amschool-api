@@ -1,38 +1,39 @@
 import {
   Body,
+  ConflictException,
   Controller,
+  GoneException,
   HttpCode,
   Post,
-  Res,
-  ConflictException,
-  UseInterceptors,
-  UploadedFile,
   Query,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
-  ApiConsumes,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from '../../auth/services/auth.service';
+import { UsersService } from '../../users/users.service';
 import { Public } from '../decorators/public.decorator';
 import {
   CompleteRegistrationDto,
   LoginDto,
   LogoutDto,
+  NewPasswordDto,
   RefreshTokenDto,
   SendVerificationEmailDto,
   VerifyEmailDto,
-  NewPasswordDto,
 } from '../dto/auth.dto';
-import { SocialLoginDto } from '../dto/social-login.dto';
 import { SocialLoginResponseDto } from '../dto/social-login-response.dto';
-import { EmailVerificationService } from '../services/email-verification.service';
-import { UsersService } from '../../users/users.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { SocialLoginDto } from '../dto/social-login.dto';
 import { VerifySocialTokenDto } from '../dto/verify-social-token.dto';
+import { EmailVerificationService } from '../services/email-verification.service';
 
 @Controller('auth')
 export class AuthController {
@@ -63,10 +64,22 @@ export class AuthController {
     const isReset = purpose === 'reset-password';
     // 가입 시에는 중복 이메일 체크, 비밀번호 찾기(purpose=reset-password) 시에는 스킵
     if (!isReset) {
-      const exists = await this.usersService.existsByEmail(
+      const foundUser = await this.usersService.existsByEmail(
         sendVerificationEmailDto.email,
       );
-      if (exists) {
+
+      if (foundUser?.deletedAt) {
+        const deletedAt = new Date(foundUser.deletedAt);
+        const now = new Date();
+        const diffDays =
+          (now.getTime() - deletedAt.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 30) {
+          throw new GoneException('탈퇴한 사용자입니다.');
+        }
+      }
+
+      if (foundUser?.deletedAt !== null) {
         throw new ConflictException('이미 가입된 이메일입니다.');
       }
     }

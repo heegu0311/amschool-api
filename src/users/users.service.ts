@@ -359,12 +359,15 @@ export class UsersService {
     };
   }
 
-  async existsByEmail(email: string): Promise<boolean> {
-    const user = await this.usersRepository.findOneBy({
-      email,
-      signinProvider: 'email',
-    });
-    return !!user;
+  async existsByEmail(email: string): Promise<User | null> {
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .withDeleted()
+      .where('user.email = :email', { email })
+      .andWhere('user.signinProvider = :provider', { provider: 'email' })
+      .getOne();
+
+    return user;
   }
 
   async existsByUsername(username: string): Promise<boolean> {
