@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import dayjs from 'dayjs';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
@@ -86,7 +85,7 @@ export class EmailService {
                 <div style="width: 100%; border-collapse: collapse;">
                   <div>
                     <div style="color: #57534E; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; font-weight: 400; line-height: 28px; word-wrap: break-word;">
-                      해당 코드는 <span style="color: #57534E; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; line-height: 24px; word-wrap: break-word;">10분</span>간 유효하며, 인증번호란에 입력하시면<br/>다음 단계로 이동해 프로필을 완성하실 수 있습니다.
+                      해당 코드는 <span style="color: #57534E; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; line-height: 24px; word-wrap: break-word;">10분</span>간 유효하며, 인증번호란에 입력하시면<br/>${purpose === 'reset-password' ? '새로운 비밀번호로 변경하실 수 있습니다.' : '다음 단계로 이동해 프로필을 완성하실 수 있습니다.'}
                     </div>
                   </div>
                 </div>
@@ -134,7 +133,10 @@ export class EmailService {
 
       await this.sendEmail({
         to: email,
-        subject: `암투게더 이메일 인증 - [${verificationCode}] - ${dayjs().format('YYYY.MM.DD HH:MM')}`,
+        subject:
+          purpose === 'reset-password'
+            ? `[암투게더] 비밀번호 변경을 도와드릴게요, 인증번호를 확인해주세요! - [${verificationCode}]`
+            : `[암투게더] 가입을 도와드릴게요, 인증번호를 확인해주세요! - [${verificationCode}]`,
         text: `인증 코드: ${verificationCode}\n이 코드는 10분 동안 유효합니다.`,
         html: htmlContent,
       });
