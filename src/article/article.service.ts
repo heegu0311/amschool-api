@@ -332,16 +332,14 @@ export class ArticleService {
     cancerId: string,
     limit: number = 3,
   ): Promise<Article[]> {
-    const articles = await this.articleRepository.find({
-      where: {
-        cancerId: +cancerId,
-        deletedAt: IsNull(),
-      },
-      relations: ['images'],
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const articles = await this.articleRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.images', 'images')
+      .where('article.cancerId = :cancerId', { cancerId: +cancerId })
+      .andWhere('article.deletedAt IS NULL')
+      .orderBy('RAND()')
+      .limit(3)
+      .getMany();
 
     const processedArticles = articles.map((article) => ({
       ...article,

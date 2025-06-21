@@ -277,39 +277,6 @@ export class ArticleController {
     return await this.articleService.delete(id);
   }
 
-  @Get('section/:sectionSecondaryCode/recommend')
-  @Public()
-  @ApiOperation({ summary: '특정 섹션의 랜덤 추천 기사 조회' })
-  @ApiParam({
-    name: 'sectionSecondaryCode',
-    required: true,
-    type: String,
-    description: '섹션 코드',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: '추천받을 기사 수 (기본값: 3)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '랜덤 추천 기사 조회 성공',
-  })
-  async getRecommendedArticles(
-    @Param('sectionSecondaryCode') sectionSecondaryCode: string,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 3,
-  ) {
-    const result = await this.articleService.findRandomBycancerId(
-      sectionSecondaryCode,
-      limit,
-    );
-    return {
-      success: true,
-      data: result,
-    };
-  }
-
   @Get('cancerId/:cancerId')
   @Public()
   @ApiOperation({

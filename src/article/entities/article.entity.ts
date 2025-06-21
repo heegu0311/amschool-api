@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -306,6 +307,7 @@ export class Article {
   @Column({ type: 'text', comment: '키워드', nullable: true })
   keywords: string;
 
+  @Index()
   @ApiProperty({ description: '암 카테고리', example: 1 })
   @Column({
     name: 'cancer_id',
@@ -334,6 +336,7 @@ export class Article {
   @UpdateDateColumn({ name: 'updated_at', comment: '수정일', nullable: true })
   updatedAt: Date;
 
+  @Index()
   @DeleteDateColumn({
     name: 'deleted_at',
     nullable: true,
