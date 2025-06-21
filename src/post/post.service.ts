@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
-import { Repository, IsNull } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Image } from '../common/entities/image.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ImageService } from '../common/services/image.service';
@@ -520,5 +520,80 @@ export class PostService {
       order: { createdAt: 'DESC' },
     });
     return posts;
+  }
+
+  // 조회수 증가 없이 게시글 정보만 반환
+  async findOneBasic(id: number, userId?: number): Promise<Post> {
+    // 댓글 수 조회
+    const commentsCount = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin(
+        'comment',
+        'comments',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
+        { entityType: 'post' },
+      )
+      .select('COUNT(comments.id)', 'count')
+      .where('post.id = :id', { id })
+      .getRawOne();
+
+    // 게시글 정보 조회
+    const post = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.author', 'author')
+      .addSelect(['author.id', 'author.username', 'author.profileImage'])
+      .leftJoinAndSelect('author.cancerUsers', 'cancerUsers')
+      .leftJoinAndSelect('cancerUsers.cancer', 'cancer')
+      .leftJoinAndSelect(
+        'post.images',
+        'images',
+        'images.entityType = :entityType',
+        { entityType: 'post' },
+      )
+      .leftJoin(
+        'comment',
+        'comments',
+        'comments.entity_id = post.id AND comments.entity_type = :entityType',
+        { entityType: 'post' },
+      )
+      .addSelect('comments')
+      .where('post.id = :id', { id })
+      .getOne();
+
+    if (!post) {
+      throw new NotFoundException(`Post #${id} not found`);
+    }
+
+    if (post.isAnonymous) {
+      post.author.username = '*******';
+      post.author.profileImage = '/images/anonymous.png';
+    }
+
+    // 이전글/다음글 조회
+    const [prevPost, nextPost] = await Promise.all([
+      this.findPrevPost(id),
+      this.findNextPost(id),
+    ]);
+
+    // 게시글 공감 조회
+    const postReactions =
+      await this.reactionEntityService.getReactionsForMultipleEntities(
+        'post',
+        [post.id],
+        userId,
+      );
+
+    // 공감 정보를 엔티티에 매핑
+    const postWithReactions = {
+      ...post,
+      reactions: postReactions[post.id]?.reactions || [],
+      userReactions: postReactions[post.id]?.userReactions || [],
+      comments: post.comments || [],
+      commentsCount: Number(commentsCount?.count) || 0,
+      prevPost,
+      nextPost,
+    };
+
+    return postWithReactions as Post;
   }
 }

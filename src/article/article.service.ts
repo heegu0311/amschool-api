@@ -366,7 +366,6 @@ export class ArticleService {
         createdAt: 'DESC',
       },
     });
-    console.log(articles.length);
 
     return articles;
   }

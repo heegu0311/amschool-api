@@ -13,6 +13,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   FileFieldsInterceptor,
   FilesInterceptor,
@@ -35,15 +36,16 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostService } from './post.service';
 
-@UseGuards(JwtAuthGuard)
 @Controller('posts')
 export class PostController {
   constructor(
     private readonly postService: PostService,
     private readonly s3Service: S3Service,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 3 }]))
   @ApiConsumes('multipart/form-data')
@@ -126,6 +128,7 @@ export class PostController {
   }
 
   @Get('my')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '내 게시글 목록 조회' })
   @ApiQuery({
@@ -182,8 +185,32 @@ export class PostController {
     return await this.postService.findAllIds();
   }
 
+  // 조회수 증가 없이 게시글 정보만 반환
+  @Get(':id/basic')
+  @Public()
+  async findOneBasic(@Request() req, @Param('id') id: string) {
+    let userId: number | undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const [type, token] = authHeader.split(' ');
+      if (type === 'Bearer' && token) {
+        try {
+          const payload = await this.jwtService.verifyAsync(token, {
+            ignoreExpiration: true,
+          });
+          userId = payload.sub || payload.id;
+        } catch (err) {
+          // 유효하지 않은 토큰(만료 등)은 무시
+          console.log(err);
+        }
+      }
+    }
+    return this.postService.findOneBasic(+id, userId);
+  }
+
+  // SSR prefetch에서만 사용: 조회수 증가 O
   @Get(':id')
-  @ApiOperation({ summary: '특정 게시글 조회' })
+  @ApiOperation({ summary: '특정 게시글 조회 (조회수 증가)' })
   @ApiResponse({
     status: 200,
     description: '게시글 조회 성공',
