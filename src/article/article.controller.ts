@@ -117,8 +117,35 @@ export class ArticleController {
     return await this.articleService.findAll(paginationDto);
   }
 
-  @Get('my')
+  @Get('sitemap')
   @Public()
+  @ApiOperation({
+    summary: '사이트맵용 기사 ID 목록 조회',
+    description:
+      '사이트맵 생성에 필요한 모든 기사의 ID, 제목, 생성일을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사이트맵용 기사 목록이 성공적으로 조회되었습니다.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+          title: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
+  async findAllIds(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    return await this.articleService.findAllIds();
+  }
+
+  @Get('my')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '내 기사 목록 조회',

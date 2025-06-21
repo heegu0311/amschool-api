@@ -154,6 +154,34 @@ export class PostController {
     return await this.postService.findByAuthorId(userId, paginationDto);
   }
 
+  @Get('sitemap')
+  @Public()
+  @ApiOperation({
+    summary: '사이트맵용 게시글 ID 목록 조회',
+    description:
+      '사이트맵 생성에 필요한 모든 게시글의 ID, 제목, 생성일을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사이트맵용 게시글 목록이 성공적으로 조회되었습니다.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+          title: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
+  async findAllIds(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    return await this.postService.findAllIds();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '특정 게시글 조회' })
   @ApiResponse({

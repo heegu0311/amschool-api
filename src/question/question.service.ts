@@ -415,4 +415,19 @@ export class QuestionService {
       },
     };
   }
+
+  async findAllIds(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    const questions = await this.questionRepository.find({
+      where: { deletedAt: undefined },
+      select: ['id', 'questionSummary', 'content', 'createdAt'],
+      order: { createdAt: 'DESC' },
+    });
+    return questions.map((q) => ({
+      id: q.id,
+      title: q.questionSummary || q.content?.slice(0, 30) || '',
+      createdAt: q.createdAt,
+    }));
+  }
 }

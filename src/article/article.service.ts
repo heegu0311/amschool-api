@@ -352,4 +352,22 @@ export class ArticleService {
     const shuffled = processedArticles.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, limit);
   }
+
+  async findAllIds(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    const articles = await this.articleRepository.find({
+      where: {
+        isUsed: true,
+        deletedAt: IsNull(),
+      },
+      select: ['id', 'title', 'createdAt'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+    console.log(articles.length);
+
+    return articles;
+  }
 }

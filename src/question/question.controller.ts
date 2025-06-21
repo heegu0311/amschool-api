@@ -128,6 +128,34 @@ export class QuestionController {
     return await this.questionervice.findByAuthorId(req.user.id, paginationDto);
   }
 
+  @Get('sitemap')
+  @Public()
+  @ApiOperation({
+    summary: '사이트맵용 질문 ID 목록 조회',
+    description:
+      '사이트맵 생성에 필요한 모든 질문의 ID, 요약, 생성일을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '사이트맵용 질문 목록이 성공적으로 조회되었습니다.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+          title: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
+  async findAllForSitemap(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    return await this.questionervice.findAllIds();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '특정 질문 조회' })
   @ApiResponse({

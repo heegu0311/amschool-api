@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import dayjs from 'dayjs';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Image } from '../common/entities/image.entity';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { ImageService } from '../common/services/image.service';
@@ -509,5 +509,16 @@ export class PostService {
         currentPage: page,
       },
     };
+  }
+
+  async findAllIds(): Promise<
+    { id: number; title: string; createdAt: Date }[]
+  > {
+    const posts = await this.postRepository.find({
+      where: { deletedAt: IsNull() },
+      select: ['id', 'title', 'createdAt'],
+      order: { createdAt: 'DESC' },
+    });
+    return posts;
   }
 }
