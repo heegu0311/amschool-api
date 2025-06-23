@@ -254,6 +254,7 @@ export class PostController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
   @UseInterceptors(FilesInterceptor('images'))
   @ApiConsumes('multipart/form-data')
