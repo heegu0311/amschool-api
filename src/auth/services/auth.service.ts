@@ -265,7 +265,7 @@ export class AuthService {
 
       // 해당 정보로 유저를 못찾은 경우
       if (users.length === 0) {
-        throw new UnauthorizedException('아이디가 존재하지 않습니다.');
+        return await this.buildSocialLoginResponse(socialLoginDto, true, false);
       }
 
       // 로그인 가능한 유저 -> 로그인 처리

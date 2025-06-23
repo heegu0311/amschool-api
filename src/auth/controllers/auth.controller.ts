@@ -4,6 +4,7 @@ import {
   Controller,
   GoneException,
   HttpCode,
+  NotFoundException,
   Post,
   Query,
   Res,
@@ -62,12 +63,11 @@ export class AuthController {
     @Query('purpose') purpose?: string,
   ): Promise<{ message: string }> {
     const isReset = purpose === 'reset-password';
+    const foundUser = await this.usersService.existsByEmail(
+      sendVerificationEmailDto.email,
+    );
     // 가입 시에는 중복 이메일 체크, 비밀번호 찾기(purpose=reset-password) 시에는 스킵
     if (!isReset) {
-      const foundUser = await this.usersService.existsByEmail(
-        sendVerificationEmailDto.email,
-      );
-
       if (foundUser?.deletedAt) {
         const deletedAt = new Date(foundUser.deletedAt);
         const now = new Date();
@@ -81,6 +81,10 @@ export class AuthController {
 
       if (foundUser?.deletedAt === null) {
         throw new ConflictException('이미 가입된 이메일입니다.');
+      }
+    } else {
+      if (foundUser === null) {
+        throw new NotFoundException('가입하지 않은 이메일입니다.');
       }
     }
     // 이메일 인증 코드 생성 및 발송
