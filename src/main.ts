@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import expressBasicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,18 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  // Swagger UI에 대한 기본 인증 설정
+  app.use(
+    '/api',
+    expressBasicAuth({
+      challenge: true,
+      users: {
+        [process.env.SWAGGER_USER || 'admin']:
+          process.env.SWAGGER_PASSWORD || 'admin123',
+      },
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('AMSchool API')
