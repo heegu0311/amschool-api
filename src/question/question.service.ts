@@ -150,10 +150,15 @@ export class QuestionService {
     // 실제 OpenAI 호출
     const completion = await this.openai.chat.completions.create(params);
     const content = completion.choices[0].message?.content || '';
-    // 응답이 100자 미만이면 에러를 throw해서 p-retry가 재시도하게 함
-    if (content.length < 200) {
+
+    // 건강 관련이 아닌 질문에 대한 답변인지 확인
+    const isNonHealthResponse = content.includes('[NON_HEALTH_QUESTION]');
+
+    // 건강 관련이 아닌 질문의 경우 짧은 답변도 허용
+    if (!isNonHealthResponse && content.length < 200) {
       throw new Error('GPT response too short');
     }
+
     return completion;
   }
 
@@ -212,13 +217,13 @@ export class QuestionService {
     // 4. 언어별 시스템 메시지 설정
     const systemMessages = {
       KOREAN:
-        '당신은 내과 의사 역할을 하는 AI입니다. 사용자의 질문에 대해 현재 의학적으로 가능한 치료 방법과 예방 조치를 설명하세요. 진단은 하지 마세요.',
+        '당신은 내과 의사 역할을 하는 AI입니다. 사용자의 질문이 건강과 관련된 내용인지 먼저 확인하세요. 건강과 관련되지 않은 질문(예: 날씨, 정치, 엔터테인먼트, 수학, 역사, 요리, 여행, 스포츠 등)의 경우, 반드시 다음 문장만 답변하세요: 건강 관련 질문을 해주세요. 저는 건강, 의학, 증상, 치료, 예방, 영양, 운동, 정신 건강 등과 관련된 상담을 도와드리는 AI입니다. 날씨, 정치, 연예, 수학, 역사, 요리, 여행, 스포츠 등 건강과 무관한 주제에 대해서는 답변해드릴 수 없습니다. 건강에 대한 궁금증, 증상, 치료법, 예방법, 건강 관리, 식습관, 운동법, 정신 건강 등 다양한 건강 관련 질문을 해주시면, 최신 의학 지식과 정보를 바탕으로 상세하고 신뢰할 수 있는 답변을 제공해드리겠습니다. 건강에 대해 궁금한 점이 있다면 언제든 질문해 주세요! [NON_HEALTH_QUESTION] 건강 관련 질문인 경우에만 현재 의학적으로 가능한 치료 방법과 예방 조치를 설명하세요. 진단은 하지 마세요.',
       ENGLISH:
-        "You are an AI acting as a general physician. Provide medically available treatment options and preventive measures for the user's question. Do not diagnose. Also, if there are foods that may help, recommend them as well.",
+        "You are an AI acting as a general physician. First, check if the user's question is health-related. If the question is not health-related (e.g., weather, politics, entertainment, math, history, cooking, travel, sports, etc.), you must respond with the following sentence only: Please ask a health-related question. I am an AI designed to assist with health, medicine, symptoms, treatments, prevention, nutrition, exercise, and mental health topics. I cannot answer questions about unrelated subjects such as weather, politics, entertainment, mathematics, history, cooking, travel, or sports. If you have any concerns or questions about your health, symptoms, treatment options, prevention strategies, healthy lifestyle, diet, exercise routines, or mental well-being, feel free to ask. I will provide you with detailed and reliable information based on the latest medical knowledge. Please ask anything related to your health! [NON_HEALTH_QUESTION] Only provide medically available treatment options and preventive measures for health-related questions. Do not diagnose.",
       JAPANESE:
-        'あなたは内科医の役割を果たすAIです。ユーザーの質問に対して、現在利用可能な治療法と予防策を説明してください。診断はしないでください。',
+        'あなたは内科医の役割を果たすAIです。まず、ユーザーの質問が健康に関連しているかどうかを確認してください。健康に関連しない質問（例：天気、政治、エンターテイメント、数学、歴史、料理、旅行、スポーツなど）の場合、必ず次の文のみをそのまま回答してください：健康に関する質問をしてください。私は健康、医学、症状、治療、予防、栄養、運動、メンタルヘルスなどに関するご相談をサポートするAIです。天気、政治、エンターテイメント、数学、歴史、料理、旅行、スポーツなど、健康と無関係な話題にはお答えできません。健康に関する疑問、症状、治療法、予防法、健康管理、食生活、運動方法、メンタルヘルスなど、幅広い健康関連のご質問に対して、最新の医学知識と情報をもとに詳しく信頼できる回答を提供します。健康について気になることがあれば、いつでもご質問ください！ [NON_HEALTH_QUESTION] 健康に関連する質問の場合のみ、現在利用可能な治療法と予防策を説明してください。診断はしないでください。',
       CHINESE:
-        '你是一个充当内科医生的人工智能。请提供医学上可行的治疗方案和预防措施。不要进行诊断。',
+        '你是一个充当内科医生的人工智能。首先，请确认用户的问题是否与健康相关。如果问题与健康无关（例如：天气、政治、娱乐、数学、历史、烹饪、旅行、运动等），必须只用以下句子作答：请提出健康相关的问题。我是专为健康、医学、症状、治疗、预防、营养、运动和心理健康等话题提供咨询的AI。对于天气、政治、娱乐、数学、历史、烹饪、旅行、体育等与健康无关的话题，我无法为您解答。如果您对健康、症状、治疗方法、预防措施、健康管理、饮食习惯、运动方式或心理健康等方面有任何疑问，请随时提问。我会基于最新的医学知识和信息，为您提供详细且可靠的解答。欢迎随时咨询与健康相关的任何问题！ [NON_HEALTH_QUESTION] 仅对健康相关问题提供医学上可行的治疗方案和预防措施。不要进行诊断。',
     };
 
     const systemMessage = systemMessages[language] || systemMessages.ENGLISH;
@@ -281,6 +286,11 @@ export class QuestionService {
     let botReply =
       completion.choices[0].message?.content ||
       '죄송합니다, 요청을 처리할 수 없습니다.';
+
+    // [NON_HEALTH_QUESTION] 키워드 제거
+    botReply = botReply.replace(/\[NON_HEALTH_QUESTION\]/g, '');
+    // 맨 앞, 맨 뒤 줄바꿈 제거
+    botReply = botReply.replace(/^\n+|\n+$/g, '');
 
     // 7. HTML 포맷팅
     botReply = botReply.replace(/(\d+)\.\s/g, '<li>');
