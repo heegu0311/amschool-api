@@ -118,6 +118,7 @@ export class NotificationController {
   }
 
   @Get('/test/add-partition')
+  @ApiBearerAuth('accessToken')
   @ApiOperation({ summary: '[개발용] 다음 달 파티션 수동 생성' })
   @ApiOkResponse({ description: '파티션 추가 시도 결과 메시지' })
   async testAddPartition() {
