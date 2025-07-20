@@ -8,7 +8,7 @@ export class CreateCancerUserDto {
   userId: number;
 
   @ApiProperty({
-    description: '암 종류 ID',
+    description: '투병 정보 ID',
     example: 1,
   })
   cancerId: number;

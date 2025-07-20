@@ -10,10 +10,10 @@ export class CancerController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: '모든 암 종류 목록 조회' })
+  @ApiOperation({ summary: '모든 투병 정보 목록 조회' })
   @ApiResponse({
     status: 200,
-    description: '암 종류 목록 조회 성공',
+    description: '투병 정보 목록 조회 성공',
     type: [Cancer],
   })
   findAll() {

@@ -280,9 +280,9 @@ export class ArticleController {
   @Get('cancerId/:cancerId')
   @Public()
   @ApiOperation({
-    summary: '특정 섹션의 암매거진 목록 조회',
+    summary: '특정 섹션의 건강매거진 목록 조회',
     description:
-      '섹션 코드를 기반으로 암매거진 목록을 페이지네이션하여 조회합니다.',
+      '섹션 코드를 기반으로 건강매거진 목록을 페이지네이션하여 조회합니다.',
   })
   @ApiParam({
     name: 'cancerId',
@@ -304,7 +304,7 @@ export class ArticleController {
   })
   @ApiResponse({
     status: 200,
-    description: '암매거진 목록이 성공적으로 조회되었습니다.',
+    description: '건강매거진 목록이 성공적으로 조회되었습니다.',
     type: [Article],
   })
   async getArticlesBycancerId(

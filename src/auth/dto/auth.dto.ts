@@ -94,7 +94,7 @@ export class CompleteRegistrationDto {
   @IsString()
   userType: 'patient' | 'supporter';
 
-  @ApiProperty({ description: '암 종류 목록', example: [1] })
+  @ApiProperty({ description: '투병 정보 목록', example: [1] })
   @IsArray()
   @Transform(({ value }) =>
     Array.isArray(value) ? value.map(Number) : value ? [Number(value)] : [],
