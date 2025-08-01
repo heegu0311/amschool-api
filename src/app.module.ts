@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
 import { AppController } from './app.controller';
@@ -58,6 +59,7 @@ import { UsersModule } from './users/users.module';
         timezone: '+09:00',
       }),
     }),
+    ScheduleModule.forRoot(),
     LoggerModule,
     UsersModule,
     CancerModule,
